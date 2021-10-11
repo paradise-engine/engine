@@ -52,13 +52,13 @@ export class Vector implements IComparable {
     }
 
     /**
-     * Rotates a given vector around its origin by
+     * Rotates a given vector anti-clockwise around its origin by
      * a given amount.
      * @param vector The vector to rotate
      * @param rotation The rotation amount
      */
     public static rotate(vector: Vector, rotation: Rotation): Vector {
-        const alpha = rotation.degrees;
+        const alpha = rotation.radian;
         return new Vector(
             (vector.x * Math.cos(alpha)) - (vector.y * Math.sin(alpha)),
             (vector.x * Math.sin(alpha)) + (vector.y * Math.cos(alpha))
