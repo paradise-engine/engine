@@ -19,3 +19,6 @@ dist/
 
 # temporary files
 temp/
+
+# test coverage reports
+coverage/
