@@ -16,3 +16,6 @@ dist/
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+
+# temporary files
+temp/
