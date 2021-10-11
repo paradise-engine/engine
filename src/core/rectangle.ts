@@ -1,8 +1,10 @@
+import { IComparable } from "./i-comparable";
+
 /**
  * Represents an area in 2D space, defined by its position (top-left corner)
  * and by its width and height.
  */
-export class Rectangle {
+export class Rectangle implements IComparable {
     /**
      * The x-position of the rectangle's top-left corner
      */
@@ -33,5 +35,12 @@ export class Rectangle {
 
         this.width = width || 0;
         this.height = height || 0;
+    }
+
+    public equals(compare: Rectangle) {
+        return this.x === compare.x &&
+            this.y === compare.y &&
+            this.width === compare.width &&
+            this.height === compare.height;
     }
 }

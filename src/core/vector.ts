@@ -1,9 +1,10 @@
+import { IComparable } from "./i-comparable";
 import { Rotation } from "./rotation";
 
 /**
  * Represents a 2D vector. Can be used for directional vectors but also for representing points.
  */
-export class Vector {
+export class Vector implements IComparable {
 
     /**
      * Calculates the dot product of two Vectors
@@ -94,6 +95,10 @@ export class Vector {
      */
     public get rotation() {
         return Rotation.fromRadian(Math.atan2(this.y, this.x)); // * (180 / Math.PI);
+    }
+
+    public equals(compare: Vector) {
+        return this.x === compare.x && this.y === compare.y;
     }
 
 }

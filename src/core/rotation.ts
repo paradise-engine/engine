@@ -1,3 +1,4 @@
+import { IComparable } from "./i-comparable";
 
 function radianToDegrees(rad: number) {
     return (rad / Math.PI) * 180;
@@ -10,7 +11,7 @@ function degreesToRadian(degrees: number) {
 /**
  * Represents a rotation between 0 and 180 degrees and -180 degrees respectively.
  */
-export class Rotation {
+export class Rotation implements IComparable {
     /**
      * Creates a new rotation based on degrees
      * @param degrees Degrees of the rotation
@@ -73,5 +74,9 @@ export class Rotation {
 
     protected constructor(degrees: number) {
         this.degrees = degrees;
+    }
+
+    public equals(compare: Rotation): boolean {
+        return this.degrees === compare.degrees;
     }
 }
