@@ -46,7 +46,7 @@ export class Rotation {
     }
 
     // internally, a rotation is represented in degrees
-    private _valueDegrees: number = 0;
+    protected _valueDegrees: number = 0;
 
     public get degrees() {
         return this._valueDegrees;
@@ -71,7 +71,7 @@ export class Rotation {
         this.degrees = radianToDegrees(val);
     }
 
-    private constructor(degrees: number) {
+    protected constructor(degrees: number) {
         this.degrees = degrees;
     }
 }

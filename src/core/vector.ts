@@ -1,10 +1,9 @@
-import { Point } from "./point";
 import { Rotation } from "./rotation";
 
 /**
- * Represents a 2D vector.
+ * Represents a 2D vector. Can be used for directional vectors but also for representing points.
  */
-export class Vector extends Point {
+export class Vector {
 
     /**
      * Calculates the dot product of two Vectors
@@ -63,6 +62,24 @@ export class Vector extends Point {
             (vector.x * Math.cos(alpha)) - (vector.y * Math.sin(alpha)),
             (vector.x * Math.sin(alpha)) + (vector.y * Math.cos(alpha))
         );
+    }
+
+    /**
+     * The x-position of the point
+     */
+    public x: number;
+    /**
+     * The y-position of the point
+     */
+    public y: number;
+
+    /**
+     * @param x The x-position of the point
+     * @param y The y-position of the point
+     */
+    constructor(x?: number, y?: number) {
+        this.x = x || 0;
+        this.y = y || 0;
     }
 
     /**
