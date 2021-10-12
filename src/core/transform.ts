@@ -1,10 +1,12 @@
+import { DestroyBoundTransformError } from "../errors";
+import { Component } from "./component";
 import { Rotation } from "./rotation";
 import { Vector } from "./vector";
 
 /**
  * Represents the transform (position, rotation and scale) of an object.
  */
-export class Transform {
+export class Transform extends Component {
     protected _parent?: Transform;
     protected _children: Transform[] = [];
     // represents local position
@@ -137,6 +139,16 @@ export class Transform {
      */
     public rotate(delta: Rotation) {
         this._localRotation = Rotation.add(this._localRotation, delta);
+    }
+
+    public override destroy() {
+        if (!this.gameObject.isDestroyed) {
+            throw new DestroyBoundTransformError();
+        }
+
+        this.setParent(null);
+
+        super.destroy();
     }
 
 }
