@@ -5,8 +5,9 @@
   "main": "dist/index.js",
   "scripts": {
     "test": "jest",
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "tsc": "tsc",
+    "transform": "ts-node tools/transform-plain.ts",
+    "build": "npm run tsc && npm run transform"
   },
   "repository": {
     "type": "git",
