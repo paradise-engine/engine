@@ -1,6 +1,6 @@
-import { CoreError } from "./core-error";
+import { ParadiseError } from "./paradise-error";
 
-export class ManagedObjectDestroyedError extends CoreError {
+export class ManagedObjectDestroyedError extends ParadiseError {
 	constructor(message?: string) {
 		super(message || 'Cannot access managed object');
 	}
