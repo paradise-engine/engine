@@ -22,6 +22,12 @@ export abstract class Component extends ManagedObject {
 			.filter((obj): obj is Component => obj instanceof Component);
 	}
 
+	/**
+	 * workaround to prevend edless loop between `destroy()`
+	 * and GameObject's `removeComponent()` 
+	 */
+	private _markedForDestruction;
+
 	public get gameObject() {
 		if (this.isDestroyed) {
 			throw new ManagedObjectDestroyedError();
@@ -41,13 +47,17 @@ export abstract class Component extends ManagedObject {
 		}
 
 		super();
+		this._markedForDestruction = false;
 		Component._gameObjectMap.set(this, gameObject);
 	}
 
 	public override destroy() {
-		this.gameObject.removeComponent(this);
-		Component._gameObjectMap.delete(this);
-		super.destroy();
+		if (!this._markedForDestruction) {
+			this._markedForDestruction = true;
+			this.gameObject.removeComponent(this);
+			Component._gameObjectMap.delete(this);
+			super.destroy();
+		}
 	}
 
 }

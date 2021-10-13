@@ -44,7 +44,10 @@ export class GameObject extends ManagedObject {
     }
 
     public addComponent<T extends Component>(componentType: ComponentConstructor<T>): T {
-        if (componentType.prototype instanceof Transform && this._transform !== undefined) {
+        if (
+            (componentType.prototype instanceof Transform || componentType === Transform as any)
+            && this._transform !== undefined
+        ) {
             throw new MultipleTransformsError();
         }
 
@@ -59,8 +62,42 @@ export class GameObject extends ManagedObject {
     public removeComponent<T extends Component>(component: T) {
         const componentIndex = this._components.indexOf(component);
         if (componentIndex !== -1) {
-            this._components.splice(componentIndex, 1);
+            const del = this._components.splice(componentIndex, 1);
+            del[0].destroy();
         }
+    }
+
+    public getAllComponents() {
+        return this._components.concat([]);
+    }
+
+    /**
+     * Returns all attached Component (if any) of the specified type.
+     * @param componentType The Component type
+     * @param strict If `true`, only Components that are the exact specified type are returned. Otherwise, also inheriting types qualify _(default)_.
+     */
+    public getComponents<T extends Component>(componentType: ComponentConstructor<T>, strict?: boolean) {
+        return this._components.filter((comp): comp is T => {
+            if (strict) {
+                return comp.constructor === componentType;
+            } else {
+                return comp instanceof componentType;
+            }
+        });
+    }
+
+    /**
+     * Returns the first attached Component (if any) of the specified type.
+     * @param componentType The Component type
+     * @param strict If `true`, only Components that are the exact specified type are returned. Otherwise, also inheriting types qualify _(default)_.
+     */
+    public getComponent<T extends Component>(componentType: ComponentConstructor<T>, strict?: boolean) {
+        const comps = this.getComponents(componentType, strict);
+        if (comps.length > 0) {
+            return comps[0];
+        }
+
+        return undefined;
     }
 
     public enable() {
@@ -78,6 +115,14 @@ export class GameObject extends ManagedObject {
 
     public getParent() {
         return this._transform.parent?.gameObject;
+    }
+
+    public addChild(child: GameObject) {
+        this.transform.addChild(child.transform);
+    }
+
+    public removeChild(child: GameObject) {
+        this.transform.removeChild(child.transform);
     }
 
     public destroy() {
