@@ -42,7 +42,7 @@ export class Rotation implements IComparable {
      * @param a The first Rotation
      * @param b The second Rotation
      */
-    public static substract(a: Rotation, b: Rotation) {
+    public static subtract(a: Rotation, b: Rotation) {
         return new Rotation(a.degrees - b.degrees);
     }
 
@@ -61,6 +61,14 @@ export class Rotation implements IComparable {
             this._valueDegrees = 180 + (degrees + 180);
         } else {
             this._valueDegrees = degrees;
+        }
+
+        if (this._valueDegrees === -0) {
+            this._valueDegrees = 0;
+        }
+
+        if (this._valueDegrees === -180) {
+            this._valueDegrees = 180;
         }
     }
 
