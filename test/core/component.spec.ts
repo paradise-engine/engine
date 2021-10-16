@@ -86,4 +86,18 @@ describe('Component destruction', () => {
         expect(() => comp.gameObject).toThrow(ManagedObjectDestroyedError);
     });
 
+    it('throws an error when accessing GameObject after being orphaned', () => {
+        /**
+         * This is just a hypothetical test. Without explicitly hacking your way to it,
+         * this part of the code should not be reachable.
+         */
+        const obj = new GameObject();
+        const comp = obj.addComponent(Comp1);
+        comp.destroy();
+
+        // the hack that makes reaching this part of the code possible
+        (comp as any)['_isDestroyed'] = false;
+        expect(() => comp.gameObject).toThrow(RuntimeInconsistencyError);
+    });
+
 });
