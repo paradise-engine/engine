@@ -33,6 +33,9 @@ export class Transform extends Component {
 
         if (parent) {
             this._parent = parent;
+            if (!parent.children.includes(this)) {
+                parent.addChild(this);
+            }
         } else {
             this._parent = undefined;
         }
@@ -66,7 +69,7 @@ export class Transform extends Component {
      */
     public get position(): Vector {
         if (this._parent) {
-            return Vector.add(this._parent.position, this._localPosition);
+            return Vector.add(this._parent.position, Vector.rotate(this._localPosition, this._parent.rotation));
         }
         return this._localPosition;
     }
