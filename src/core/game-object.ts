@@ -129,7 +129,7 @@ export class GameObject extends ManagedObject {
         if (!this.isDestroyed) {
             super.destroy();
             this._transform.children.forEach(c => c.gameObject.destroy());
-            this._components.forEach(c => c.destroy());
+            this.getAllComponents().forEach(c => c.destroy());
         }
     }
 
