@@ -17,7 +17,6 @@
         "esModuleInterop": true,
         "forceConsistentCasingInFileNames": true,
         "sourceMap": true,
-        "baseUrl": "./",
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true
     },
