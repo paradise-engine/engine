@@ -85,7 +85,21 @@ function initBuffers(gl: WebGLRenderingContext) {
         1.0, -1.0
     ];
 
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+
+    setTimeout(() => {
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+
+        const newPositions = [
+            -0.5, 0.5,
+            0.5, 0.5,
+            -0.5, -0.5,
+            0.5, -0.5
+        ];
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(newPositions), gl.DYNAMIC_DRAW);
+        console.log('BUFFER UPDATED')
+    }, 5000);
 
     const colors = [
         1.0, 1.0, 1.0, 1.0,    // white
@@ -127,7 +141,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
     // and we only want to see objects between 0.1 units
     // and 100 units away from the camera.
 
-    const fieldOfView = 45 * Math.PI / 180;   // in radians
+    const fieldOfView = 1 * Math.PI / 180;   // in radians
     const aspect = gl.canvas.clientWidth / gl.canvas.clientHeight;
     const zNear = 0.1;
     const zFar = 100.0;
@@ -144,11 +158,14 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
 
     // note: glmatrix.js always has the first argument
     // as the destination to receive the result.
-    mat4.perspective(projectionMatrix,
-        fieldOfView, // 0.7853982
-        aspect, // 1.333333
-        zNear, // 0.1
-        zFar); // 100
+
+    mat4.ortho(projectionMatrix, -1, 1, -1, 1, 0.1, 100);
+
+    // mat4.perspective(projectionMatrix,
+    //     fieldOfView, // 0.7853982
+    //     aspect, // 1.333333
+    //     zNear, // 0.1
+    //     zFar); // 100
 
     console.log('PERSPECTIVE', projectionMatrix);
 
@@ -161,7 +178,7 @@ function drawScene(gl: WebGLRenderingContext, programInfo: ProgramInfo, buffers:
 
     mat4.translate(modelViewMatrix,     // destination matrix
         modelViewMatrix,     // matrix to translate
-        [-0.0, 0.0, -6.0]);  // amount to translate
+        [-0.0, 0.0, -4]);  // amount to translate
 
     // Tell WebGL how to pull out the positions from the position
     // buffer into the vertexPosition attribute.
@@ -232,7 +249,7 @@ export function renderSimple() {
     canvas.width = 640;
     canvas.height = 480;
 
-    document.appendChild(canvas);
+    document.body.appendChild(canvas);
     const gl = canvas.getContext('webgl');
 
     if (gl === null) {
@@ -285,5 +302,10 @@ export function renderSimple() {
 
     const buffers = initBuffers(gl);
 
-    drawScene(gl, programInfo, buffers);
+    const draw = () => {
+        drawScene(gl, programInfo, buffers);
+        requestAnimationFrame(draw);
+    }
+
+    draw();
 }
