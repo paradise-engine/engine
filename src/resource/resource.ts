@@ -1,4 +1,4 @@
-import { Texture } from "./texture";
+import { Texture } from "../renderer";
 import { ResourceStatus } from "./resource-status";
 import { ResourceType } from "./resource-type";
 

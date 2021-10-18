@@ -1,4 +1,4 @@
-import { ResourceType } from "./resource-type";
+import { ResourceType } from "../resource";
 import { RenderingContextError } from "../errors";
 
 export type TextureType = ResourceType.Image | ResourceType.Video;

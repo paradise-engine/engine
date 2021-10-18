@@ -3,8 +3,7 @@ import { MimeTypeExtensions } from "./mime-types";
 import { Resource } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { Renderer } from "../renderer";
-import { Texture } from "./texture";
+import { Renderer, Texture } from "../renderer";
 import { StringDictionary } from "../util";
 
 export type ResourceLoadCallback = (resource: Resource) => void;
