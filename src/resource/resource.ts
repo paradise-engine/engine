@@ -1,4 +1,4 @@
-import { Texture } from "../renderer";
+import { BaseTexture } from "../renderer";
 import { ResourceStatus } from "./resource-status";
 import { ResourceType } from "./resource-type";
 
@@ -8,7 +8,7 @@ export interface ResourceOptions {
     type: ResourceType;
     status: ResourceStatus;
     sourceElement: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
-    texture?: Texture;
+    texture?: BaseTexture;
 }
 
 export class Resource {
@@ -18,7 +18,7 @@ export class Resource {
     public status: ResourceStatus;
 
     public sourceElement: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
-    public texture?: Texture;
+    public texture?: BaseTexture;
 
     constructor(options: ResourceOptions) {
         this.name = options.name;

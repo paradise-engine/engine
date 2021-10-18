@@ -1,7 +1,7 @@
 import { ResourceType } from "../resource";
 import { RenderingContextError } from "../errors";
 
-export type TextureType = ResourceType.Image | ResourceType.Video;
+export type BaseTextureType = ResourceType.Image | ResourceType.Video;
 
 function isPowerOf2(value: number) {
     return (value & (value - 1)) === 0;
@@ -75,23 +75,23 @@ function initImageTexture(gl: WebGLRenderingContext, image: HTMLImageElement) {
 }
 
 
-export class Texture {
+export class BaseTexture {
 
     public static createVideoTexture(gl: WebGLRenderingContext, video: HTMLVideoElement) {
         const texture = initVideoTexture(gl);
-        return new Texture(texture, ResourceType.Video, video);
+        return new BaseTexture(texture, ResourceType.Video, video);
     }
 
     public static createImageTexture(gl: WebGLRenderingContext, image: HTMLImageElement) {
         const texture = initImageTexture(gl, image);
-        return new Texture(texture, ResourceType.Image, image);
+        return new BaseTexture(texture, ResourceType.Image, image);
     }
 
     public readonly glTexture: WebGLTexture;
-    public readonly type: TextureType;
+    public readonly type: BaseTextureType;
     public readonly srcElement: HTMLImageElement | HTMLVideoElement;
 
-    private constructor(glTexture: WebGLTexture, type: TextureType, srcElement: HTMLImageElement | HTMLVideoElement) {
+    private constructor(glTexture: WebGLTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement) {
         this.glTexture = glTexture;
         this.type = type;
         this.srcElement = srcElement;

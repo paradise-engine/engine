@@ -3,7 +3,7 @@ import { MimeTypeExtensions } from "./mime-types";
 import { Resource } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { Renderer, Texture } from "../renderer";
+import { Renderer, BaseTexture } from "../renderer";
 import { StringDictionary } from "../util";
 
 export type ResourceLoadCallback = (resource: Resource) => void;
@@ -97,7 +97,7 @@ export class ResourceLoader {
             const image = new Image();
             image.onload = () => {
 
-                const texture = Texture.createImageTexture(this.renderer.context, image);
+                const texture = BaseTexture.createImageTexture(this.renderer.context, image);
 
                 const resource = new Resource({
                     name: task.name,
@@ -130,7 +130,7 @@ export class ResourceLoader {
 
             video.oncanplaythrough = () => {
 
-                const texture = Texture.createVideoTexture(this.renderer.context, video);
+                const texture = BaseTexture.createVideoTexture(this.renderer.context, video);
 
                 const resource = new Resource({
                     name: task.name,
