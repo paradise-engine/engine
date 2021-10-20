@@ -1,0 +1,1 @@
+export type Indexable<T = any> = { [key: number]: T }
