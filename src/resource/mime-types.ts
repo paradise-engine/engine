@@ -1,4 +1,4 @@
-import { StringDictionary } from "../util";
+import { Dictionary } from "../util";
 import { ResourceType } from "./resource-type";
 
 export interface MimeType {
@@ -9,9 +9,9 @@ export interface MimeType {
 
 const _allTypes: MimeType[] = [];
 // a map of all mime types by their name
-const _nameMimeTypeMap: StringDictionary<MimeType> = {};
+const _nameMimeTypeMap: Dictionary<MimeType> = {};
 // a map of all mime types by their extensions
-const _extMimeTypeMap: StringDictionary<MimeType> = {};
+const _extMimeTypeMap: Dictionary<MimeType> = {};
 
 function _createMimeType(name: string, extensions: string[], type: ResourceType) {
     const mimeType: MimeType = {

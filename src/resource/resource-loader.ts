@@ -4,7 +4,7 @@ import { Resource } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
 import { Renderer, BaseTexture } from "../renderer";
-import { StringDictionary } from "../util";
+import { Dictionary } from "../util";
 
 export type ResourceLoadCallback = (resource: Resource) => void;
 export type ResourcesLoadCallback = (resources: Resource[]) => void;
@@ -18,7 +18,7 @@ interface ResourceLoadTask {
 export class ResourceLoader {
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
-    private _resourceMap: StringDictionary<Resource> = {};
+    private _resourceMap: Dictionary<Resource> = {};
 
     public readonly renderer: Renderer;
 
@@ -95,6 +95,7 @@ export class ResourceLoader {
     private loadImage(task: ResourceLoadTask): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const image = new Image();
+            image.crossOrigin = 'anonymous';
             image.onload = () => {
 
                 const texture = BaseTexture.createImageTexture(this.renderer.context, image);
@@ -127,6 +128,7 @@ export class ResourceLoader {
     private loadVideo(task: ResourceLoadTask): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
+            video.crossOrigin = 'anonymous';
 
             video.oncanplaythrough = () => {
 
