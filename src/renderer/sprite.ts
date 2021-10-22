@@ -1,4 +1,3 @@
-import { mat4 } from "gl-matrix";
 import { IRenderable } from "./i-renderable";
 import { Renderer } from "./renderer";
 import { Texture } from "./texture";
