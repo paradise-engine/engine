@@ -62,7 +62,7 @@ export class ResourceLoader {
             if (onload) {
                 onload(resources);
             }
-        }).catch((err) => {
+        }, (err) => {
             if (err instanceof ResourceLoaderError) {
                 throw err;
             }
