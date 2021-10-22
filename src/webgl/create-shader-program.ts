@@ -1,6 +1,12 @@
 import { glEnumToString } from "./gl-enum-to-string";
 import { RenderingContextError } from "../errors";
 
+export interface ShaderInfo {
+    program: WebGLProgram;
+    vertexShader: WebGLShader;
+    fragmentShader: WebGLShader;
+}
+
 /**
  * Creates and compiles a shader.
  *
@@ -41,7 +47,7 @@ function compileShader(gl: WebGLRenderingContext, shaderSource: string, shaderTy
  * @param fragmentShader A fragment shader.
  * @return A program.
  */
-function linkProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+function linkShaderProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
     // create a program.
     const program = gl.createProgram();
 
@@ -74,8 +80,10 @@ function linkProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragm
  * @param fsSource The GLSL source code for the fragment shader.
  * @return The program.
  */
-export function createShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
+export function createShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string): ShaderInfo {
     const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
     const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
-    return linkProgram(gl, vertexShader, fragmentShader);
+    const program = linkShaderProgram(gl, vertexShader, fragmentShader);
+
+    return { vertexShader, fragmentShader, program };
 }

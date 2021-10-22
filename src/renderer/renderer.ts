@@ -1,9 +1,12 @@
+import { Shader } from "../webgl";
 import { RenderingContextError } from "../errors";
+import { BaseShader } from '../shader';
 
 export interface RendererOptions {
     view?: HTMLCanvasElement;
     width?: number;
     height?: number;
+    baseShader?: Shader;
 }
 
 export class Renderer {
@@ -13,6 +16,8 @@ export class Renderer {
 
     public readonly width: number;
     public readonly height: number;
+
+    public readonly baseShader: Shader;
 
     constructor(options?: RendererOptions) {
         options = options || {};
@@ -31,5 +36,7 @@ export class Renderer {
 
         this.view.width = this.width;
         this.view.height = this.height;
+
+        this.baseShader = options.baseShader || new BaseShader(this);
     }
 }

@@ -1,12 +1,10 @@
 import { Dictionary } from "../util";
-import { AttributeSetters } from "./attribute-setters";
 import { BufferInfo } from "./buffer-info";
-import { UniformData, UniformSetters } from "./uniform-setters";
+import { Shader } from "./shader";
+import { UniformData } from "./uniform-setters";
 
 export interface ProgramInfo {
-    program: WebGLProgram;
-    uniformSetters: UniformSetters;
-    attributeSetters: AttributeSetters;
+    shader: Shader;
     uniformInfo: Dictionary<UniformData>;
     bufferInfo: BufferInfo;
 }
