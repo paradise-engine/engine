@@ -7,6 +7,7 @@ export interface RendererOptions {
     width?: number;
     height?: number;
     baseShader?: Shader;
+    antialias?: boolean;
 }
 
 export class Renderer {
@@ -23,7 +24,9 @@ export class Renderer {
         options = options || {};
 
         this.view = options.view || document.createElement('canvas');
-        const context = this.view.getContext('webgl');
+        const context = this.view.getContext('webgl', {
+            antialias: options.antialias || false
+        });
 
         if (!context) {
             throw new RenderingContextError('Could not get rendering context');
