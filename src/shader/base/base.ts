@@ -1,7 +1,7 @@
-import { BufferInfo, createBufferInfo, Shader } from "../webgl";
+import { BufferInfo, createBufferInfo, Shader } from "../../webgl";
 import vert from './base.vert';
 import frag from './base.frag';
-import type { Renderer } from "../renderer/renderer";
+import type { Renderer } from "../../renderer/renderer";
 
 const BASE_POSITION = [
     0, 0,
