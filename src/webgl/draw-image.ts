@@ -1,6 +1,41 @@
 import { ProgramInfo } from "./program-info";
 import { mat4 } from 'gl-matrix';
+import { Shader, ShaderState } from "./shader";
+import { Dictionary } from "../util";
+import { UniformData } from "./uniform-setters";
+import { InactiveShaderError } from "../errors";
 
+export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dictionary<UniformData>, shader: Shader, texture: WebGLTexture) {
+    if (shader.state === ShaderState.Inactive) {
+        throw new InactiveShaderError();
+    }
+
+    gl.useProgram(shader.program);
+
+    let uniforms: Dictionary<UniformData> = {
+        ...globalUniforms
+    };
+
+    if (shader.state === ShaderState.Dirty) {
+        uniforms = {
+            ...uniforms,
+            ...shader.uniforms
+        }
+    }
+
+    const identityMatrix = mat4.create();
+
+    uniforms = {
+        ...uniforms,
+        'u_matrix': identityMatrix,
+        'u_texture': texture
+    }
+
+    shader.updateUniforms(uniforms);
+    shader.setPristine();
+
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+}
 
 // Unlike images, textures do not have a width and height associated
 // with then so we'll pass in the width and height of the teture

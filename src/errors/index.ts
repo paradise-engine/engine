@@ -5,3 +5,4 @@ export * from './multiple-transforms';
 export * from './destroy-bound-transform';
 export * from './rendering-context';
 export * from './resource-loader';
+export * from './inactive-shader';
