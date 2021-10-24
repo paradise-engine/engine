@@ -77,13 +77,16 @@ import { UniformSetters, UniformData } from "./uniform-setters";
  */
 export function setUniforms(setters: UniformSetters, ...uniformDicts: Dictionary<UniformData>[]) {
     for (const uniformValues of uniformDicts) {
-        for (const name of Object.keys(uniformValues)) {
-            if (uniformValues.hasOwnProperty(name)) {
-                const setter = setters[name];
-                if (setter) {
-                    setter(uniformValues[name]);
+        if (uniformValues) {
+            for (const name of Object.keys(uniformValues)) {
+                if (uniformValues.hasOwnProperty(name)) {
+                    const setter = setters[name];
+                    if (setter) {
+                        setter(uniformValues[name]);
+                    }
                 }
             }
         }
+
     }
 }

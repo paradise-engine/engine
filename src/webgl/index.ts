@@ -3,7 +3,6 @@ export * from './attribute-setters';
 export * from './buffer-info';
 export * from './create-buffer-info';
 export * from './create-shader-program';
-export * from './program-info';
 export * from './resize-canvas';
 export * from './set-attributes';
 export * from './set-uniforms';

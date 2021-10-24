@@ -19,7 +19,7 @@ export enum ShaderState {
     Pristine = 2 // re-use & apply
 }
 
-export abstract class Shader {
+export class Shader {
 
     protected _gl: WebGLRenderingContext;
 
@@ -29,6 +29,7 @@ export abstract class Shader {
     protected _uniformSetters: UniformSetters;
     protected _state: ShaderState;
     protected _isActive: boolean;
+    protected _bufferInfo: BufferInfo;
 
     public get internals() {
         return this._internals;
@@ -46,9 +47,13 @@ export abstract class Shader {
         return this._isActive;
     }
 
+    public get bufferInfo() {
+        return this._bufferInfo;
+    }
+
     public readonly uniforms: Dictionary<UniformData>;
 
-    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
+    constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
         this._gl = gl;
 
         const { program, vertexShader, fragmentShader } = createShaderProgram(gl, vertexSource, fragmentSource);
@@ -66,8 +71,7 @@ export abstract class Shader {
         this._isActive = true;
 
         this.uniforms = createDictionaryProxy<UniformData>(this.onUniformUpdate);
-
-        this.updateAttributes(bufferInfo);
+        this._bufferInfo = bufferInfo;
     }
 
     public deactivate() {
@@ -88,12 +92,12 @@ export abstract class Shader {
         }
     }
 
-    public updateAttributes(data: BufferInfo) {
-        setAttributes(this._gl, this._attributeSetters, data);
+    public updateAttributes(data?: BufferInfo) {
+        setAttributes(this._gl, this._attributeSetters, data || this.bufferInfo);
     }
 
-    public updateUniforms(data: Dictionary<UniformData>) {
-        setUniforms(this._uniformSetters, data);
+    public updateUniforms(...data: Dictionary<UniformData>[]) {
+        setUniforms(this._uniformSetters, ...data);
     }
 
     protected onUniformUpdate() {

@@ -1,73 +1,109 @@
-import { ProgramInfo } from "./program-info";
 import { mat4 } from 'gl-matrix';
 import { Shader, ShaderState } from "./shader";
 import { Dictionary } from "../util";
 import { UniformData } from "./uniform-setters";
 import { InactiveShaderError } from "../errors";
 
-export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dictionary<UniformData>, shader: Shader, texture: WebGLTexture) {
+/**
+ * Tell WebGL to use the program of the specified shader and update shader uniforms
+ * @param gl 
+ * @param shader 
+ * @param globalUniforms 
+ */
+function prepareShader(gl: WebGLRenderingContext, shader: Shader, globalUniforms: Dictionary<UniformData>, localUniforms: Dictionary<UniformData>) {
     if (shader.state === ShaderState.Inactive) {
         throw new InactiveShaderError();
     }
 
     gl.useProgram(shader.program);
 
-    let uniforms: Dictionary<UniformData> = {
-        ...globalUniforms
-    };
+    let uniforms: Dictionary<UniformData>[] = [
+        globalUniforms
+    ];
 
     if (shader.state === ShaderState.Dirty) {
-        uniforms = {
-            ...uniforms,
-            ...shader.uniforms
-        }
+        uniforms.push(shader.uniforms);
     }
 
+    uniforms.push(localUniforms);
+
+    shader.updateAttributes();
+    shader.updateUniforms(...uniforms);
+    shader.setPristine();
+}
+
+export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dictionary<UniformData>, shader: Shader, texture: WebGLTexture) {
     const identityMatrix = mat4.create();
 
-    uniforms = {
-        ...uniforms,
+    const localUniforms = {
         'u_matrix': identityMatrix,
         'u_texture': texture
     }
 
-    shader.updateUniforms(uniforms);
-    shader.setPristine();
-
+    prepareShader(gl, shader, globalUniforms, localUniforms);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-// Unlike images, textures do not have a width and height associated
-// with then so we'll pass in the width and height of the teture
-export function drawImage(gl: WebGLRenderingContext, programInfo: ProgramInfo, tex: WebGLTexture, texWidth: number, texHeight: number, dstX: number, dstY: number) {
-    // Tell WebGL to use our shader program pair
-    gl.useProgram(programInfo.shader.program);
+export interface DrawImageOptions {
+    gl: WebGLRenderingContext;
+    shader: Shader;
+    globalUniforms: Dictionary<UniformData>;
+    texture: WebGLTexture;
+    textureWidth: number;
+    textureHeight: number;
+    destinationX: number;
+    destinationY: number;
+    destinationWidth?: number;
+    destinationHeight?: number;
+}
 
-    const shader = programInfo.shader;
-    shader.updateAttributes(programInfo.bufferInfo);
 
-    // this matrix will convert from pixels to clip space
+export function drawImage(options: DrawImageOptions) {
+    const gl = options.gl;
+
+    if (options.destinationWidth === undefined) {
+        options.destinationWidth = options.textureWidth;
+    }
+
+    if (options.destinationHeight === undefined) {
+        options.destinationHeight = options.textureHeight;
+    }
+
+
     const matrix = mat4.create();
     mat4.ortho(matrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
-    mat4.translate(matrix, matrix, [dstX, dstY, 0]);
-    mat4.scale(matrix, matrix, [texWidth, texHeight, 1]);
+    mat4.translate(matrix, matrix, [options.destinationX, options.destinationY, 0]);
+    mat4.scale(matrix, matrix, [options.destinationWidth, options.destinationHeight, 1]);
 
-    shader.updateUniforms({
+    prepareShader(gl, options.shader, options.globalUniforms, {
         'u_matrix': matrix,
-        'u_texture': tex
+        'u_texture': options.texture
     });
 
     // draw the quad (2 triangles, 6 vertices)
-    gl.drawArrays(gl.TRIANGLES, 0, programInfo.bufferInfo.numElements);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
 /*
+
+// Some demo code to test if rendering actually works
+
+import { createBufferInfo } from "./create-buffer-info";
+
 interface DrawInfo {
     x: number;
     y: number;
     dx: number;
     dy: number;
+    xScale: number;
+    yScale: number;
     textureInfo: TextureInfo;
+}
+
+interface TextureInfo {
+    texture: WebGLTexture,
+    width: number;
+    height: number;
 }
 
 export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[]) {
@@ -82,6 +118,8 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
             y: Math.random() * gl.canvas.height,
             dx: Math.random() > 0.5 ? -1 : 1,
             dy: Math.random() > 0.5 ? -1 : 1,
+            xScale: Math.random() * 0.25 + 0.25,
+            yScale: Math.random() * 0.25 + 0.25,
             textureInfo: textureInfos[Math.random() * textureInfos.length | 0]
         }
         drawInfos.push(drawInfo);
@@ -106,34 +144,107 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
         });
     }
 
+    const vs = `
+            attribute vec4 a_position;
+            attribute vec2 a_texcoord;
+
+            uniform mat4 u_matrix;
+
+            varying vec2 v_texcoord;
+
+            void main(void) {
+                gl_Position = u_matrix * a_position;
+                v_texcoord = a_texcoord;
+            }
+        `;
+
+    const fs = `
+            precision mediump float;
+
+            varying vec2 v_texcoord;
+
+            uniform sampler2D u_texture;
+
+            void main() {
+                gl_FragColor = texture2D(u_texture, v_texcoord);
+            }
+        `;
+
+    const BASE_POSITION = [
+        0, 0,
+        0, 1,
+        1, 0,
+        1, 0,
+        0, 1,
+        1, 1
+    ];
+
+    const BASE_TEXCOORD = [
+        0, 0,
+        0, 1,
+        1, 0,
+        1, 0,
+        0, 1,
+        1, 1
+    ];
+
+    const bufferInput = {
+        'a_position': {
+            numComponents: 2,
+            data: BASE_POSITION,
+            type: Float32Array
+        },
+        'a_texcoord': {
+            numComponents: 2,
+            data: BASE_TEXCOORD,
+            type: Float32Array
+        }
+    }
+
+    const shader = new Shader(gl, vs, fs, createBufferInfo(gl, bufferInput));
+
     function draw() {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const p = setup(gl);
-
-        const pi: ProgramInfo = {
-            program: p.program,
-            attributeSetters: p.attribSetters,
-            uniformSetters: p.uniformSetters,
-            bufferInfo: p.bufferInfo,
-            uniformInfo: {}
-        }
-
         drawInfos.forEach(function (drawInfo) {
-            drawImage(
+            const dstWidth = drawInfo.textureInfo.width * drawInfo.xScale;
+            const dstHeight = drawInfo.textureInfo.height * drawInfo.yScale;
+
+            drawImage({
                 gl,
-                pi,
-                drawInfo.textureInfo.texture,
-                drawInfo.textureInfo.width,
-                drawInfo.textureInfo.height,
-                drawInfo.x,
-                drawInfo.y
-            );
+                shader,
+                globalUniforms: {},
+                texture: drawInfo.textureInfo.texture,
+                textureWidth: drawInfo.textureInfo.width,
+                textureHeight: drawInfo.textureInfo.height,
+                destinationX: drawInfo.x,
+                destinationY: drawInfo.y,
+                destinationWidth: dstWidth,
+                destinationHeight: dstHeight
+            });
         });
     }
 
     let t = 0;
+    let lastRender = 0;
+
+    let fpsSamples: number[] = [];
+    const fpsContainer = document.getElementById('fps') as HTMLDivElement;
+
+    function sampleFps(fps: number) {
+        fpsSamples.push(fps);
+        if (fpsSamples.length === 10) {
+            const sum = fpsSamples.reduce((prev, curr) => prev + curr, 0);
+            let avg = sum / fpsSamples.length;
+            avg = parseInt(avg.toString(), 10);
+
+            fpsSamples.splice(0, fpsSamples.length);
+
+            fpsContainer.textContent = avg.toString();
+        }
+    }
+
     function render(time: number) {
         const now = time * 0.001;
         const deltaTime = Math.min(0.1, now - t);
@@ -141,6 +252,13 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
 
         update(deltaTime);
         draw();
+
+        if (lastRender !== 0) {
+            const msSinceLastRender = time - lastRender;
+            const fps = 1000 / msSinceLastRender;
+            sampleFps(fps);
+        }
+        lastRender = time;
 
         requestAnimationFrame(render);
     }
