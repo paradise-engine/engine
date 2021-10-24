@@ -1,4 +1,4 @@
-import { Dictionary } from "../util";
+import { createDictionaryProxy, Dictionary } from "../util";
 import { AttributeSetters, createAttributeSetters } from "./attribute-setters";
 import { BufferInfo } from "./buffer-info";
 import { createShaderProgram } from "./create-shader-program";
@@ -13,6 +13,12 @@ export interface ShaderInternals {
     fragmentShader: WebGLShader;
 }
 
+export enum ShaderState {
+    Inactive = 0, // don't apply
+    Dirty = 1, // re-set values & apply
+    Pristine = 2 // re-use & apply
+}
+
 export abstract class Shader {
 
     protected _gl: WebGLRenderingContext;
@@ -21,6 +27,8 @@ export abstract class Shader {
     protected _program: WebGLProgram;
     protected _attributeSetters: AttributeSetters;
     protected _uniformSetters: UniformSetters;
+    protected _state: ShaderState;
+    protected _isActive: boolean;
 
     public get internals() {
         return this._internals;
@@ -30,8 +38,17 @@ export abstract class Shader {
         return this._program;
     }
 
-    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string) {
+    public get state() {
+        return this._state;
+    }
 
+    public get isActive() {
+        return this._isActive;
+    }
+
+    public readonly uniforms: Dictionary<UniformData>;
+
+    protected constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
         this._gl = gl;
 
         const { program, vertexShader, fragmentShader } = createShaderProgram(gl, vertexSource, fragmentSource);
@@ -45,6 +62,30 @@ export abstract class Shader {
 
         this._attributeSetters = createAttributeSetters(gl, program);
         this._uniformSetters = createUniformSetters(gl, program);
+        this._state = ShaderState.Dirty;
+        this._isActive = true;
+
+        this.uniforms = createDictionaryProxy<UniformData>(this.onUniformUpdate);
+
+        this.updateAttributes(bufferInfo);
+    }
+
+    public deactivate() {
+        this._isActive = false;
+        this._state = ShaderState.Inactive;
+    }
+
+    public activate() {
+        if (!this._isActive) {
+            this._isActive = true;
+            this._state = ShaderState.Dirty;
+        }
+    }
+
+    public setPristine() {
+        if (this._isActive) {
+            this._state = ShaderState.Pristine;
+        }
     }
 
     public updateAttributes(data: BufferInfo) {
@@ -53,5 +94,11 @@ export abstract class Shader {
 
     public updateUniforms(data: Dictionary<UniformData>) {
         setUniforms(this._uniformSetters, data);
+    }
+
+    protected onUniformUpdate() {
+        if (this._isActive) {
+            this._state = ShaderState.Dirty;
+        }
     }
 }
