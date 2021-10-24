@@ -34,6 +34,18 @@ export function createTextureFromImage(gl: WebGLRenderingContext, image: TexImag
     return texture;
 }
 
+export function createGeneralPurposeTexture(gl: WebGLRenderingContext) {
+    const texture = createTextureOrThrow(gl);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    return texture
+}
+
 export function initTextureFromVideo(gl: WebGLRenderingContext, video: TexImageSource): GLVideoTextureInfo {
 
     const texture = createTextureOrThrow(gl);
@@ -70,6 +82,36 @@ export function initTextureFromVideo(gl: WebGLRenderingContext, video: TexImageS
     }
 
     return { update, texture };
+}
+
+export function createFramebuffer(gl: WebGLRenderingContext) {
+    return createFramebufferOrThrow(gl);
+}
+
+export function resizeTexture(gl: WebGLRenderingContext, texture: WebGLTexture, width: number, height: number) {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+}
+
+export function attachTextureToFramebuffer(gl: WebGLRenderingContext, texture: WebGLTexture, fbo: WebGLFramebuffer) {
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+}
+
+export function setFramebuffer(gl: WebGLRenderingContext, fbo: WebGLFramebuffer | null, width: number, height: number) {
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.viewport(0, 0, width, height);
+}
+
+function createFramebufferOrThrow(gl: WebGLRenderingContext) {
+    const fbo = gl.createFramebuffer();
+
+    if (!fbo) {
+        throw new RenderingContextError('Could not create WebGLFramebuffer');
+    }
+
+    return fbo;
 }
 
 function createTextureOrThrow(gl: WebGLRenderingContext) {
