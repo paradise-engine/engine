@@ -45,16 +45,63 @@ export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dic
 }
 
 export interface DrawImageOptions {
+    /**
+     * The WebGL rendering context
+     */
     gl: WebGLRenderingContext;
+    /**
+     * The Shader to use for rendering
+     */
     shader: Shader;
+    /**
+     * Global uniforms to pass into shader program
+     */
     globalUniforms: Dictionary<UniformData>;
+    /**
+     * The texture to receive color information from
+     */
     texture: WebGLTexture;
+    /**
+     * The original width of the texture
+     */
     textureWidth: number;
+    /**
+     * The original height of the texture
+     */
     textureHeight: number;
+    /**
+     * The x-location of the texture section to render
+     */
+    sourceX?: number;
+    /**
+     * The y-location of the texture section to render
+     */
+    sourceY?: number;
+    /**
+     * The width of the texture section to render
+     */
+    sourceWidth?: number;
+    /**
+    * The height of the texture section to render
+    */
+    sourceHeight?: number;
+    /**
+     * The destination x-location on the canvas in pixels
+     */
     destinationX: number;
+    /**
+     * The destination y-location on the canvas in pixels
+     */
     destinationY: number;
+    /**
+     * The destination width to render in pixels. Defaults to `textureWidth`
+     */
     destinationWidth?: number;
+    /**
+     * The destination height to render in pixels. Defaults to `textureHeight`
+     */
     destinationHeight?: number;
+
 }
 
 
@@ -69,14 +116,36 @@ export function drawImage(options: DrawImageOptions) {
         options.destinationHeight = options.textureHeight;
     }
 
+    if (options.sourceX === undefined) {
+        options.sourceX = 0;
+    }
+
+    if (options.sourceY === undefined) {
+        options.sourceY = 0;
+    }
+
+    if (options.sourceWidth === undefined) {
+        options.sourceWidth = options.textureWidth;
+    }
+
+
+    if (options.sourceHeight === undefined) {
+        options.sourceHeight = options.textureHeight;
+    }
+
 
     const matrix = mat4.create();
     mat4.ortho(matrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
     mat4.translate(matrix, matrix, [options.destinationX, options.destinationY, 0]);
     mat4.scale(matrix, matrix, [options.destinationWidth, options.destinationHeight, 1]);
 
+    const texMatrix = mat4.create();
+    mat4.fromTranslation(texMatrix, [options.sourceX / options.textureWidth, options.sourceY / options.textureHeight, 0]);
+    mat4.scale(texMatrix, texMatrix, [options.sourceWidth / options.textureWidth, options.sourceHeight / options.textureHeight, 1]);
+
     prepareShader(gl, options.shader, options.globalUniforms, {
         'u_matrix': matrix,
+        'u_textureMatrix': texMatrix,
         'u_texture': options.texture
     });
 
@@ -97,6 +166,10 @@ interface DrawInfo {
     dy: number;
     xScale: number;
     yScale: number;
+    offX: number;
+    offY: number;
+    width: number;
+    height: number;
     textureInfo: TextureInfo;
 }
 
@@ -120,8 +193,15 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
             dy: Math.random() > 0.5 ? -1 : 1,
             xScale: Math.random() * 0.25 + 0.25,
             yScale: Math.random() * 0.25 + 0.25,
-            textureInfo: textureInfos[Math.random() * textureInfos.length | 0]
+            offX: Math.random() * 0.75,
+            offY: Math.random() * 0.75,
+            textureInfo: textureInfos[Math.random() * textureInfos.length | 0],
+            width: 0,
+            height: 0
         }
+        drawInfo.width = Math.random() * (1 - drawInfo.offX);
+        drawInfo.height = Math.random() * (1 - drawInfo.offY);
+
         drawInfos.push(drawInfo);
     }
 
@@ -145,17 +225,18 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
     }
 
     const vs = `
-            attribute vec4 a_position;
-            attribute vec2 a_texcoord;
+        attribute vec4 a_position;
+        attribute vec2 a_texcoord;
 
-            uniform mat4 u_matrix;
+        uniform mat4 u_matrix;
+        uniform mat4 u_textureMatrix;
 
-            varying vec2 v_texcoord;
+        varying vec2 v_texcoord;
 
-            void main(void) {
-                gl_Position = u_matrix * a_position;
-                v_texcoord = a_texcoord;
-            }
+        void main(void) {
+            gl_Position = u_matrix * a_position;
+            v_texcoord = (u_textureMatrix * vec4(a_texcoord, 0, 1)).xy;
+        }
         `;
 
     const fs = `
@@ -211,6 +292,11 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
             const dstWidth = drawInfo.textureInfo.width * drawInfo.xScale;
             const dstHeight = drawInfo.textureInfo.height * drawInfo.yScale;
 
+            var srcX = drawInfo.textureInfo.width * drawInfo.offX;
+            var srcY = drawInfo.textureInfo.height * drawInfo.offY;
+            var srcWidth = drawInfo.textureInfo.width * drawInfo.width;
+            var srcHeight = drawInfo.textureInfo.height * drawInfo.height;
+
             drawImage({
                 gl,
                 shader,
@@ -221,7 +307,11 @@ export function drawRandom(gl: WebGLRenderingContext, textureInfos: TextureInfo[
                 destinationX: drawInfo.x,
                 destinationY: drawInfo.y,
                 destinationWidth: dstWidth,
-                destinationHeight: dstHeight
+                destinationHeight: dstHeight,
+                sourceX: srcX,
+                sourceY: srcY,
+                sourceWidth: srcWidth,
+                sourceHeight: srcHeight
             });
         });
     }
