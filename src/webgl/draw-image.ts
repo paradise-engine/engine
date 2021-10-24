@@ -101,7 +101,18 @@ export interface DrawImageOptions {
      * The destination height to render in pixels. Defaults to `textureHeight`
      */
     destinationHeight?: number;
-
+    /**
+     * The angle to rotate by in radians (clockwise)
+     */
+    rotationRadian?: number;
+    /**
+     * The x-location of the rotation center, with `0` being the left edge of the rect
+     */
+    rotationOffsetX?: number;
+    /**
+     * The y-location of the rotation center, with `0` being the top edge of the rect
+     */
+    rotationOffsetY?: number;
 }
 
 
@@ -128,15 +139,34 @@ export function drawImage(options: DrawImageOptions) {
         options.sourceWidth = options.textureWidth;
     }
 
-
     if (options.sourceHeight === undefined) {
         options.sourceHeight = options.textureHeight;
     }
 
+    if (options.rotationRadian === undefined) {
+        options.rotationRadian = 0;
+    }
+
+    if (options.rotationOffsetX === undefined) {
+        options.rotationOffsetX = 0;
+    }
+
+    if (options.rotationOffsetY === undefined) {
+        options.rotationOffsetY = 0;
+    }
+
+    const scaleX = options.sourceWidth / options.destinationWidth;
+    const scaleY = options.sourceHeight / options.destinationHeight;
+
+    const rotationOffsetMatrix = mat4.create();
+    mat4.fromRotation(rotationOffsetMatrix, options.rotationRadian, [0, 0, 1]);
+    mat4.translate(rotationOffsetMatrix, rotationOffsetMatrix, [-options.rotationOffsetX / scaleX, -options.rotationOffsetY / scaleY, 0]);
 
     const matrix = mat4.create();
     mat4.ortho(matrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
     mat4.translate(matrix, matrix, [options.destinationX, options.destinationY, 0]);
+    mat4.rotate(matrix, matrix, options.rotationRadian, [0, 0, 1]);
+    mat4.multiply(matrix, matrix, rotationOffsetMatrix);
     mat4.scale(matrix, matrix, [options.destinationWidth, options.destinationHeight, 1]);
 
     const texMatrix = mat4.create();
