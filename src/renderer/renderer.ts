@@ -1,4 +1,4 @@
-import { Shader } from "../webgl";
+import { resetViewport, Shader } from "../webgl";
 import { RenderingContextError } from "../errors";
 import { DefaultShader } from '../shader';
 import { ShaderPipeline } from "./shader-pipeline";
@@ -43,6 +43,8 @@ export class Renderer {
 
         this.view.width = this.width;
         this.view.height = this.height;
+
+        resetViewport(context);
 
         this.globalShaderData = new GlobalShaderData(this);
         this.baseShader = options.baseShader || new DefaultShader(this);

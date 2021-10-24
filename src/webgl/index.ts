@@ -13,3 +13,4 @@ export * from './create-texture';
 export * from './texture-info';
 export * from './shader';
 export * from './draw-image';
+export * from './reset-viewport';
