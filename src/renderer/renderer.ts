@@ -49,5 +49,7 @@ export class Renderer {
         this.globalShaderData = new GlobalShaderData(this);
         this.baseShader = options.baseShader || new DefaultShader(this);
         this.shaderPipeline = new ShaderPipeline(this);
+
+        this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
     }
 }
