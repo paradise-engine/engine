@@ -1,23 +1,22 @@
-import { IRenderable } from "./i-renderable";
+import { Rotation, Vector } from "../core";
+import { RenderablePrimitive } from "./renderable-primitive";
 import { Renderer } from "./renderer";
 import { Texture } from "./texture";
 
-export class Sprite implements IRenderable {
+export class Sprite extends RenderablePrimitive {
+    public texture: Texture;
 
-    private _texture?: Texture;
-
-    public get texture() {
-        return this._texture;
-    }
-
-    constructor(texture?: Texture) {
-        this._texture = texture;
+    constructor(texture: Texture) {
+        super(
+            new Vector(0, 0),
+            Rotation.fromDegrees(0),
+            new Vector(1, 1)
+        );
+        this.texture = texture;
     }
 
     render(renderer: Renderer) {
-        if (!this.texture) {
-            throw new Error('Cannot render: No texture');
-        }
-    }
+        const textureToRender = renderer.shaderPipeline.applyShaders(this.texture.baseTexture, this.getShaders());
 
+    }
 }
