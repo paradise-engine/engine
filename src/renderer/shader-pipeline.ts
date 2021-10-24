@@ -7,24 +7,17 @@ import type { Renderer } from "./renderer";
 export class ShaderPipeline {
 
     private _renderer: Renderer;
-    private _textures: UniformTuple<WebGLTexture>;
-    private _fbos: UniformTuple<WebGLFramebuffer>;
 
     constructor(renderer: Renderer) {
         this._renderer = renderer;
+    }
 
-        this._textures = [
-            createGeneralPurposeTexture(this._renderer.context),
-            createGeneralPurposeTexture(this._renderer.context)
-        ];
+    private _createAndResizeTexture(width: number, height: number) {
+        const gl = this._renderer.context;
+        const tex = createGeneralPurposeTexture(gl);
 
-        this._fbos = [
-            createFramebuffer(this._renderer.context),
-            createFramebuffer(this._renderer.context)
-        ]
-
-        attachTextureToFramebuffer(this._renderer.context, this._textures[0], this._fbos[0]);
-        attachTextureToFramebuffer(this._renderer.context, this._textures[1], this._fbos[1]);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        return tex;
     }
 
     public applyShaders(texture: BaseTexture, shaders: Shader[]) {
@@ -33,6 +26,19 @@ export class ShaderPipeline {
         if (shaders.length === 0) {
             return texture.glTexture;
         }
+
+        const textures = [];
+        const fbos = [];
+
+        for (let i = 0; i < 2; i++) {
+            const tex = this._createAndResizeTexture(texture.width, texture.height);
+            const fbo = createFramebuffer(this._renderer.context);
+            attachTextureToFramebuffer(this._renderer.context, tex, fbo);
+
+            textures.push(tex);
+            fbos.push(fbo);
+        }
+
         const outputTexture = createGeneralPurposeTexture(this._renderer.context);
         const outputFbo = createFramebuffer(this._renderer.context);
         attachTextureToFramebuffer(this._renderer.context, outputTexture, outputFbo);
@@ -43,17 +49,17 @@ export class ShaderPipeline {
         for (let i = 0; i < shaders.length; i++) {
             // get source and target
             const sourceTexture = nextSource;
-            const targetFramebuffer = (i === shaders.length - 1) ? outputFbo : this._fbos[nextTargetIndex];
+            const targetFramebuffer = (i === shaders.length - 1) ? outputFbo : fbos[nextTargetIndex];
 
             // apply shader
             this._setFramebuffer(targetFramebuffer, texture.width, texture.height);
             drawToFramebuffer(this._renderer.context, this._renderer.globalShaderData.uniforms, shaders[i], sourceTexture);
 
             // set next source and target
-            if (nextSource !== this._textures[0]) {
-                nextSource = this._textures[0];
+            if (nextSource !== textures[0]) {
+                nextSource = textures[0];
             } else {
-                nextSource = this._textures[1];
+                nextSource = textures[1];
             }
 
             nextTargetIndex = nextTargetIndex === 0 ? 1 : 0;
