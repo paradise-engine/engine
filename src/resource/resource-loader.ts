@@ -72,7 +72,7 @@ export class ResourceLoader {
     }
 
     private async loadSingle(task: ResourceLoadTask): Promise<Resource> {
-        const url = new URL(task.url);
+        const url = new URL(task.url, window.location.origin);
         const extension = '.' + url.pathname.split('.').pop();
 
         const mimeType = MimeTypeExtensions[extension];
