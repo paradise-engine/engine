@@ -1,18 +1,20 @@
-import { ResourceType } from "../resource";
 import { createTextureFromImage, initTextureFromVideo, TextureInfo } from "../webgl";
 
-export type BaseTextureType = ResourceType.Image | ResourceType.Video;
+export enum BaseTextureType {
+    Image = 'image',
+    Video = 'video'
+}
 
 export class BaseTexture {
 
     public static createVideoTexture(gl: WebGLRenderingContext, video: HTMLVideoElement) {
         const { texture, update } = initTextureFromVideo(gl, video);
-        return new BaseTexture(texture, ResourceType.Video, video, update);
+        return new BaseTexture(texture, BaseTextureType.Video, video, update);
     }
 
     public static createImageTexture(gl: WebGLRenderingContext, image: HTMLImageElement) {
         const texture = createTextureFromImage(gl, image);
-        return new BaseTexture(texture, ResourceType.Image, image);
+        return new BaseTexture(texture, BaseTextureType.Image, image);
     }
 
     private readonly _updateFn?: () => void;
