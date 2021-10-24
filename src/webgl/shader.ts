@@ -53,6 +53,12 @@ export class Shader {
 
     public readonly uniforms: Dictionary<UniformData>;
 
+    protected onUniformUpdate = () => {
+        if (this._isActive) {
+            this._state = ShaderState.Dirty;
+        }
+    }
+
     constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
         this._gl = gl;
 
@@ -98,11 +104,5 @@ export class Shader {
 
     public updateUniforms(...data: Dictionary<UniformData>[]) {
         setUniforms(this._uniformSetters, ...data);
-    }
-
-    protected onUniformUpdate() {
-        if (this._isActive) {
-            this._state = ShaderState.Dirty;
-        }
     }
 }

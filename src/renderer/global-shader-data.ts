@@ -44,6 +44,12 @@ export type GlobalUniformsChangeHandler = (name: string, value: UniformData) => 
 export class GlobalShaderData {
     private _renderer: Renderer;
 
+    private _onUniformsUpdate = (key: string, value: UniformData) => {
+        for (const listener of this._uniformUpdateListeners) {
+            listener(key, value);
+        }
+    }
+
     private _uniformUpdateListeners: GlobalUniformsChangeHandler[] = [];
     private _uniforms: Dictionary<UniformData> = createDictionaryProxy(this._onUniformsUpdate, initialUniforms);
     private _bufferInfo: BufferInfo;
@@ -51,12 +57,6 @@ export class GlobalShaderData {
     constructor(renderer: Renderer) {
         this._renderer = renderer;
         this._bufferInfo = createBufferInfo(this._renderer.context, globalAttributes);
-    }
-
-    private _onUniformsUpdate(key: string, value: UniformData) {
-        for (const listener of this._uniformUpdateListeners) {
-            listener(key, value);
-        }
     }
 
     public addUpdateListener(listener: GlobalUniformsChangeHandler) {
