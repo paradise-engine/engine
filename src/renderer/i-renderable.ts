@@ -1,4 +1,4 @@
-import { Renderer } from "./renderer";
+import type { Renderer } from "./renderer";
 
 export interface IRenderable {
     render(renderer: Renderer): void;
