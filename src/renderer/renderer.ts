@@ -1,5 +1,5 @@
 import { resetViewport, Shader } from "./webgl";
-import { RenderingContextError } from "../errors";
+import { RendererRanOutOfContainersError, RenderingContextError } from "../errors";
 import { DefaultShader } from './shader';
 import { ShaderPipeline } from "./shader-pipeline";
 import { GlobalShaderData } from "./global-shader-data";
@@ -12,7 +12,50 @@ export interface RendererOptions {
     antialias?: boolean;
 }
 
+interface RenderQueueItem {
+    worldSpacePosition: [number, number];
+    items?: RenderQueueItem[],
+    renderFn?: () => void;
+}
+
+type RenderQueue = RenderQueueItem[];
+
+function sortQueueItems(queue: RenderQueue) {
+    for (const item of queue) {
+        if (item.items) {
+            sortQueueItems(item.items);
+        }
+    }
+
+    return queue.sort((a, b) => {
+        const a_y = a.worldSpacePosition[1];
+        const b_y = b.worldSpacePosition[1];
+        if (a_y === b_y) {
+            return 0;
+        }
+        if (a_y < b_y) {
+            return -1;
+        }
+        return 1;
+    });
+}
+
+function drawQueueItem(item: RenderQueueItem) {
+    if (item.items) {
+        for (const child of item.items) {
+            drawQueueItem(child);
+        }
+    }
+
+    if (item.renderFn) {
+        item.renderFn();
+    }
+}
+
 export class Renderer {
+
+    private _renderQueue: RenderQueue = [];
+    private _activeQueueStack: RenderQueue[] = [];
 
     public readonly view: HTMLCanvasElement;
     public readonly context: WebGLRenderingContext;
@@ -51,5 +94,44 @@ export class Renderer {
         this.shaderPipeline = new ShaderPipeline(this);
 
         this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
+
+        this._activeQueueStack.push(this._renderQueue);
+    }
+
+    public clearRenderQueue() {
+        this._renderQueue = [];
+        this._activeQueueStack = [];
+        this._activeQueueStack.push(this._renderQueue);
+    }
+
+    public enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void) {
+        const activeQueue = this._activeQueueStack[this._activeQueueStack.length - 1];
+        activeQueue.push({ worldSpacePosition, renderFn });
+    }
+
+    public openContainer(worldSpacePosition: [number, number]) {
+        const container: RenderQueue = [];
+        const activeQueue = this._activeQueueStack[this._activeQueueStack.length - 1];
+        activeQueue.push({ worldSpacePosition, items: container });
+
+        this._activeQueueStack.push(container);
+    }
+
+    public closeContainer() {
+        if (this._activeQueueStack.length === 1) {
+            throw new RendererRanOutOfContainersError();
+        }
+        this._activeQueueStack.pop();
+    }
+
+    /**
+     * Draws every enqueued item
+     */
+    public drawFrame() {
+        sortQueueItems(this._renderQueue);
+        for (const item of this._renderQueue) {
+            drawQueueItem(item);
+        }
+        this.clearRenderQueue();
     }
 }

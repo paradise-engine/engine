@@ -41,6 +41,8 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
 
         const containerShaderCount = this._shaders.length;
 
+        renderer.openContainer(this.worldSpacePosition);
+
         for (const child of this._children) {
             const childShaderCount = child.getShaders().length;
 
@@ -56,6 +58,8 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
                 shaderCount--;
             }
         }
+
+        renderer.closeContainer();
     }
 
     public addChild(child: Container | RenderablePrimitive) {

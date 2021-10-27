@@ -34,6 +34,8 @@ export class Sprite extends RenderablePrimitive {
             rotationRadian: this.rotationZ
         };
 
-        drawImage(drawOptions);
+        renderer.enqueueRenderable([this.x, this.y], () => {
+            drawImage(drawOptions);
+        });
     }
 }

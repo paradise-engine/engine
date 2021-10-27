@@ -9,3 +9,4 @@ export * from './inactive-shader';
 export * from './duplicate-game-object';
 export * from './hierarchy-inconsistency';
 export * from './object-not-found';
+export * from './renderer-ran-out-of-containers';
