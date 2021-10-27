@@ -1,3 +1,4 @@
+import { mat4, quat, vec3 } from "gl-matrix";
 import { DestroyBoundTransformError } from "../errors";
 import { Component } from "./component";
 import { Rotation } from "./rotation";
@@ -142,6 +143,59 @@ export class Transform extends Component {
      */
     public rotate(delta: Rotation) {
         this._localRotation = Rotation.add(this._localRotation, delta);
+    }
+
+    /**
+     * Rotates the transform around an anchor point relative to the transform itself
+     * @param delta The Rotation to rotate by
+     * @param anchor The anchor point, with (0,0) being the top-left corner of the transform (default)
+     */
+    public rotateAround(delta: Rotation, anchor: Vector) {
+        const rotationOffsetMatrix = mat4.create();
+        mat4.fromRotation(rotationOffsetMatrix, delta.radian, [0, 0, 1]);
+        mat4.translate(rotationOffsetMatrix, rotationOffsetMatrix, [-anchor.x, -anchor.y, 0]);
+
+        const matrix = mat4.create();
+        mat4.translate(matrix, matrix, [this._localPosition.x, this.localPosition.y, 0]);
+        mat4.rotateZ(matrix, matrix, this._localRotation.radian);
+        mat4.rotateZ(matrix, matrix, delta.radian);
+        mat4.multiply(matrix, matrix, rotationOffsetMatrix);
+        mat4.scale(matrix, matrix, [this._localScale.x, this._localScale.y, 1]);
+
+        const translation = vec3.create();
+        const rotation = quat.create();
+        const scaling = vec3.create();
+        mat4.getTranslation(translation, matrix);
+        mat4.getRotation(rotation, matrix);
+        mat4.getScaling(scaling, matrix);
+
+        this._localPosition = new Vector(translation[0], translation[1]);
+        this._localRotation = Rotation.fromRadian(rotation[2]);
+        this._localScale = new Vector(scaling[0], scaling[1]);
+    }
+
+    /**
+     * Returns the local matrix of the Transform
+     */
+    public getLocalMatrix() {
+        const matrix = mat4.create();
+        mat4.translate(matrix, matrix, [this._localPosition.x, this.localPosition.y, 0]);
+        mat4.rotateZ(matrix, matrix, this._localRotation.radian);
+        mat4.scale(matrix, matrix, [this._localScale.x, this._localScale.y, 1]);
+        return matrix;
+    }
+
+    /**
+     * Returns the global matrix of the Transform
+     */
+    public getGlobalMatrix() {
+        const matrix = this.getLocalMatrix();
+        if (this._parent) {
+            const parentMatrix = this._parent.getGlobalMatrix();
+            mat4.multiply(matrix, parentMatrix, matrix);
+        }
+
+        return matrix;
     }
 
     public override destroy() {
