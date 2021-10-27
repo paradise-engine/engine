@@ -1,11 +1,9 @@
-import { Shader } from "./webgl";
 import { IRenderable } from "./i-renderable";
 import { Renderer } from "./renderer";
 import { mat4, quat, vec3 } from "gl-matrix";
+import { ShaderTarget } from "./shader-target";
 
-export abstract class RenderablePrimitive implements IRenderable {
-    protected _shaders: Shader[] = [];
-
+export abstract class RenderablePrimitive extends ShaderTarget implements IRenderable {
     private _globalMatrix: mat4;
     private _translation: vec3 = vec3.create();
     private _rotation: quat = quat.create();
@@ -41,6 +39,7 @@ export abstract class RenderablePrimitive implements IRenderable {
     }
 
     constructor(globalMatrix: mat4) {
+        super();
         this._globalMatrix = globalMatrix;
     }
 
@@ -51,16 +50,4 @@ export abstract class RenderablePrimitive implements IRenderable {
     }
 
     public abstract render(renderer: Renderer): void;
-
-    public getShaders() {
-        return this._shaders.slice();
-    }
-
-    public addShader(shader: Shader) {
-        this._shaders.push(shader);
-    }
-
-    public removeShaderAt(index: number) {
-        this._shaders.splice(index, 1);
-    }
 }
