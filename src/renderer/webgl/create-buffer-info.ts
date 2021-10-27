@@ -1,6 +1,6 @@
 import { AttributeData } from "./attribute-data";
-import { RenderingContextError } from "../errors";
-import { Dictionary } from "../util";
+import { RenderingContextError } from "../../errors";
+import { Dictionary } from "../../util";
 import { BufferInfo } from "./buffer-info";
 import { TypedArrayConstructor, TypedArray } from "./typed-array";
 import { glEnumToString } from "./gl-enum-to-string";

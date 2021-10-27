@@ -1,6 +1,6 @@
-import { resetViewport, Shader } from "../webgl";
+import { resetViewport, Shader } from "./webgl";
 import { RenderingContextError } from "../errors";
-import { DefaultShader } from '../shader';
+import { DefaultShader } from './shader';
 import { ShaderPipeline } from "./shader-pipeline";
 import { GlobalShaderData } from "./global-shader-data";
 

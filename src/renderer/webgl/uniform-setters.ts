@@ -1,5 +1,5 @@
-import { RenderingContextError } from "../errors";
-import { Dictionary } from "../util";
+import { RenderingContextError } from "../../errors";
+import { Dictionary } from "../../util";
 import { glEnumToString } from "./gl-enum-to-string";
 
 export type UniformData = number |

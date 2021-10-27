@@ -1,5 +1,5 @@
 import { Dictionary, createDictionaryProxy } from "../util";
-import { BufferInfo, BufferInput, createBufferInfo, UniformData } from "../webgl";
+import { BufferInfo, BufferInput, createBufferInfo, UniformData } from "./webgl";
 import type { Renderer } from "./renderer";
 
 const initialUniforms: Dictionary<UniformData> = {

@@ -1,4 +1,4 @@
-import { Shader } from "../webgl";
+import { Shader } from "./webgl";
 import { IRenderable } from "./i-renderable";
 import { Renderer } from "./renderer";
 import { mat4, quat, vec3 } from "gl-matrix";

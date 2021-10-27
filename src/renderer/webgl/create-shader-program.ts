@@ -1,5 +1,5 @@
 import { glEnumToString } from "./gl-enum-to-string";
-import { RenderingContextError } from "../errors";
+import { RenderingContextError } from "../../errors";
 
 export interface ShaderInfo {
     program: WebGLProgram;

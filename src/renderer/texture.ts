@@ -1,5 +1,5 @@
 import { Rect } from "../core";
-import { TextureInfo } from "../webgl";
+import { TextureInfo } from "./webgl";
 import { BaseTexture } from "./base-texture";
 
 export class Texture {

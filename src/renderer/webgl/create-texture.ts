@@ -1,4 +1,4 @@
-import { RenderingContextError } from "../errors";
+import { RenderingContextError } from "../../errors";
 
 export interface GLVideoTextureInfo {
     update(): void;

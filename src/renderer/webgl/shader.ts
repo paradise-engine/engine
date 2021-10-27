@@ -1,4 +1,4 @@
-import { createDictionaryProxy, Dictionary } from "../util";
+import { createDictionaryProxy, Dictionary } from "../../util";
 import { AttributeSetters, createAttributeSetters } from "./attribute-setters";
 import { BufferInfo } from "./buffer-info";
 import { createShaderProgram } from "./create-shader-program";

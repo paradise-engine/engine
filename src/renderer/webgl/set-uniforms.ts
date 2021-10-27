@@ -1,4 +1,4 @@
-import { Dictionary } from "..";
+import { Dictionary } from "../../util";
 import { UniformSetters, UniformData } from "./uniform-setters";
 
 /**

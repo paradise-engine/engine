@@ -1,5 +1,4 @@
-import { UniformTuple } from "../util";
-import { attachTextureToFramebuffer, createFramebuffer, createGeneralPurposeTexture, drawToFramebuffer, setFramebuffer, Shader } from "../webgl";
+import { attachTextureToFramebuffer, createFramebuffer, createGeneralPurposeTexture, drawToFramebuffer, setFramebuffer, Shader } from "./webgl";
 import { BaseTexture } from "./base-texture";
 import type { Renderer } from "./renderer";
 

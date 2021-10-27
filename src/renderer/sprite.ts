@@ -1,5 +1,5 @@
 import { mat4 } from "gl-matrix";
-import { drawImage, DrawImageOptions } from "../webgl";
+import { drawImage, DrawImageOptions } from "./webgl";
 import { RenderablePrimitive } from "./renderable-primitive";
 import { Renderer } from "./renderer";
 import { Texture } from "./texture";

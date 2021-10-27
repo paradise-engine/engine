@@ -1,4 +1,4 @@
-import { createTextureFromImage, initTextureFromVideo, TextureInfo } from "../webgl";
+import { createTextureFromImage, initTextureFromVideo, TextureInfo } from "./webgl";
 
 export enum BaseTextureType {
     Image = 'image',
