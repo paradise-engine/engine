@@ -6,3 +6,6 @@ export * from './destroy-bound-transform';
 export * from './rendering-context';
 export * from './resource-loader';
 export * from './inactive-shader';
+export * from './duplicate-game-object';
+export * from './hierarchy-inconsistency';
+export * from './object-not-found';
