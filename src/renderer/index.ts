@@ -7,3 +7,5 @@ export * from './renderable-primitive';
 export * from './global-shader-data';
 export * from './shader-pipeline';
 export * from './shader-target';
+export * from './container';
+export * from './i-positionable';

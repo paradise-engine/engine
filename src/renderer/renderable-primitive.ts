@@ -2,15 +2,16 @@ import { IRenderable } from "./i-renderable";
 import { Renderer } from "./renderer";
 import { mat4, quat, vec3 } from "gl-matrix";
 import { ShaderTarget } from "./shader-target";
+import { IPositionable } from "./i-positionable";
 
-export abstract class RenderablePrimitive extends ShaderTarget implements IRenderable {
+export abstract class RenderablePrimitive extends ShaderTarget implements IRenderable, IPositionable {
     private _globalMatrix: mat4;
     private _translation: vec3 = vec3.create();
     private _rotation: quat = quat.create();
     private _scaling: vec3 = vec3.create();
 
     public get globalMatrix() {
-        return this._globalMatrix;
+        return mat4.clone(this._globalMatrix);
     }
 
     public set globalMatrix(value: mat4) {
@@ -36,6 +37,14 @@ export abstract class RenderablePrimitive extends ShaderTarget implements IRende
 
     public get rotationZ() {
         return this._rotation[2];
+    }
+
+    public get worldSpacePosition() {
+        const pos: [number, number] = [
+            this._translation[0],
+            this._translation[1]
+        ];
+        return pos;
     }
 
     constructor(globalMatrix: mat4) {
