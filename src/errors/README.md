@@ -14,6 +14,7 @@
 | [RenderingContextError]           | A low-level WebGL error occurred                                                                 |
 | [ResourceLoaderError]             | An error ocurred while loading a resource                                                        |
 | [RuntimeInconsistencyError]       | A fatal engine error ocurred during runtime, usually because external code misused internal APIs |
+| [UnknownDeserializableError]      | Attempted to deserialize object whose deserializer class has not been registered                 |
 
 [paradiseerror]: ./paradise-error.ts
 [destroyboundtransformerror]: ./destroy-bound-transform.ts
@@ -27,3 +28,4 @@
 [renderingcontexterror]: ./rendering-context.ts
 [resourceloadererror]: ./resource-loader.ts
 [runtimeinconsistencyerror]: ./runtime-inconsistency.ts
+[unknowndeserializableerror]: './unknown-deserializable.ts

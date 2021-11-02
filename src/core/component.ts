@@ -1,15 +1,20 @@
 import { ManagedObjectDestroyedError, RuntimeInconsistencyError } from "../errors";
+import { ISerializable, SerializableObject } from "../serialization";
 import { __ComponentCreationLock } from "./component-creation-lock";
 import { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
 
 export type ComponentConstructor<T extends Component> = new (gameObject: GameObject) => T;
 
+export interface SerializableComponent extends SerializableObject {
+
+}
+
 /**
  * Base class for everything that can be attached
  * to GameObjects.
  */
-export abstract class Component extends ManagedObject {
+export abstract class Component extends ManagedObject implements ISerializable<SerializableComponent> {
 
 	// WeakMap that holds a reference to a GameObject for each Component
 	private static _gameObjectMap: WeakMap<Component, GameObject> = new WeakMap();
@@ -59,5 +64,7 @@ export abstract class Component extends ManagedObject {
 			super.destroy();
 		}
 	}
+
+	public abstract getSerializableObject(): SerializableComponent;
 
 }

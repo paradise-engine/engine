@@ -1,13 +1,48 @@
 import { MultipleTransformsError } from "../errors";
-import { Component, ComponentConstructor } from "./component";
+import { applySerializable, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { Component, ComponentConstructor, SerializableComponent } from "./component";
 import { __ComponentCreationLock } from "./component-creation-lock";
 import { ManagedObject } from "./managed-object";
-import { Transform } from "./transform";
+import { SerializableTransform, Transform } from "./transform";
+
+export interface SerializableGameObject extends SerializableObject {
+    name: string;
+    isActive: boolean;
+    transform: SerializableTransform;
+    components: SerializableComponent[];
+    children: SerializableGameObject[];
+}
 
 /**
  * Base class for any game object.
  */
-export class GameObject extends ManagedObject {
+export class GameObject extends ManagedObject implements ISerializable<SerializableGameObject> {
+
+    public static fromSerializable(s: SerializableGameObject) {
+        const obj = new GameObject(s.name);
+        obj._isActive = s.isActive;
+
+        applySerializable(s.transform, obj._transform);
+        for (const comp of s.components) {
+            const ctor = getSerializableComponentClass(comp._ctor);
+            try {
+                const compInstance = obj.addComponent(ctor);
+                applySerializable(comp, compInstance);
+            } catch (err) {
+                // avoid crashing because another transform is being added to object
+                if (!(err instanceof MultipleTransformsError)) {
+                    throw err;
+                }
+            }
+        }
+
+        for (const child of s.children) {
+            const childObject: GameObject = deserialize(child);
+            obj.addChild(childObject);
+        }
+
+        return obj;
+    }
 
     /**
      * Returns all currently loaded GameObjects
@@ -133,4 +168,17 @@ export class GameObject extends ManagedObject {
         }
     }
 
+    public getSerializableObject(): SerializableGameObject {
+        return {
+            _ctor: GameObject.name,
+            transform: this._transform.getSerializableObject(),
+            isActive: this._isActive,
+            components: this._components.map(c => c.getSerializableObject()),
+            name: this.name,
+            children: this.getChildren().map(c => c.getSerializableObject())
+        }
+    }
+
 }
+
+registerDeserializable(GameObject);

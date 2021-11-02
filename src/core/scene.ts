@@ -1,8 +1,25 @@
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
+import { deserialize, ISerializable, SerializableObject } from "../serialization";
 import { Indexable } from "../util";
-import { GameObject } from "./game-object";
+import { GameObject, SerializableGameObject } from "./game-object";
 
-export class Scene {
+export interface SerializableScene extends SerializableObject {
+    name: string;
+    gameObjects: SerializableGameObject[];
+}
+
+export class Scene implements ISerializable<SerializableScene> {
+
+    public static fromSerializable(s: SerializableScene) {
+        const scene = new Scene(s.name);
+        for (const obj of s.gameObjects) {
+            const gameObject: GameObject = deserialize(obj);
+            scene.addGameObject(gameObject);
+        }
+
+        return scene;
+    }
+
     private static _nextId = 0;
     private static _scenes: Indexable<Scene> = {};
 
@@ -56,5 +73,13 @@ export class Scene {
 
     public moveGameObject(fromIndex: number, toIndex: number) {
         this._gameObjects.splice(toIndex, 0, this._gameObjects.splice(fromIndex, 1)[0]);
+    }
+
+    public getSerializableObject(): SerializableScene {
+        return {
+            _ctor: Scene.name,
+            name: this.name,
+            gameObjects: this._gameObjects.map(go => go.getSerializableObject())
+        }
     }
 }

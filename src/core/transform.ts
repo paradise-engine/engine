@@ -1,13 +1,27 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { DestroyBoundTransformError } from "../errors";
+import { deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { Component } from "./component";
-import { Rotation } from "./rotation";
-import { Vector } from "./vector";
+import { Rotation, SerializableRotation } from "./rotation";
+import { SerializableVector, Vector } from "./vector";
+
+export interface SerializableTransform extends SerializableObject {
+    localPosition: SerializableVector;
+    localRotation: SerializableRotation;
+    localScale: SerializableVector;
+}
 
 /**
  * Represents the transform (position, rotation and scale) of an object.
  */
-export class Transform extends Component {
+export class Transform extends Component implements ISerializable<SerializableTransform> {
+
+    public static applySerializable(s: SerializableTransform, comp: Transform) {
+        comp._localPosition = deserialize(s.localPosition);
+        comp._localRotation = deserialize(s.localRotation);
+        comp._localScale = deserialize(s.localScale);
+    }
+
     protected _parent?: Transform;
     protected _children: Transform[] = [];
     // represents local position
@@ -208,4 +222,14 @@ export class Transform extends Component {
         super.destroy();
     }
 
+    public getSerializableObject(): SerializableTransform {
+        return {
+            _ctor: Transform.name,
+            localPosition: this._localPosition.getSerializableObject(),
+            localRotation: this._localRotation.getSerializableObject(),
+            localScale: this._localScale.getSerializableObject()
+        }
+    }
 }
+
+registerDeserializableComponent(Transform);

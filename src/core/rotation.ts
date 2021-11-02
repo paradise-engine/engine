@@ -1,3 +1,4 @@
+import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
 
 function radianToDegrees(rad: number) {
@@ -8,10 +9,19 @@ function degreesToRadian(degrees: number) {
     return (degrees / 180) * Math.PI;
 }
 
+export interface SerializableRotation extends SerializableObject {
+    degrees: number;
+}
+
 /**
  * Represents a rotation between 0 and 180 degrees and -180 degrees respectively.
  */
-export class Rotation implements IComparable {
+export class Rotation implements IComparable, ISerializable<SerializableRotation> {
+
+    public static fromSerializable(s: SerializableRotation) {
+        return this.fromDegrees(s.degrees);
+    }
+
     /**
      * Creates a new rotation based on degrees
      * @param degrees Degrees of the rotation
@@ -87,4 +97,13 @@ export class Rotation implements IComparable {
     public equals(compare: Rotation): boolean {
         return this.degrees === compare.degrees;
     }
+
+    public getSerializableObject(): SerializableRotation {
+        return {
+            _ctor: Rotation.name,
+            degrees: this._valueDegrees
+        }
+    }
 }
+
+registerDeserializable(Rotation);

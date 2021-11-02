@@ -1,10 +1,20 @@
+import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
 import { Rotation } from "./rotation";
+
+export interface SerializableVector extends SerializableObject {
+    x: number;
+    y: number;
+}
 
 /**
  * Represents a 2D vector. Can be used for directional vectors but also for representing points.
  */
-export class Vector implements IComparable {
+export class Vector implements IComparable, ISerializable<SerializableVector> {
+
+    public static fromSerializable(s: SerializableVector) {
+        return new Vector(s.x, s.y);
+    }
 
     /**
      * Calculates the dot product of two Vectors
@@ -101,4 +111,13 @@ export class Vector implements IComparable {
         return this.x === compare.x && this.y === compare.y;
     }
 
+    public getSerializableObject(): SerializableVector {
+        return {
+            _ctor: Vector.name,
+            x: this.x,
+            y: this.y
+        };
+    }
 }
+
+registerDeserializable(Vector);
