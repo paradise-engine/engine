@@ -6,9 +6,7 @@ import { ManagedObject } from "./managed-object";
 
 export type ComponentConstructor<T extends Component> = new (gameObject: GameObject) => T;
 
-export interface SerializableComponent extends SerializableObject {
-
-}
+export interface SerializableComponent extends SerializableObject { }
 
 /**
  * Base class for everything that can be attached

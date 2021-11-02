@@ -1,3 +1,4 @@
+import { isInstanceOf } from "../util";
 import { MultipleTransformsError } from "../errors";
 import { applySerializable, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
@@ -112,13 +113,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
      * @param strict If `true`, only Components that are the exact specified type are returned. Otherwise, also inheriting types qualify _(default)_.
      */
     public getComponents<T extends Component>(componentType: ComponentConstructor<T>, strict?: boolean) {
-        return this._components.filter((comp): comp is T => {
-            if (strict) {
-                return comp.constructor === componentType;
-            } else {
-                return comp instanceof componentType;
-            }
-        });
+        return this._components.filter((comp): comp is T => isInstanceOf(comp, componentType, strict));
     }
 
     /**
