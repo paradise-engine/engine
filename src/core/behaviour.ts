@@ -29,4 +29,16 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
             isActive: this._isActive
         }
     }
+
+    // #region lifecycle methods
+
+    public onAwake() { }
+    public onEnable() { }
+    public onStart() { }
+    public onUpdate() { }
+    public onPostUpdate() { }
+    public onDestroy() { }
+    public onDisable() { }
+
+    // #endregion
 }
