@@ -1,3 +1,4 @@
+import { BaseControlOptions, ControlType } from "../controls";
 import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
 
@@ -8,10 +9,17 @@ export interface SerializableRect extends SerializableObject {
     height: number;
 }
 
+export interface RectControlOptions extends BaseControlOptions {
+    prefixes?: [string, string, string, string],
+    suffixes?: [string, string, string, string],
+    step?: number;
+}
+
 /**
  * Represents an area in 2D space, defined by its position (top-left corner)
  * and by its width and height.
  */
+@ControlType()
 export class Rect implements IComparable, ISerializable<SerializableRect> {
 
     public static fromSerializable(s: SerializableRect) {

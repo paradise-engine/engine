@@ -1,3 +1,4 @@
+import { BaseControlOptions, ControlType } from "../controls";
 import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
 import { Rotation } from "./rotation";
@@ -7,9 +8,17 @@ export interface SerializableVector extends SerializableObject {
     y: number;
 }
 
+export interface VectorControlOptions extends BaseControlOptions {
+    prefixes?: [string, string];
+    suffixes?: [string, string];
+    step?: number;
+    asInteger?: boolean;
+}
+
 /**
  * Represents a 2D vector. Can be used for directional vectors but also for representing points.
  */
+@ControlType()
 export class Vector implements IComparable, ISerializable<SerializableVector> {
 
     public static fromSerializable(s: SerializableVector) {

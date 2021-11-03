@@ -1,3 +1,4 @@
+import { BaseControlOptions, ControlType } from "../controls";
 import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
 
@@ -13,9 +14,12 @@ export interface SerializableRotation extends SerializableObject {
     degrees: number;
 }
 
+export interface RotationControlOptions extends BaseControlOptions { }
+
 /**
  * Represents a rotation between 0 and 180 degrees and -180 degrees respectively.
  */
+@ControlType()
 export class Rotation implements IComparable, ISerializable<SerializableRotation> {
 
     public static fromSerializable(s: SerializableRotation) {

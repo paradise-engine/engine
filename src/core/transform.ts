@@ -1,9 +1,10 @@
 import { mat4, quat, vec3 } from "gl-matrix";
+import { Control } from "../controls";
 import { DestroyBoundTransformError } from "../errors";
 import { deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { Component } from "./component";
-import { Rotation, SerializableRotation } from "./rotation";
-import { SerializableVector, Vector } from "./vector";
+import { Rotation, RotationControlOptions, SerializableRotation } from "./rotation";
+import { SerializableVector, Vector, VectorControlOptions } from "./vector";
 
 export interface SerializableTransform extends SerializableObject {
     localPosition: SerializableVector;
@@ -24,11 +25,30 @@ export class Transform extends Component implements ISerializable<SerializableTr
 
     protected _parent?: Transform;
     protected _children: Transform[] = [];
+
     // represents local position
+    @Control<VectorControlOptions>({
+        name: 'Position',
+        options: {
+            prefixes: ['x', 'y']
+        }
+    })
     protected _localPosition: Vector = new Vector(0, 0);
+
     // represents local rotation
+    @Control<RotationControlOptions>({
+        name: 'Rotation',
+        options: {}
+    })
     protected _localRotation: Rotation = Rotation.fromDegrees(0);
+
     // represents local scale
+    @Control<VectorControlOptions>({
+        name: 'Scale',
+        options: {
+            prefixes: ['x', 'y']
+        }
+    })
     protected _localScale: Vector = new Vector(1, 1);
 
     // #region hierarchy implementation
