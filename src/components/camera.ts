@@ -1,8 +1,8 @@
 import { Control, NumberControlOptions } from "../controls";
-import { Color, ColorControlOptions, Component, GameObject, Rect, SerializableColor, SerializableComponent, SerializableRect } from "../core";
+import { Color, ColorControlOptions, Behaviour, GameObject, Rect, SerializableColor, SerializableBehaviour, SerializableRect } from "../core";
 import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 
-export interface SerializableCamera extends SerializableComponent {
+export interface SerializableCamera extends SerializableBehaviour {
     backgroundColor: SerializableColor;
     size: number;
     nearClipPane: number;
@@ -11,7 +11,7 @@ export interface SerializableCamera extends SerializableComponent {
     depth: number;
 }
 
-export class Camera extends Component implements ISerializable<SerializableCamera> {
+export class Camera extends Behaviour implements ISerializable<SerializableCamera> {
     public static applySerializable(s: SerializableCamera, comp: Camera) {
         comp.backgroundColor = deserialize(s.backgroundColor);
         comp.size = s.size;
@@ -59,6 +59,7 @@ export class Camera extends Component implements ISerializable<SerializableCamer
 
     public getSerializableObject(): SerializableCamera {
         return {
+            ...super.getSerializableObject(),
             _ctor: Camera.name,
             backgroundColor: this.backgroundColor.getSerializableObject(),
             size: this.size,
