@@ -17,6 +17,7 @@
 | [RenderingContextError]             | A low-level WebGL error occurred                                                                          |
 | [ResourceLoaderError]               | An error ocurred while loading a resource                                                                 |
 | [RuntimeInconsistencyError]         | A fatal engine error ocurred during runtime, usually because external code misused internal APIs          |
+| [SceneLoadError]                    | An error ocurred while loading or transitioning a scene                                                   |
 | [SingletonConstraintViolationError] | A singleton class has been instantiated more than once                                                    |
 | [UnknownDeserializableError]        | Attempted to deserialize object whose deserializer class has not been registered                          |
 
@@ -35,5 +36,6 @@
 [renderingcontexterror]: ./rendering-context.ts
 [resourceloadererror]: ./resource-loader.ts
 [runtimeinconsistencyerror]: ./runtime-inconsistency.ts
+[sceneloaderror]: ./scene-load.ts
 [singletonconstraintviolationerror]: ./singleton-constraint-violation.ts
 [unknowndeserializableerror]: './unknown-deserializable.ts

@@ -13,5 +13,6 @@ export * from './renderer-ran-out-of-containers';
 export * from './rendering-context';
 export * from './resource-loader';
 export * from './runtime-inconsistency';
+export * from './scene-load';
 export * from './singleton-constraint-violation';
 export * from './unknown-deserializable';
