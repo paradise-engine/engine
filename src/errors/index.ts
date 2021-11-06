@@ -6,6 +6,7 @@ export * from './inactive-shader';
 export * from './invalid-control-type';
 export * from './invalid-hex-code';
 export * from './managed-object-destroyed';
+export * from './micro-emitter-duplicate-listener';
 export * from './multiple-transforms';
 export * from './object-not-found';
 export * from './paradise-error';
