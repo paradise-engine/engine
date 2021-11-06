@@ -1,6 +1,7 @@
 import { Scene } from "../core";
 import { SceneLoadError } from "../errors";
 import { Renderer } from "../renderer";
+import { ResourceLoader } from "../resource";
 import { Time } from "../time";
 
 export class GameManager {
@@ -12,6 +13,7 @@ export class GameManager {
     private _transitionScene?: Scene;
 
     public readonly renderer: Renderer;
+    public readonly loader: ResourceLoader;
 
     public get isRunning() {
         return this._isRunning;
@@ -35,6 +37,7 @@ export class GameManager {
 
     constructor() {
         this.renderer = new Renderer();
+        this.loader = new ResourceLoader(this.renderer);
     }
 
     private _gameLoop = (msElapsed: number) => {
@@ -51,15 +54,34 @@ export class GameManager {
         }
     }
 
+    private _queueSceneResources(scene: Scene) {
+        // TODO add scene resources to load (or unflag them if they are already loaded)
+        // first, SpriteRenderer, VideoRenderer, AudioListener etc. need to be implemented
+        // also, resource load priority need to be implemented
+    }
+
     private _executeTransition() {
-        this._currentScene = this._transitionScene;
+        if (!this._transitionScene) {
+            throw new SceneLoadError('Cannot transition scene: No scene selected for transition');
+        }
+
         this._transitionFlag = false;
+        this._currentScene = this._transitionScene;
+
+        this.loader.preparePurge();
+        this._queueSceneResources(this._transitionScene);
+        this.loader.purge();
+        this.loader.load(() => {
+            // TODO emit an event
+        });
     }
 
     public loadScene(scene: Scene) {
         if (this._currentScene) {
             throw new SceneLoadError('Cannot load scene: A scene is already loaded. Use transitionScene instead');
         }
+
+        // TODO
 
         this._currentScene = scene;
     }
@@ -81,6 +103,8 @@ export class GameManager {
         if (this._isRunning) {
             throw new SceneLoadError('Cannot unload scene: Game loop is running');
         }
+
+        // TODO
 
         this._currentScene = undefined;
     }
