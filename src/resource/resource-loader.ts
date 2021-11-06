@@ -1,10 +1,10 @@
 import { ResourceType } from "./resource-type";
 import { MimeTypeExtensions } from "./mime-types";
-import { Resource } from "./resource";
+import { Resource, ResourceRenameData } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
 import { Renderer, BaseTexture } from "../renderer";
-import { Dictionary } from "../util";
+import { Dictionary, MicroListener } from "../util";
 
 export type ResourceLoadCallback = (resource: Resource) => void;
 export type ResourcesLoadCallback = (resources: Resource[]) => void;
@@ -19,6 +19,7 @@ export class ResourceLoader {
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
+    private _flaggedForPurge: Resource[] = [];
 
     public readonly renderer: Renderer;
 
@@ -26,9 +27,9 @@ export class ResourceLoader {
         this.renderer = renderer;
     }
 
-    public add(name: string, url: string, onload?: ResourceLoadCallback) {
+    public add(url: string, name?: string, onload?: ResourceLoadCallback) {
         const task: ResourceLoadTask = {
-            name,
+            name: name || url,
             url,
             callback: onload
         };
@@ -45,6 +46,34 @@ export class ResourceLoader {
             const promise = this.loadSingle(task).then(
                 (resource) => {
                     this._resourceMap[resource.name] = resource;
+                    const self = this;
+
+                    let bypassRenameListener = false;
+
+                    const onRenamed: MicroListener<Resource, ResourceRenameData> = function (data) {
+                        if (!bypassRenameListener) {
+                            bypassRenameListener = true;
+
+                            if (self._resourceMap[data.new]) {
+                                this.name = data.old;
+                                throw new ResourceLoaderError(`Cannot rename resource to '${data.new}': Another resource with this name already exists`);
+                            }
+
+                            self._resourceMap[data.new] = resource;
+                            delete self._resourceMap[data.old];
+
+                            bypassRenameListener = false;
+                        }
+                    }
+
+                    const onUnloaded: MicroListener<Resource> = function () {
+                        delete self._resourceMap[this.name];
+                        this.off('renamed', onRenamed);
+                    }
+
+                    resource.on('renamed', onRenamed);
+                    resource.once('unloaded', onUnloaded);
+
                     if (task.callback) {
                         task.callback(resource);
                     }
@@ -183,6 +212,83 @@ export class ResourceLoader {
                 return reject(new Error('Unknown error'));
             }
         });
+    }
+
+    public isFlaggedForPurge(resource: Resource) {
+        return this._flaggedForPurge.indexOf(resource) !== -1;
+    }
+
+    /**
+     * Flag all resources that are not locked
+     * for unloading.
+     * Call `purge()` to unload flagged resources.
+     */
+    public preparePurge() {
+        for (const resKey of Object.keys(this._resourceMap)) {
+            if (this._resourceMap.hasOwnProperty(resKey)) {
+                const resource = this._resourceMap[resKey];
+                if (!resource.isLocked && !this.isFlaggedForPurge(resource)) {
+                    this._flaggedForPurge.push(resource);
+                }
+            }
+        }
+    }
+
+    /**
+     * Manually flags a resource for unloading during purge.
+     * Resource gets flagged even if it is locked.
+     * Call `purge()` to unload flagged resources.
+     * @param resource 
+     */
+    public flagForUnload(resource: Resource) {
+        const cachedResource = this._resourceMap[resource.name];
+
+        if (!cachedResource || cachedResource !== resource) {
+            throw new ResourceLoaderError('Cannot flag resource for unload: Resource not known to resource loader');
+        }
+
+        if (!this.isFlaggedForPurge(resource)) {
+            this._flaggedForPurge.push(resource);
+            resource.status = ResourceStatus.FlaggedForUnload;
+            resource.emit('flaggedForUnload');
+        }
+    }
+
+    /**
+     * Un-flags a resource that was previously flagged for unload
+     * during purge.
+     * @param resource 
+     */
+    public unflagFromUnload(resource: Resource) {
+        const cachedResource = this._resourceMap[resource.name];
+
+        if (!cachedResource || cachedResource !== resource) {
+            throw new ResourceLoaderError('Cannot unflag resource from unload: Resource not known to resource loader');
+        }
+
+        if (this.isFlaggedForPurge(resource)) {
+            this._flaggedForPurge.splice(this._flaggedForPurge.indexOf(resource), 1);
+            resource.status = ResourceStatus.Loaded;
+            resource.emit('unflaggedFromUnload');
+        }
+    }
+
+    /**
+     * Unloads all resources that are flagged for unload.
+     */
+    public purge() {
+        for (const resource of this._flaggedForPurge.slice()) {
+            this.unloadResource(resource);
+        }
+        this._flaggedForPurge = [];
+    }
+
+    /**
+     * Immediately unloads a resource.
+     * @param resource 
+     */
+    public unloadResource(resource: Resource) {
+        resource.unload();
     }
 
 }

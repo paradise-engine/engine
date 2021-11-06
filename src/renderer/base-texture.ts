@@ -1,3 +1,4 @@
+import { MicroEmitter } from "../util";
 import { createTextureFromImage, initTextureFromVideo, TextureInfo } from "./webgl";
 
 export enum BaseTextureType {
@@ -5,20 +6,26 @@ export enum BaseTextureType {
     Video = 'video'
 }
 
-export class BaseTexture {
+interface BaseTextureEvents {
+    destroyed: void;
+}
+
+export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
 
     public static createVideoTexture(gl: WebGLRenderingContext, video: HTMLVideoElement) {
         const { texture, update } = initTextureFromVideo(gl, video);
-        return new BaseTexture(texture, BaseTextureType.Video, video, update);
+        return new BaseTexture(gl, texture, BaseTextureType.Video, video, update);
     }
 
     public static createImageTexture(gl: WebGLRenderingContext, image: HTMLImageElement) {
         const texture = createTextureFromImage(gl, image);
-        return new BaseTexture(texture, BaseTextureType.Image, image);
+        return new BaseTexture(gl, texture, BaseTextureType.Image, image);
     }
 
     private readonly _updateFn?: () => void;
+    private _destroyed = false;
 
+    public readonly context: WebGLRenderingContext;
     public readonly glTexture: WebGLTexture;
     public readonly type: BaseTextureType;
     public readonly srcElement: HTMLImageElement | HTMLVideoElement;
@@ -35,7 +42,9 @@ export class BaseTexture {
         };
     }
 
-    private constructor(glTexture: WebGLTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
+    private constructor(context: WebGLRenderingContext, glTexture: WebGLTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
+        super();
+        this.context = context;
         this.glTexture = glTexture;
         this.type = type;
         this.srcElement = srcElement;
@@ -47,6 +56,14 @@ export class BaseTexture {
     public update() {
         if (this._updateFn) {
             this._updateFn();
+        }
+    }
+
+    public destroy() {
+        if (!this._destroyed) {
+            this._destroyed = true;
+            this.context.deleteTexture(this.glTexture);
+            this.emit('destroyed');
         }
     }
 }
