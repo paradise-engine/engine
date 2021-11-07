@@ -1,5 +1,5 @@
 {
-  "name": "engine",
+  "name": "paradise-engine",
   "version": "1.0.0",
   "description": "The core functionalities of Paradise Engine.",
   "main": "dist/index.js",
@@ -19,6 +19,13 @@
     "url": "https://github.com/ParadiseEngine/engine/issues"
   },
   "homepage": "https://github.com/ParadiseEngine/engine#readme",
+  "files": [
+    "dist/**/*",
+    "LICENSE",
+    "logo.svg",
+    "package.json",
+    "README.md"
+  ],
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@types/node": "^16.10.3",
