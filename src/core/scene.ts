@@ -1,5 +1,5 @@
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
-import { deserialize, ISerializable, SerializableObject } from "../serialization";
+import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Indexable } from "../util";
 import { GameObject, SerializableGameObject } from "./game-object";
 
@@ -83,3 +83,5 @@ export class Scene implements ISerializable<SerializableScene> {
         }
     }
 }
+
+registerDeserializable(Scene);
