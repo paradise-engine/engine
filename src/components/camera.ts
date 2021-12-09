@@ -13,6 +13,7 @@ export interface SerializableCamera extends SerializableBehaviour {
 
 export class Camera extends Behaviour implements ISerializable<SerializableCamera> {
     public static applySerializable(s: SerializableCamera, comp: Camera) {
+        super.applySerializable(s, comp);
         comp.backgroundColor = deserialize(s.backgroundColor);
         comp.size = s.size;
         comp.nearClipPane = s.nearClipPane;

@@ -7,6 +7,7 @@ import { Rotation, RotationControlOptions, SerializableRotation } from "./rotati
 import { SerializableVector, Vector, VectorControlOptions } from "./vector";
 
 export interface SerializableTransform extends SerializableObject {
+    id: string;
     localPosition: SerializableVector;
     localRotation: SerializableRotation;
     localScale: SerializableVector;
@@ -18,6 +19,7 @@ export interface SerializableTransform extends SerializableObject {
 export class Transform extends Component implements ISerializable<SerializableTransform> {
 
     public static applySerializable(s: SerializableTransform, comp: Transform) {
+        comp._id = s.id;
         comp._localPosition = deserialize(s.localPosition);
         comp._localRotation = deserialize(s.localRotation);
         comp._localScale = deserialize(s.localScale);
@@ -245,6 +247,7 @@ export class Transform extends Component implements ISerializable<SerializableTr
     public getSerializableObject(): SerializableTransform {
         return {
             _ctor: Transform.name,
+            id: this.id,
             localPosition: this._localPosition.getSerializableObject(),
             localRotation: this._localRotation.getSerializableObject(),
             localScale: this._localScale.getSerializableObject()

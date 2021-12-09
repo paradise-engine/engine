@@ -3,12 +3,18 @@ import { Component, SerializableComponent } from "./component";
 
 export interface SerializableBehaviour extends SerializableComponent {
     isActive: boolean;
+    id: string;
 }
 
 /**
  * Base class for Components that can be enabled/disabled
  */
 export class Behaviour extends Component implements ISerializable<SerializableBehaviour> {
+    public static applySerializable(s: SerializableBehaviour, b: Behaviour) {
+        b._isActive = s.isActive;
+        b._id = s.id;
+    }
+
     private _isActive: boolean = true;
 
     public get isActive() {
@@ -26,7 +32,8 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
     public getSerializableObject(): SerializableBehaviour {
         return {
             _ctor: Behaviour.name,
-            isActive: this._isActive
+            isActive: this._isActive,
+            id: this.id
         }
     }
 

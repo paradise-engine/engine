@@ -1,10 +1,11 @@
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
 import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
-import { Indexable } from "../util";
+import { Dictionary, generateRandomString } from "../util";
 import { GameObject, SerializableGameObject } from "./game-object";
 
 export interface SerializableScene extends SerializableObject {
     name: string;
+    id: string;
     gameObjects: SerializableGameObject[];
 }
 
@@ -12,6 +13,7 @@ export class Scene implements ISerializable<SerializableScene> {
 
     public static fromSerializable(s: SerializableScene) {
         const scene = new Scene(s.name);
+        scene._id = s.id;
         for (const obj of s.gameObjects) {
             const gameObject: GameObject = deserialize(obj);
             scene.addGameObject(gameObject);
@@ -20,20 +22,23 @@ export class Scene implements ISerializable<SerializableScene> {
         return scene;
     }
 
-    private static _nextId = 0;
-    private static _scenes: Indexable<Scene> = {};
+    private static _scenes: Dictionary<Scene> = {};
 
-    public static getSceneById(id: number): Scene | undefined {
+    public static getSceneById(id: string): Scene | undefined {
         return this._scenes[id];
     }
 
     private _gameObjects: GameObject[] = [];
+    private _id: string;
 
-    public readonly id: number;
+    public get id() {
+        return this._id;
+    }
+
     public name: string;
 
     constructor(name: string) {
-        this.id = Scene._nextId++;
+        this._id = generateRandomString();
         this.name = name;
         Scene._scenes[this.id] = this;
     }
@@ -79,6 +84,7 @@ export class Scene implements ISerializable<SerializableScene> {
         return {
             _ctor: Scene.name,
             name: this.name,
+            id: this.id,
             gameObjects: this._gameObjects.map(go => go.getSerializableObject())
         }
     }

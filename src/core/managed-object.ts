@@ -1,19 +1,19 @@
+import { generateRandomString } from "../util";
 
 /**
  * Base class for managed objects
  * that can be destroyed.
  */
 export abstract class ManagedObject {
-	private static _nextId = 0;
 	// map that holds all currently loaded managed objects
-	private static _objectMap: Map<number, ManagedObject> = new Map();
+	private static _objectMap: Map<string, ManagedObject> = new Map();
 
 	/**
 	 * Returns the loaded ManagedObject with the
 	 * specified id
 	 * @param id The id of the Object
 	 */
-	public static getObjectById(id: number) {
+	public static getObjectById(id: string) {
 		return this._objectMap.get(id);
 	}
 
@@ -25,15 +25,18 @@ export abstract class ManagedObject {
 	}
 
 	private _isDestroyed = false;
+	protected _id: string;
 
-	public readonly id: number;
+	public get id() {
+		return this._id;
+	}
 
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
 
 	constructor() {
-		this.id = ManagedObject._nextId++;
+		this._id = generateRandomString();
 		ManagedObject._objectMap.set(this.id, this);
 	}
 

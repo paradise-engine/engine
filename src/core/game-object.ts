@@ -8,6 +8,7 @@ import { SerializableTransform, Transform } from "./transform";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
+    id: string;
     isActive: boolean;
     transform: SerializableTransform;
     components: SerializableComponent[];
@@ -21,6 +22,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
 
     public static fromSerializable(s: SerializableGameObject) {
         const obj = new GameObject(s.name);
+        obj._id = s.id;
         obj._isActive = s.isActive;
 
         applySerializable(s.transform, obj._transform);
@@ -166,6 +168,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     public getSerializableObject(): SerializableGameObject {
         return {
             _ctor: GameObject.name,
+            id: this.id,
             transform: this._transform.getSerializableObject(),
             isActive: this._isActive,
             components: this._components.map(c => c.getSerializableObject()),
