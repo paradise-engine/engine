@@ -12,7 +12,7 @@ export interface SerializableBehaviour extends SerializableComponent {
 export class Behaviour extends Component implements ISerializable<SerializableBehaviour> {
     public static applySerializable(s: SerializableBehaviour, b: Behaviour) {
         b._isActive = s.isActive;
-        b._id = s.id;
+        this._changeId(b, s.id);
     }
 
     private _isActive: boolean = true;

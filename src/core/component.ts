@@ -14,8 +14,8 @@ export interface SerializableComponent extends SerializableObject { }
  */
 export abstract class Component extends ManagedObject implements ISerializable<SerializableComponent> {
 
-	// WeakMap that holds a reference to a GameObject for each Component
-	private static _gameObjectMap: WeakMap<Component, GameObject> = new WeakMap();
+	// Map that holds a reference to a GameObject id for each Component id
+	private static _gameObjectMap: Map<string, string> = new Map();
 
 	/**
 	 * Returns all currently loaded Components
@@ -36,12 +36,12 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 			throw new ManagedObjectDestroyedError();
 		}
 
-		const obj = Component._gameObjectMap.get(this);
-		if (!obj) {
+		const objId = Component._gameObjectMap.get(this.id);
+		if (!objId) {
 			throw new RuntimeInconsistencyError('Cannot get GameObject of orphaned Component');
 		}
 
-		return obj;
+		return GameObject.getObjectById(objId) as GameObject;
 	}
 
 	constructor(gameObject: GameObject) {
@@ -51,14 +51,14 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 
 		super();
 		this._markedForDestruction = false;
-		Component._gameObjectMap.set(this, gameObject);
+		Component._gameObjectMap.set(this.id, gameObject.id);
 	}
 
 	public override destroy() {
 		if (!this._markedForDestruction) {
 			this._markedForDestruction = true;
 			this.gameObject.removeComponent(this);
-			Component._gameObjectMap.delete(this);
+			Component._gameObjectMap.delete(this.id);
 			super.destroy();
 		}
 	}

@@ -19,7 +19,7 @@ export interface SerializableTransform extends SerializableObject {
 export class Transform extends Component implements ISerializable<SerializableTransform> {
 
     public static applySerializable(s: SerializableTransform, comp: Transform) {
-        comp._id = s.id;
+        this._changeId(comp, s.id);
         comp._localPosition = deserialize(s.localPosition);
         comp._localRotation = deserialize(s.localRotation);
         comp._localScale = deserialize(s.localScale);

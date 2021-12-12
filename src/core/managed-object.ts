@@ -8,6 +8,12 @@ export abstract class ManagedObject {
 	// map that holds all currently loaded managed objects
 	private static _objectMap: Map<string, ManagedObject> = new Map();
 
+	protected static _changeId(obj: ManagedObject, id: string) {
+		this._objectMap.delete(obj.id);
+		obj._id = id;
+		this._objectMap.set(obj.id, obj);
+	}
+
 	/**
 	 * Returns the loaded ManagedObject with the
 	 * specified id

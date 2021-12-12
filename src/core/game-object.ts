@@ -22,7 +22,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
 
     public static fromSerializable(s: SerializableGameObject) {
         const obj = new GameObject(s.name);
-        obj._id = s.id;
+        this._changeId(obj, s.id);
         obj._isActive = s.isActive;
 
         applySerializable(s.transform, obj._transform);

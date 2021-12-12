@@ -13,7 +13,11 @@ export class Scene implements ISerializable<SerializableScene> {
 
     public static fromSerializable(s: SerializableScene) {
         const scene = new Scene(s.name);
+        delete Scene._scenes[scene.id];
         scene._id = s.id;
+
+        Scene._scenes[scene._id] = scene;
+
         for (const obj of s.gameObjects) {
             const gameObject: GameObject = deserialize(obj);
             scene.addGameObject(gameObject);
