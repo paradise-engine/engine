@@ -1,6 +1,7 @@
+import { Application } from "../application";
 import { Control, NumberControlOptions } from "../controls";
 import { Color, ColorControlOptions, Behaviour, GameObject, Rect, SerializableColor, SerializableBehaviour, SerializableRect } from "../core";
-import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 
 export interface SerializableCamera extends SerializableBehaviour {
     backgroundColor: SerializableColor;
@@ -14,11 +15,14 @@ export interface SerializableCamera extends SerializableBehaviour {
 export class Camera extends Behaviour implements ISerializable<SerializableCamera> {
     public static applySerializable(s: SerializableCamera, comp: Camera) {
         super.applySerializable(s, comp);
-        comp.backgroundColor = deserialize(s.backgroundColor);
+
+        const options: DeserializationOptions = { application: comp.application }
+
+        comp.backgroundColor = deserialize(s.backgroundColor, options);
         comp.size = s.size;
         comp.nearClipPane = s.nearClipPane;
         comp.farClipPane = s.farClipPane;
-        comp.viewportRect = deserialize(s.viewportRect);
+        comp.viewportRect = deserialize(s.viewportRect, options);
         comp.depth = s.depth;
     }
 
@@ -47,8 +51,8 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
     })
     public depth: number;
 
-    constructor(gameObject: GameObject) {
-        super(gameObject);
+    constructor(application: Application, gameObject: GameObject) {
+        super(application, gameObject);
 
         this.backgroundColor = Color.Blue;
         this.size = 5;

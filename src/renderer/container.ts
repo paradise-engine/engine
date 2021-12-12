@@ -1,8 +1,8 @@
 import { mat4, vec3 } from "gl-matrix";
 import { IPositionable } from "./i-positionable";
 import { IRenderable } from "./i-renderable";
+import { IRenderer } from "./i-renderer";
 import { RenderablePrimitive } from "./renderable-primitive";
-import { Renderer } from "./renderer";
 import { ShaderTarget } from "./shader-target";
 
 export class Container extends ShaderTarget implements IRenderable, IPositionable {
@@ -37,7 +37,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
         this._globalMatrix = globalMatrix;
     }
 
-    public render(renderer: Renderer) {
+    public render(renderer: IRenderer) {
 
         const containerShaderCount = this._shaders.length;
 

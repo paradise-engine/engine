@@ -1,5 +1,6 @@
+import { Application } from "../application";
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
-import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Dictionary, generateRandomString } from "../util";
 import { GameObject, SerializableGameObject } from "./game-object";
 
@@ -11,15 +12,15 @@ export interface SerializableScene extends SerializableObject {
 
 export class Scene implements ISerializable<SerializableScene> {
 
-    public static fromSerializable(s: SerializableScene) {
-        const scene = new Scene(s.name);
+    public static fromSerializable(s: SerializableScene, options: DeserializationOptions) {
+        const scene = new Scene(options.application, s.name);
         delete Scene._scenes[scene.id];
         scene._id = s.id;
 
         Scene._scenes[scene._id] = scene;
 
         for (const obj of s.gameObjects) {
-            const gameObject: GameObject = deserialize(obj);
+            const gameObject: GameObject = deserialize(obj, options);
             scene.addGameObject(gameObject);
         }
 
@@ -32,56 +33,69 @@ export class Scene implements ISerializable<SerializableScene> {
         return this._scenes[id];
     }
 
-    private _gameObjects: GameObject[] = [];
+    private _gameObjectIds: string[] = [];
     private _id: string;
+    private _application: Application;
 
     public get id() {
         return this._id;
     }
 
+    public get application() {
+        return this._application;
+    }
+
     public name: string;
 
-    constructor(name: string) {
+    constructor(application: Application, name: string) {
         this._id = generateRandomString();
+        this._application = application;
         this.name = name;
         Scene._scenes[this.id] = this;
+
+        this._application.managedObjectRepository.on('idChanged', (data) => {
+            const gameObjectIndex = this._gameObjectIds.indexOf(data.oldId);
+            if (gameObjectIndex !== -1) {
+                this._gameObjectIds[gameObjectIndex] = data.newId;
+            }
+        });
     }
 
     public getAllGameObjects() {
-        return this._gameObjects.slice();
+        return this._gameObjectIds.map(goId => this._application.managedObjectRepository.getObjectById<GameObject>(goId));
     }
 
     public addGameObject(obj: GameObject) {
-        if (this._gameObjects.indexOf(obj) !== -1) {
-            throw new DuplicateGameObjectError(`Cannot add GameObject: GameObject '${obj.name}' already exists in scene '${this.name}' (${this.id})`);
+        if (this._gameObjectIds.indexOf(obj.id) !== -1) {
+            throw new DuplicateGameObjectError(`Cannot add GameObject: GameObject ${obj.name} (${obj.id}) already exists in scene '${this.name}' (${this.id})`);
         }
 
         if (obj.getParent() !== undefined) {
             throw new HierarchyInconsistencyError(`Cannot add GameObject: GameObject '${obj.name}' is a child of another GameObject`);
         }
 
-        this._gameObjects.push(obj);
+        this._gameObjectIds.push(obj.id);
     }
 
     public removeGameObject(obj: GameObject) {
-        const index = this._gameObjects.indexOf(obj);
+        const index = this._gameObjectIds.indexOf(obj.id);
         if (index === -1) {
-            throw new ObjectNotFoundError(`Cannot remove GameObject: GameObject '${obj.name}' does not exist in scene '${this.name}' (${this.id})`);
+            throw new ObjectNotFoundError(`Cannot remove GameObject: GameObject ${obj.name} (${obj.id}) does not exist in scene '${this.name}' (${this.id})`);
         }
 
-        this._gameObjects.splice(index, 1);
+        this._gameObjectIds.splice(index, 1);
     }
 
     public removeGameObjectAt(index: number) {
-        if (this._gameObjects[index] === undefined) {
+        if (this._gameObjectIds[index] === undefined) {
             throw new ObjectNotFoundError(`Cannot remove GameObject at index ${index}: There is no GameObject at index ${index} in scene '${this.name}' (${this.id})`);
         }
 
-        this._gameObjects.splice(index, 1);
+        this._gameObjectIds.splice(index, 1);
     }
 
     public moveGameObject(fromIndex: number, toIndex: number) {
-        this._gameObjects.splice(toIndex, 0, this._gameObjects.splice(fromIndex, 1)[0]);
+        this._gameObjectIds.splice(toIndex, 0, this._gameObjectIds.splice(fromIndex, 1)[0]);
     }
 
     public getSerializableObject(): SerializableScene {
@@ -89,7 +103,7 @@ export class Scene implements ISerializable<SerializableScene> {
             _ctor: Scene.name,
             name: this.name,
             id: this.id,
-            gameObjects: this._gameObjects.map(go => go.getSerializableObject())
+            gameObjects: this._gameObjectIds.map(goId => this._application.managedObjectRepository.getObjectById<GameObject>(goId).getSerializableObject())
         }
     }
 }

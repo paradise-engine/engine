@@ -1,10 +1,10 @@
 import { isInstanceOf } from "../util";
 import { MultipleTransformsError } from "../errors";
-import { applySerializable, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { applySerializable, DeserializationOptions, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
-import { __ComponentCreationLock } from "./component-creation-lock";
 import { ManagedObject } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
+import { Application } from "../application";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
@@ -20,9 +20,9 @@ export interface SerializableGameObject extends SerializableObject {
  */
 export class GameObject extends ManagedObject implements ISerializable<SerializableGameObject> {
 
-    public static fromSerializable(s: SerializableGameObject) {
-        const obj = new GameObject(s.name);
-        this._changeId(obj, s.id);
+    public static fromSerializable(s: SerializableGameObject, options: DeserializationOptions) {
+        const obj = new GameObject(options.application, s.name);
+        obj.application.managedObjectRepository.changeId(obj, s.id);
         obj._isActive = s.isActive;
 
         applySerializable(s.transform, obj._transform);
@@ -40,22 +40,14 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         }
 
         for (const child of s.children) {
-            const childObject: GameObject = deserialize(child);
+            const childObject: GameObject = deserialize(child, options);
             obj.addChild(childObject);
         }
 
         return obj;
     }
 
-    /**
-     * Returns all currently loaded GameObjects
-     */
-    public static override getAllLoadedObjects() {
-        return super.getAllLoadedObjects()
-            .filter((obj): obj is GameObject => obj instanceof GameObject);
-    }
-
-    private _components: Component[] = [];
+    private _componentIds: string[] = [];
 
     // internal representation of the active field
     protected _isActive: boolean = true;
@@ -75,8 +67,8 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         return this._isActive;
     }
 
-    constructor(name?: string) {
-        super();
+    constructor(application: Application, name?: string) {
+        super(application);
         this.name = name || 'EmptyObject';
         this._transform = this.addComponent(Transform);
     }
@@ -89,24 +81,24 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             throw new MultipleTransformsError();
         }
 
-        __ComponentCreationLock.unlockComponentCreation();
-        const component = new componentType(this);
-        __ComponentCreationLock.lockComponentCreation();
+        this._application['__ccLock'].unlockComponentCreation();
+        const component = new componentType(this._application, this);
+        this._application['__ccLock'].lockComponentCreation();
 
-        this._components.push(component);
+        this._componentIds.push(component.id);
         return component;
     }
 
     public removeComponent<T extends Component>(component: T) {
-        const componentIndex = this._components.indexOf(component);
+        const componentIndex = this._componentIds.indexOf(component.id);
         if (componentIndex !== -1) {
-            const del = this._components.splice(componentIndex, 1);
-            del[0].destroy();
+            const del = this._componentIds.splice(componentIndex, 1);
+            this._application.managedObjectRepository.getObjectById<Component>(del[0]).destroy();
         }
     }
 
     public getAllComponents() {
-        return this._components.concat([]);
+        return this._componentIds.map(cId => this._application.managedObjectRepository.getObjectById<Component>(cId));
     }
 
     /**
@@ -115,7 +107,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
      * @param strict If `true`, only Components that are the exact specified type are returned. Otherwise, also inheriting types qualify _(default)_.
      */
     public getComponents<T extends Component>(componentType: ComponentConstructor<T>, strict?: boolean) {
-        return this._components.filter((comp): comp is T => isInstanceOf(comp, componentType, strict));
+        return this.getAllComponents().filter((comp): comp is T => isInstanceOf(comp, componentType, strict));
     }
 
     /**
@@ -171,7 +163,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             id: this.id,
             transform: this._transform.getSerializableObject(),
             isActive: this._isActive,
-            components: this._components.map(c => c.getSerializableObject()),
+            components: this._componentIds.map(cId => this._application.managedObjectRepository.getObjectById<Component>(cId).getSerializableObject()),
             name: this.name,
             children: this.getChildren().map(c => c.getSerializableObject())
         }

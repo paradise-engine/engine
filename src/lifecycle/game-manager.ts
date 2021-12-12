@@ -1,6 +1,6 @@
 import { Scene } from "../core";
 import { SceneLoadError } from "../errors";
-import { Renderer } from "../renderer";
+import { IRenderer } from "../renderer";
 import { ResourceLoader } from "../resource";
 import { Time } from "../time";
 
@@ -12,7 +12,7 @@ export class GameManager {
     private _transitionFlag = false;
     private _transitionScene?: Scene;
 
-    public readonly renderer: Renderer;
+    public readonly renderer: IRenderer;
     public readonly loader: ResourceLoader;
 
     public get isRunning() {
@@ -35,9 +35,9 @@ export class GameManager {
         return this._transitionScene;
     }
 
-    constructor() {
-        this.renderer = new Renderer();
-        this.loader = new ResourceLoader(this.renderer);
+    constructor(renderer: IRenderer, loader: ResourceLoader) {
+        this.renderer = renderer;
+        this.loader = loader;
     }
 
     private _gameLoop = (msElapsed: number) => {

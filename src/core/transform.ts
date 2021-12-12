@@ -1,7 +1,7 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { Control } from "../controls";
 import { DestroyBoundTransformError } from "../errors";
-import { deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
+import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { Component } from "./component";
 import { Rotation, RotationControlOptions, SerializableRotation } from "./rotation";
 import { SerializableVector, Vector, VectorControlOptions } from "./vector";
@@ -19,14 +19,18 @@ export interface SerializableTransform extends SerializableObject {
 export class Transform extends Component implements ISerializable<SerializableTransform> {
 
     public static applySerializable(s: SerializableTransform, comp: Transform) {
-        this._changeId(comp, s.id);
-        comp._localPosition = deserialize(s.localPosition);
-        comp._localRotation = deserialize(s.localRotation);
-        comp._localScale = deserialize(s.localScale);
+        const compIdIndex = comp.gameObject['_componentIds'].indexOf(comp.id);
+        comp.application.managedObjectRepository.changeId(comp, s.id);
+        comp.gameObject['_componentIds'][compIdIndex] = s.id;
+
+        const options: DeserializationOptions = { application: comp.application };
+        comp._localPosition = deserialize(s.localPosition, options);
+        comp._localRotation = deserialize(s.localRotation, options);
+        comp._localScale = deserialize(s.localScale, options);
     }
 
-    protected _parent?: Transform;
-    protected _children: Transform[] = [];
+    protected _parentId?: string;
+    protected _children: string[] = [];
 
     // represents local position
     @Control<VectorControlOptions>({
@@ -55,43 +59,47 @@ export class Transform extends Component implements ISerializable<SerializableTr
 
     // #region hierarchy implementation
 
-    public get parent() {
-        return this._parent;
+    public get parent(): Transform | undefined {
+        if (!this._parentId) {
+            return undefined;
+        }
+        return this._application.managedObjectRepository.getObjectById<Transform>(this._parentId);
     }
 
     public get children() {
-        return this._children.concat([]);
+        return this._children.map(childId => this._application.managedObjectRepository.getObjectById<Transform>(childId));
     }
 
     public setParent(parent: Transform | null) {
-        if (this._parent) {
-            this._parent.removeChild(this);
+        if (this.parent) {
+            this.parent.removeChild(this);
         }
 
         if (parent) {
-            this._parent = parent;
-            if (!parent.children.includes(this)) {
+            this._parentId = parent.id;
+
+            if (!parent._children.includes(this.id)) {
                 parent.addChild(this);
             }
         } else {
-            this._parent = undefined;
+            this._parentId = undefined;
         }
     }
 
     public addChild(child: Transform) {
-        if (!this._children.includes(child)) {
-            this._children.push(child);
+        if (!this._children.includes(child.id)) {
+            this._children.push(child.id);
 
-            if (child.parent !== this) {
+            if (child._parentId !== this.id) {
                 child.setParent(this);
             }
         }
     }
 
     public removeChild(child: Transform) {
-        if (this._children.includes(child)) {
+        if (this._children.includes(child.id)) {
 
-            this._children.splice(this._children.indexOf(child), 1);
+            this._children.splice(this._children.indexOf(child.id), 1);
             if (child.parent) {
                 child.setParent(null);
             }
@@ -105,8 +113,8 @@ export class Transform extends Component implements ISerializable<SerializableTr
      * The global position of the Transform
      */
     public get position(): Vector {
-        if (this._parent) {
-            return Vector.add(this._parent.position, Vector.rotate(this._localPosition, this._parent.rotation));
+        if (this.parent) {
+            return Vector.add(this.parent.position, Vector.rotate(this._localPosition, this.parent.rotation));
         }
         return this._localPosition;
     }
@@ -122,8 +130,8 @@ export class Transform extends Component implements ISerializable<SerializableTr
      * The global rotation of the Transform
      */
     public get rotation(): Rotation {
-        if (this._parent) {
-            return Rotation.add(this._parent.rotation, this._localRotation);
+        if (this.parent) {
+            return Rotation.add(this.parent.rotation, this._localRotation);
         }
 
         return this._localRotation;
@@ -140,8 +148,8 @@ export class Transform extends Component implements ISerializable<SerializableTr
      * The global scale of the Transform
      */
     public get scale(): Vector {
-        if (this._parent) {
-            return Vector.multiply(this._parent.scale, this._localScale);
+        if (this.parent) {
+            return Vector.multiply(this.parent.scale, this._localScale);
         }
 
         return this._localScale;
@@ -226,8 +234,8 @@ export class Transform extends Component implements ISerializable<SerializableTr
      */
     public getGlobalMatrix() {
         const matrix = this.getLocalMatrix();
-        if (this._parent) {
-            const parentMatrix = this._parent.getGlobalMatrix();
+        if (this.parent) {
+            const parentMatrix = this.parent.getGlobalMatrix();
             mat4.multiply(matrix, parentMatrix, matrix);
         }
 

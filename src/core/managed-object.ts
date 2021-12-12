@@ -1,3 +1,4 @@
+import { Application } from "../application";
 import { generateRandomString } from "../util";
 
 /**
@@ -5,51 +6,34 @@ import { generateRandomString } from "../util";
  * that can be destroyed.
  */
 export abstract class ManagedObject {
-	// map that holds all currently loaded managed objects
-	private static _objectMap: Map<string, ManagedObject> = new Map();
-
-	protected static _changeId(obj: ManagedObject, id: string) {
-		this._objectMap.delete(obj.id);
-		obj._id = id;
-		this._objectMap.set(obj.id, obj);
-	}
-
-	/**
-	 * Returns the loaded ManagedObject with the
-	 * specified id
-	 * @param id The id of the Object
-	 */
-	public static getObjectById(id: string) {
-		return this._objectMap.get(id);
-	}
-
-	/**
-	 * Returns all currently loaded ManagedObjects
-	 */
-	public static getAllLoadedObjects() {
-		return Array.from(this._objectMap.values());
-	}
-
 	private _isDestroyed = false;
 	protected _id: string;
+	protected _application: Application;
 
 	public get id() {
 		return this._id;
+	}
+
+	public get application() {
+		return this._application;
 	}
 
 	public get isDestroyed() {
 		return this._isDestroyed;
 	}
 
-	constructor() {
+	constructor(application: Application) {
 		this._id = generateRandomString();
-		ManagedObject._objectMap.set(this.id, this);
+		this._application = application;
+		this._application.managedObjectRepository['_objectMap'].set(this.id, this);
+
+		Object.defineProperty(this, '_application', { enumerable: false });
 	}
 
 	public destroy() {
 		if (!this._isDestroyed) {
 			this._isDestroyed = true;
-			ManagedObject._objectMap.delete(this.id);
+			this._application.managedObjectRepository['_objectMap'].delete(this.id);
 		}
 	}
 }

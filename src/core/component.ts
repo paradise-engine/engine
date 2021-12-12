@@ -1,10 +1,10 @@
+import { Application } from "../application";
 import { ManagedObjectDestroyedError, RuntimeInconsistencyError } from "../errors";
 import { ISerializable, SerializableObject } from "../serialization";
-import { __ComponentCreationLock } from "./component-creation-lock";
 import { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
 
-export type ComponentConstructor<T extends Component> = new (gameObject: GameObject) => T;
+export type ComponentConstructor<T extends Component> = new (application: Application, gameObject: GameObject) => T;
 
 export interface SerializableComponent extends SerializableObject { }
 
@@ -13,18 +13,6 @@ export interface SerializableComponent extends SerializableObject { }
  * to GameObjects.
  */
 export abstract class Component extends ManagedObject implements ISerializable<SerializableComponent> {
-
-	// Map that holds a reference to a GameObject id for each Component id
-	private static _gameObjectMap: Map<string, string> = new Map();
-
-	/**
-	 * Returns all currently loaded Components
-	 */
-	public static override getAllLoadedObjects() {
-		return super.getAllLoadedObjects()
-			.filter((obj): obj is Component => obj instanceof Component);
-	}
-
 	/**
 	 * workaround to prevend edless loop between `destroy()`
 	 * and GameObject's `removeComponent()` 
@@ -36,29 +24,29 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 			throw new ManagedObjectDestroyedError();
 		}
 
-		const objId = Component._gameObjectMap.get(this.id);
+		const objId = this._application.managedObjectRepository['_componentObjectMap'].get(this.id);
 		if (!objId) {
 			throw new RuntimeInconsistencyError('Cannot get GameObject of orphaned Component');
 		}
 
-		return GameObject.getObjectById(objId) as GameObject;
+		return this._application.managedObjectRepository.getObjectById<GameObject>(objId);
 	}
 
-	constructor(gameObject: GameObject) {
-		if (!__ComponentCreationLock.componentsMayBeCreated()) {
+	constructor(application: Application, gameObject: GameObject) {
+		if (!application['__ccLock'].componentsMayBeCreated()) {
 			throw new RuntimeInconsistencyError('Cannot create component: Component creation is locked');
 		}
 
-		super();
+		super(application);
 		this._markedForDestruction = false;
-		Component._gameObjectMap.set(this.id, gameObject.id);
+		this._application.managedObjectRepository['_componentObjectMap'].set(this.id, gameObject.id);
 	}
 
 	public override destroy() {
 		if (!this._markedForDestruction) {
 			this._markedForDestruction = true;
 			this.gameObject.removeComponent(this);
-			Component._gameObjectMap.delete(this.id);
+			this._application.managedObjectRepository['_componentObjectMap'].delete(this.id);
 			super.destroy();
 		}
 	}

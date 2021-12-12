@@ -3,6 +3,7 @@ import { RendererRanOutOfContainersError, RenderingContextError } from "../error
 import { DefaultShader } from './shader';
 import { ShaderPipeline } from "./shader-pipeline";
 import { GlobalShaderData } from "./global-shader-data";
+import { IRenderer } from "./i-renderer";
 
 export interface RendererOptions {
     view?: HTMLCanvasElement;
@@ -52,7 +53,7 @@ function drawQueueItem(item: RenderQueueItem) {
     }
 }
 
-export class Renderer {
+export class Renderer implements IRenderer {
 
     private _renderQueue: RenderQueue = [];
     private _activeQueueStack: RenderQueue[] = [];

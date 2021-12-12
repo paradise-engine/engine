@@ -9,3 +9,4 @@ export * from './component';
 export * from './scene';
 export * from './color';
 export * from './behaviour';
+export * from './managed-object-repository';

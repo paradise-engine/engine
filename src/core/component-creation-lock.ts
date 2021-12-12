@@ -9,10 +9,10 @@ import { RuntimeInconsistencyError } from "../errors";
  * This static class is used to unlock component creation.
  * It should not be used by non-internal classes.
  */
-export abstract class __ComponentCreationLock {
-	private static __isLocked = true;
+export class __ComponentCreationLock {
+	private __isLocked = true;
 
-	public static unlockComponentCreation() {
+	public unlockComponentCreation() {
 		if (this.__isLocked) {
 			this.__isLocked = false;
 		} else {
@@ -20,7 +20,7 @@ export abstract class __ComponentCreationLock {
 		}
 	}
 
-	public static lockComponentCreation() {
+	public lockComponentCreation() {
 		if (!this.__isLocked) {
 			this.__isLocked = true;
 		} else {
@@ -28,7 +28,7 @@ export abstract class __ComponentCreationLock {
 		}
 	}
 
-	public static componentsMayBeCreated() {
+	public componentsMayBeCreated() {
 		return !this.__isLocked;
 	}
 }

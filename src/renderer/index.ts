@@ -9,3 +9,4 @@ export * from './shader-pipeline';
 export * from './shader-target';
 export * from './container';
 export * from './i-positionable';
+export * from './i-renderer';
