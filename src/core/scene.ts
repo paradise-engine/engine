@@ -1,7 +1,7 @@
 import { Application } from "../application";
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
-import { Dictionary, generateRandomString } from "../util";
+import { arrayMove, Dictionary, generateRandomString } from "../util";
 import { GameObject, SerializableGameObject } from "./game-object";
 
 export interface SerializableScene extends SerializableObject {
@@ -95,7 +95,7 @@ export class Scene implements ISerializable<SerializableScene> {
     }
 
     public moveGameObject(fromIndex: number, toIndex: number) {
-        this._gameObjectIds.splice(toIndex, 0, this._gameObjectIds.splice(fromIndex, 1)[0]);
+        this._gameObjectIds = arrayMove(this._gameObjectIds, fromIndex, toIndex);
     }
 
     public getSerializableObject(): SerializableScene {

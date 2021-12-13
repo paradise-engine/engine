@@ -2,6 +2,7 @@ import { mat4, quat, vec3 } from "gl-matrix";
 import { Control } from "../controls";
 import { DestroyBoundTransformError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
+import { arrayMove } from "../util";
 import { Component } from "./component";
 import { Rotation, RotationControlOptions, SerializableRotation } from "./rotation";
 import { SerializableVector, Vector, VectorControlOptions } from "./vector";
@@ -105,6 +106,10 @@ export class Transform extends Component implements ISerializable<SerializableTr
             }
 
         }
+    }
+
+    public reorderChild(childIndex: number, destinationIndex: number) {
+        this._children = arrayMove(this._children, childIndex, destinationIndex);
     }
 
     // #endregion
