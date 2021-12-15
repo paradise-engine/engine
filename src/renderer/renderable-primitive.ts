@@ -58,5 +58,5 @@ export abstract class RenderablePrimitive extends ShaderTarget implements IRende
         mat4.getScaling(this._scaling, this._globalMatrix);
     }
 
-    public abstract render(renderer: IRenderer): void;
+    public abstract render(renderer: IRenderer<any>): void;
 }

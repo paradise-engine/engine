@@ -1,4 +1,5 @@
-import { RuntimeInconsistencyError } from "../errors";
+import { RuntimeInconsistencyError, UnknownDeserializableError } from "../errors";
+import { DeserializationOptions, deserialize, ISerializable, isSerializableComponentClass, registerDeserializable, SerializableObject } from "../serialization";
 import { MicroEmitter } from "../util";
 import { Component } from "./component";
 import { GameObject } from "./game-object";
@@ -8,7 +9,44 @@ interface ObjectRepositoryEvents {
     idChanged: { oldId: string, newId: string }
 }
 
-export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents> {
+export interface SerializableManagedObjectRepository extends SerializableObject {
+    objectMap: { [key: string]: SerializableObject };
+    componentObjectMap: { [key: string]: string };
+}
+
+export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents> implements ISerializable<SerializableManagedObjectRepository> {
+    public static fromSerializable(s: SerializableManagedObjectRepository, options: DeserializationOptions) {
+        const repo = new ManagedObjectRepository();
+
+        options.application['_managedObjectRepository'] = repo;
+
+        for (const key of Object.keys(s.objectMap)) {
+            if (s.objectMap.hasOwnProperty(key)) {
+                try {
+                    repo._objectMap.set(key, deserialize(s.objectMap[key], options) as unknown as ManagedObject)
+                } catch (err) {
+                    // catch UnknownDeserializableError for components
+                    if (!(err instanceof UnknownDeserializableError)) {
+                        throw err;
+                    }
+
+                    if (!isSerializableComponentClass(s.objectMap[key]._ctor)) {
+                        throw err;
+                    }
+                }
+
+            }
+        }
+
+        for (const key of Object.keys(s.componentObjectMap)) {
+            if (s.componentObjectMap.hasOwnProperty(key)) {
+                repo._componentObjectMap.set(key, s.componentObjectMap[key]);
+            }
+        }
+
+        return repo;
+    }
+
     // map that holds all currently loaded managed objects
     private _objectMap: Map<string, ManagedObject> = new Map();
 
@@ -72,4 +110,26 @@ export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents
         return this.getAllLoadedObjects()
             .filter((obj): obj is GameObject => obj instanceof GameObject)
     }
+
+    public getSerializableObject(): SerializableManagedObjectRepository {
+        const objectMap: { [key: string]: SerializableObject } = {};
+
+        this._objectMap.forEach((value, key) => {
+            objectMap[key] = (value as unknown as ISerializable<SerializableObject>).getSerializableObject();
+        });
+
+        const componentObjectMap: { [key: string]: string } = {};
+
+        this._componentObjectMap.forEach((value, key) => {
+            componentObjectMap[key] = value;
+        });
+
+        return {
+            _ctor: ManagedObjectRepository.name,
+            objectMap,
+            componentObjectMap
+        }
+    }
 }
+
+registerDeserializable(ManagedObjectRepository);

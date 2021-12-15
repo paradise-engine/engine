@@ -27,7 +27,7 @@ export abstract class ManagedObject {
 		this._application = application;
 		this._application.managedObjectRepository['_objectMap'].set(this.id, this);
 
-		Object.defineProperty(this, '_application', { enumerable: false });
+		// Object.defineProperty(this, '_application', { enumerable: false });
 	}
 
 	public destroy() {

@@ -37,7 +37,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
         this._globalMatrix = globalMatrix;
     }
 
-    public render(renderer: IRenderer) {
+    public render(renderer: IRenderer<any>) {
 
         const containerShaderCount = this._shaders.length;
 

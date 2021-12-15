@@ -47,6 +47,14 @@ export function getSerializableComponentClass(cname: string) {
     return deserializableComponentClass;
 }
 
+export function isSerializableComponentClass(ctor: string) {
+    const compClass = _serializableComponents[ctor];
+    if (compClass) {
+        return true;
+    }
+    return false;
+}
+
 export function applySerializable<T extends SerializableObject, K extends ISerializable<T>>(s: T, comp: K) {
     const deserializableComponentClass = _serializableComponents[s._ctor];
 
