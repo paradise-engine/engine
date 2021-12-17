@@ -94,7 +94,7 @@ export class Rotation implements IComparable, ISerializable<SerializableRotation
         this.degrees = radianToDegrees(val);
     }
 
-    protected constructor(degrees: number) {
+    constructor(degrees: number) {
         this.degrees = degrees;
     }
 
