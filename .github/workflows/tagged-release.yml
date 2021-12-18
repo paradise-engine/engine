@@ -26,6 +26,11 @@ jobs:
           files: dist/ typings LICENSE logo.svg package.json README.md
           dest: "${{ inputs.releaseName }}.zip"
 
+      - uses: actions/upload-artifact@v2
+        with:
+          name: archive
+          path: ${{ github.workspace }}/${{ inputs.releaseName }}.zip
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -33,4 +38,4 @@ jobs:
           automatic_release_tag: ${{ inputs.releaseName }}
           title: ${{ inputs.releaseName }}
           files: |
-            "${{ inputs.releaseName }}.zip"
+            "${{ github.workspace }}/${{ inputs.releaseName }}.zip"
