@@ -1,0 +1,14 @@
+name: Create Alpha Release
+
+on:
+  push:
+    branches:
+      - alpha
+
+jobs:
+  call_release:
+    name: Call Release Workflow
+    runs-on: ubuntu-latest
+    uses: ParadiseEngine/engine/.github/workflows/release.yml
+    with:
+      semverType: alpha
