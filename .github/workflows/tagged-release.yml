@@ -1,9 +1,12 @@
 name: "Create Release from Tag"
 
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_call:
+    inputs:
+      releaseName:
+        description: "Release Name"
+        required: true
+        type: string
 
 jobs:
   tagged-release:
@@ -21,3 +24,4 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          title: ${{ inputs.releaseName }}

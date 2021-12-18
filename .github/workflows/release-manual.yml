@@ -16,6 +16,12 @@ on:
 
 jobs:
   call_release:
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
+    uses: ParadiseEngine/engine/.github/workflows/release.yml@master
     with:
       semverType: ${{ github.event.inputs.semverType }}
+
+  call_tagged:
+    needs: call_release
+    uses: ParadiseEngine/engine/.github/workflows/release.yml@master
+    with:
+      releaseName: ${{ needs.call_release.outputs.version }}
