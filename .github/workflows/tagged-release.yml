@@ -26,3 +26,10 @@ jobs:
           prerelease: false
           automatic_release_tag: ${{ inputs.releaseName }}
           title: ${{ inputs.releaseName }}
+          files: |
+            typings
+            LICENSE
+            logo.svg
+            package.json
+            README.md
+            dist
