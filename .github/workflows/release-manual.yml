@@ -18,4 +18,4 @@ jobs:
   call_release:
     uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
     with:
-      semverType: ${{ inputs.semverType }}
+      semverType: ${{ github.event.inputs.semverType }}
