@@ -1,0 +1,43 @@
+# This is a basic workflow that is manually triggered
+
+name: New Release
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      semverType:
+        description: 'Release Type'     
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - alpha
+        - patch
+        - minor
+        - major
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - run: npm ci
+      - run: npm run build
+      - if: ${{ github.event.inputs.semverType == 'alpha' }}
+        run: npm version prerelease --preid=alpha
+      - if: ${{ github.event.inputs.semverType == 'patch' }}
+        run: npm version patch
+      - if: ${{ github.event.inputs.semverType == 'minor' }}
+        run: npm version minor
+      - if: ${{ github.event.inputs.semverType == 'major' }}
+        run: npm version major
+      - run: git config user.name github-actions
+      - run: git config user.email github-actions@github.com
+      - run: git push --follow-tags
