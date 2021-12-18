@@ -1,5 +1,5 @@
 <div align="center">
-    <img width="200" height="200" src="logo.svg" />
+    <img width="200" height="200" src="https://raw.githubusercontent.com/paradise-engine/engine/master/logo.svg" />
     <h1>Paradise Engine</h1>
     <p>2D JavaScript/WebGL engine.</p>
     <p><i>Paradise Engine is an experimental project in a <b>very</b> early pre-alpha stage.</i></p>
