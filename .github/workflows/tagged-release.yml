@@ -20,8 +20,23 @@ jobs:
           registry-url: https://npm.pkg.github.com/
       - run: npm ci
       - run: npm run build
+
+      - uses: papeloto/action-zip@v1
+        with:
+          files: dist typings LICENSE logo.svg package.json README.md
+          recursive: false
+          dest: "${{ inputs.releaseName }}.zip"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: archive
+          path: ${{ github.workspace }}/${{ inputs.releaseName }}.zip
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
+          automatic_release_tag: ${{ inputs.releaseName }}
           title: ${{ inputs.releaseName }}
+          files: |
+            ${{ github.workspace }}/${{ inputs.releaseName }}.zip
