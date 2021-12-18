@@ -16,8 +16,6 @@ on:
 
 jobs:
   call_release:
-    name: Call Release Workflow
-    runs-on: ubuntu-latest
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@master
+    uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
     with:
-      semverType: ${{ inputs.semverType }}
+      semverType: ${{ github.event.inputs.semverType }}
