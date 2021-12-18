@@ -22,6 +22,6 @@ jobs:
 
   call_tagged:
     needs: call_release
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@master
+    uses: ParadiseEngine/engine/.github/workflows/tagged-release.yml@master
     with:
       releaseName: ${{ needs.call_release.outputs.version }}

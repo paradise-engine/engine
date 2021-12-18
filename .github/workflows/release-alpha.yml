@@ -10,3 +10,9 @@ jobs:
     uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
     with:
       semverType: alpha
+
+  call_tagged:
+    needs: call_release
+    uses: ParadiseEngine/engine/.github/workflows/tagged-release.yml@alpha
+    with:
+      releaseName: ${{ needs.call_release.outputs.version }}
