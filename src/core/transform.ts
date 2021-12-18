@@ -37,7 +37,7 @@ export class Transform extends Component implements ISerializable<SerializableTr
     @Control<VectorControlOptions>({
         name: 'Position',
         options: {
-            prefixes: ['x', 'y']
+            prefixes: ['X', 'Y']
         }
     })
     protected _localPosition: Vector = new Vector(0, 0);
@@ -53,8 +53,9 @@ export class Transform extends Component implements ISerializable<SerializableTr
     @Control<VectorControlOptions>({
         name: 'Scale',
         options: {
-            prefixes: ['x', 'y']
-        }
+            prefixes: ['X', 'Y'],
+            step: 0.1
+        },
     })
     protected _localScale: Vector = new Vector(1, 1);
 
