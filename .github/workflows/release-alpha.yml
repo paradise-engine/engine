@@ -9,6 +9,7 @@ jobs:
   call_release:
     name: Call Release Workflow
     runs-on: ubuntu-latest
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
-    with:
-      semverType: alpha
+    steps:
+      - uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
+        with:
+          semverType: alpha
