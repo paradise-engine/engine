@@ -1,4 +1,4 @@
-name: Create Release
+name: Create Release Manually
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
 
 jobs:
   call_release:
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@master
+    uses: ParadiseEngine/engine/.github/workflows/tag-version.yml@master
     with:
       semverType: ${{ github.event.inputs.semverType }}
 

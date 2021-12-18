@@ -7,7 +7,7 @@ on:
 
 jobs:
   call_release:
-    uses: ParadiseEngine/engine/.github/workflows/release.yml@alpha
+    uses: ParadiseEngine/engine/.github/workflows/tag-version.yml@alpha
     with:
       semverType: alpha
 
