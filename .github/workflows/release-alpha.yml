@@ -18,4 +18,7 @@ jobs:
       releaseName: ${{ needs.call_tag_version.outputs.version }}
 
   call_publish:
+    needs: call_tag_version
     uses: paradise-engine/engine/.github/workflows/npm-publish-github-packages.yml@alpha
+    with:
+      tag: alpha
