@@ -1,0 +1,23 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      semverType:
+        description: "Release Type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - alpha
+          - patch
+          - minor
+          - major
+
+jobs:
+  call_release:
+    name: Call Release Workflow
+    runs-on: ubuntu-latest
+    uses: ParadiseEngine/engine/.github/workflows/release.yml
+    with:
+      semverType: ${{ inputs.semverType }}
