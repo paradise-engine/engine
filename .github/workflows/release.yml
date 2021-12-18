@@ -22,6 +22,9 @@ jobs:
           node-version: 14
       - run: npm ci
       - run: npm run build
+      - run: git config user.name github-actions
+      - run: git config user.email github-actions@github.com
+
       - if: ${{ inputs.semverType == 'alpha' }}
         run: npm version prerelease --preid=alpha
       - if: ${{ inputs.semverType == 'patch' }}
@@ -30,6 +33,5 @@ jobs:
         run: npm version minor
       - if: ${{ inputs.semverType == 'major' }}
         run: npm version major
-      - run: git config user.name github-actions
-      - run: git config user.email github-actions@github.com
+
       - run: git push --follow-tags
