@@ -1,6 +1,6 @@
 {
   "name": "@paradise-engine/engine",
-  "version": "1.0.1-alpha.20",
+  "version": "1.0.1-alpha.21",
   "description": "The core functionalities of Paradise Engine.",
   "main": "dist/index.js",
   "scripts": {
