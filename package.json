@@ -1,5 +1,5 @@
 {
-  "name": "paradise-engine",
+  "name": "@paradise-engine/engine",
   "version": "1.0.1-alpha.17",
   "description": "The core functionalities of Paradise Engine.",
   "main": "dist/index.js",
@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ParadiseEngine/engine.git"
+    "url": "git+https://github.com/paradise-engine/engine.git"
   },
   "author": "Paradise Engine <contact@paradise-engine.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/ParadiseEngine/engine/issues"
+    "url": "https://github.com/paradise-engine/engine/issues"
   },
-  "homepage": "https://github.com/ParadiseEngine/engine#readme",
+  "homepage": "https://github.com/paradise-engine/engine#readme",
   "files": [
     "dist/**/*",
     "LICENSE",

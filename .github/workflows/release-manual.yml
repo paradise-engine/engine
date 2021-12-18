@@ -16,15 +16,15 @@ on:
 
 jobs:
   call_tag_version:
-    uses: ParadiseEngine/engine/.github/workflows/tag-version.yml@master
+    uses: paradise-engine/engine/.github/workflows/tag-version.yml@master
     with:
       semverType: ${{ github.event.inputs.semverType }}
 
   call_release_tagged:
     needs: call_tag_version
-    uses: ParadiseEngine/engine/.github/workflows/tagged-release.yml@master
+    uses: paradise-engine/engine/.github/workflows/tagged-release.yml@master
     with:
       releaseName: ${{ needs.call_tag_version.outputs.version }}
 
   call_publish:
-    uses: ParadiseEngine/engine/.github/workflows/npm-publish-github-packages.yml@master
+    uses: paradise-engine/engine/.github/workflows/npm-publish-github-packages.yml@master

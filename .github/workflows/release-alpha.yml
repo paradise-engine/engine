@@ -7,15 +7,15 @@ on:
 
 jobs:
   call_tag_version:
-    uses: ParadiseEngine/engine/.github/workflows/tag-version.yml@alpha
+    uses: paradise-engine/engine/.github/workflows/tag-version.yml@alpha
     with:
       semverType: alpha
 
   call_release_tagged:
     needs: call_tag_version
-    uses: ParadiseEngine/engine/.github/workflows/tagged-release.yml@alpha
+    uses: paradise-engine/engine/.github/workflows/tagged-release.yml@alpha
     with:
       releaseName: ${{ needs.call_tag_version.outputs.version }}
 
   call_publish:
-    uses: ParadiseEngine/engine/.github/workflows/npm-publish-github-packages.yml@alpha
+    uses: paradise-engine/engine/.github/workflows/npm-publish-github-packages.yml@alpha
