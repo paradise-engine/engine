@@ -12,7 +12,7 @@
 
 <h2 id="getting-started">Getting Started</h2>
 
-Paradise Engine required Node.js v14.x or higher.
+Paradise Engine required Node.js v16.x or higher.
 
 ### Installing from GitHub Packages registry
 
