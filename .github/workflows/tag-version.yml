@@ -11,6 +11,8 @@ on:
     outputs:
       version:
         value: ${{ jobs.version.outputs.version_output }}
+      sha:
+        value: ${{ jobs.version.outputs.sha_output }}
 
 jobs:
   version:
@@ -20,6 +22,7 @@ jobs:
       contents: write
     outputs:
       version_output: ${{ steps.version_command.outputs.version }}
+      sha_output: ${{ steps.sha_command.outputs.sha }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -38,5 +41,8 @@ jobs:
         run: echo "CUSTOM_NEXT_VERSION=$(npm version major)" >> $GITHUB_ENV
 
       - run: git push --follow-tags
+      - run: echo "CUSTOM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
       - id: version_command
         run: echo "::set-output name=version::${CUSTOM_NEXT_VERSION}"
+      - id: sha_command
+        run: echo "::set-output name=sha::${CUSTOM_SHA}"
