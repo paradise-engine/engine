@@ -1,6 +1,6 @@
 import { Application } from "../application";
 import { Control, NumberControlOptions } from "../controls";
-import { Color, ColorControlOptions, Behaviour, GameObject, Rect, SerializableColor, SerializableBehaviour, SerializableRect } from "../core";
+import { Color, ColorControlOptions, Behaviour, GameObject, Rect, SerializableColor, SerializableBehaviour, SerializableRect, RectControlOptions } from "../core";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 
 export interface SerializableCamera extends SerializableBehaviour {
@@ -26,10 +26,14 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         comp.depth = s.depth;
     }
 
-    @Control<ColorControlOptions>()
+    @Control<ColorControlOptions>({
+        name: 'Background Color',
+        options: {}
+    })
     public backgroundColor: Color;
 
     @Control<NumberControlOptions>({
+        name: 'Size',
         options: {
             min: 0,
             step: 0.1,
@@ -37,14 +41,28 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
     })
     public size: number;
 
-    @Control<NumberControlOptions>()
+    @Control<NumberControlOptions>({
+        name: 'Near Clip Pane',
+        options: {}
+    })
     public nearClipPane: number;
 
-    @Control<NumberControlOptions>()
+    @Control<NumberControlOptions>({
+        name: 'Far Clip Pane',
+        options: {}
+    })
     public farClipPane: number;
+
+    @Control<RectControlOptions>({
+        name: 'Viewport',
+        options: {
+            prefixes: ['X', 'Y', 'Width', 'Height']
+        }
+    })
     public viewportRect: Rect;
 
     @Control<NumberControlOptions>({
+        name: 'Depth',
         options: {
             asInteger: true
         }
