@@ -7,6 +7,10 @@ on:
         description: "Release Name"
         required: true
         type: string
+      ref:
+        description: "The ref to use"
+        required: true
+        type: string
 
 jobs:
   tagged-release:
@@ -14,6 +18,8 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{ inputs.ref }}
       - uses: actions/setup-node@v2
         with:
           node-version: 16
