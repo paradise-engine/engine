@@ -72,7 +72,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
     constructor(application: Application, gameObject: GameObject) {
         super(application, gameObject);
 
-        this.backgroundColor = Color.Blue;
+        this.backgroundColor = new Color(25, 35, 50);
         this.size = 5;
         this.nearClipPane = -1;
         this.farClipPane = 1000;
