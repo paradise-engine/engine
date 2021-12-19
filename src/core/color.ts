@@ -135,6 +135,8 @@ export class Color implements ISerializable<SerializableColor> {
         this._red = comps.r;
         this._green = comps.g;
         this._blue = comps.b;
+
+        this._hex = rgbToHex(comps.r, comps.g, comps.b);
     }
 
     public getSerializableObject(): SerializableColor {
