@@ -7,3 +7,4 @@ export * from './serialization';
 export * from './lifecycle';
 export * from './application';
 export * from './controls';
+export * from './components';
