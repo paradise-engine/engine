@@ -88,7 +88,14 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public setRenderer(renderer: IRenderer<any>) {
         this._renderer = renderer;
-        this.loader.setRenderer(renderer as Renderer);
+
+        if ((renderer as Renderer).context && !this.loader) {
+            this._loader = new ResourceLoader(renderer as Renderer);
+        }
+
+        if (this.loader) {
+            this.loader.setRenderer(renderer as Renderer);
+        }
     }
 
     public setLoader(loader: ResourceLoader) {
