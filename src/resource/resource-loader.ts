@@ -20,11 +20,23 @@ export class ResourceLoader {
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
     private _flaggedForPurge: Resource[] = [];
+    private _renderer: Renderer;
 
-    public readonly renderer: Renderer;
+    public get renderer() {
+        return this._renderer;
+    }
 
     constructor(renderer: Renderer) {
-        this.renderer = renderer;
+        this._renderer = renderer;
+    }
+
+    public setRenderer(renderer: Renderer) {
+        this._renderer = renderer;
+        for (const resource of Object.values(this._resourceMap)) {
+            if (resource.texture) {
+                resource.texture.setContext(renderer.context);
+            }
+        }
     }
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {

@@ -10,6 +10,9 @@ import { DeserializationOptions, deserialize, ISerializable, registerDeserializa
 export interface ApplicationOptions {
     id?: string;
     renderer?: IRenderer<any>;
+    loader?: ResourceLoader;
+    gameManager?: GameManager;
+    managedObjectRepository?: ManagedObjectRepository;
 }
 
 export interface SerializableApplication extends SerializableObject {
@@ -46,8 +49,7 @@ export class Application implements ISerializable<SerializableApplication> {
     private _loader: ResourceLoader;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
-
-    public readonly renderer: IRenderer<any>;
+    private _renderer: IRenderer<any>;
 
     public get loader() {
         return this._loader;
@@ -65,20 +67,41 @@ export class Application implements ISerializable<SerializableApplication> {
         return this._id;
     }
 
+    public get renderer() {
+        return this._renderer;
+    }
+
     constructor(options: ApplicationOptions = {}) {
         this._id = options.id || generateRandomString();
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
-        this.renderer = options.renderer || new Renderer(options.renderer);
+        this._renderer = options.renderer || new Renderer(options.renderer);
 
         if ((this.renderer as Renderer).context) {
             this._loader = new ResourceLoader(this.renderer as Renderer);
-            this._gameManager = new GameManager(this.renderer, this._loader);
+            this._gameManager = new GameManager(this._loader);
         } else {
             this._loader = undefined as any;
             this._gameManager = undefined as any;
         }
+    }
 
+    public setRenderer(renderer: IRenderer<any>) {
+        this._renderer = renderer;
+        this.loader.setRenderer(renderer as Renderer);
+    }
+
+    public setLoader(loader: ResourceLoader) {
+        this._loader = loader;
+        this._gameManager = new GameManager(this.loader);
+    }
+
+    public setManagedObjectRepo(repo: ManagedObjectRepository) {
+        this._managedObjectRepository = repo;
+    }
+
+    public setGameManager(gm: GameManager) {
+        this._gameManager = gm;
     }
 
     public snapshot(): Application {
