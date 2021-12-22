@@ -1,7 +1,7 @@
 import { Application } from "../application";
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
-import { arrayMove, Dictionary, generateRandomString } from "../util";
+import { arrayMove, Dictionary, generateRandomString, MicroEmitter } from "../util";
 import { GameObject, SerializableGameObject } from "./game-object";
 
 export interface SerializableScene extends SerializableObject {
@@ -10,7 +10,12 @@ export interface SerializableScene extends SerializableObject {
     gameObjects: SerializableGameObject[];
 }
 
-export class Scene implements ISerializable<SerializableScene> {
+interface SceneEvents {
+    objectEnabled: string;
+    objectDisabled: string;
+}
+
+export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<SerializableScene> {
 
     public static fromSerializable(s: SerializableScene, options: DeserializationOptions) {
         const scene = new Scene(options.application, s.name);
@@ -48,6 +53,7 @@ export class Scene implements ISerializable<SerializableScene> {
     public name: string;
 
     constructor(application: Application, name: string) {
+        super();
         this._id = generateRandomString();
         this._application = application;
         this.name = name;
@@ -105,6 +111,14 @@ export class Scene implements ISerializable<SerializableScene> {
             id: this.id,
             gameObjects: this._gameObjectIds.map(goId => this._application.managedObjectRepository.getObjectById<GameObject>(goId).getSerializableObject())
         }
+    }
+
+    public notifyEnable(objectId: string) {
+        this.emit('objectEnabled', objectId);
+    }
+
+    public notifyDisable(objectId: string) {
+        this.emit('objectDisabled', objectId);
     }
 }
 

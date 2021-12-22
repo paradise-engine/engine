@@ -1,4 +1,4 @@
-import { Application } from "../application";
+import { IBehaviour } from "./i-behaviour";
 import { ISerializable } from "../serialization";
 import { Component, SerializableComponent } from "./component";
 
@@ -10,7 +10,7 @@ export interface SerializableBehaviour extends SerializableComponent {
 /**
  * Base class for Components that can be enabled/disabled
  */
-export class Behaviour extends Component implements ISerializable<SerializableBehaviour> {
+export class Behaviour extends Component implements ISerializable<SerializableBehaviour>, IBehaviour {
     public static applySerializable(s: SerializableBehaviour, b: Behaviour) {
         b._isActive = s.isActive;
 
@@ -26,11 +26,17 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
     }
 
     public enable() {
-        this._isActive = true;
+        if (this._isActive === false) {
+            this._isActive = true;
+            this.application.gameManager.currentScene?.notifyEnable(this.id);
+        }
     }
 
     public disable() {
-        this._isActive = false;
+        if (this._isActive === true) {
+            this._isActive = false;
+            this.application.gameManager.currentScene?.notifyDisable(this.id);
+        }
     }
 
     public getSerializableObject(): SerializableBehaviour {
@@ -43,12 +49,35 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
 
     // #region lifecycle methods
 
+    /**
+     * Is called on instantiation.
+     */
     public onAwake() { }
+
+    /**
+     * Is called when an object is enabled.
+     */
     public onEnable() { }
+
+    /**
+     * Is called before the onUpdate function is called the first time
+     * for an enabled object.
+     */
     public onStart() { }
+
+    /**
+     * Is called every frame.
+     */
     public onUpdate() { }
-    public onPostUpdate() { }
+
+    /**
+     * Is called on destroy.
+     */
     public onDestroy() { }
+
+    /**
+     * Is called when object state is switched to inactive.
+     */
     public onDisable() { }
 
     // #endregion

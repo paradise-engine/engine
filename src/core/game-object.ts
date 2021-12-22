@@ -1,4 +1,4 @@
-import { isInstanceOf } from "../util";
+import { isInstanceOf, recursiveEvent } from "../util";
 import { MultipleTransformsError } from "../errors";
 import { applySerializable, DeserializationOptions, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
@@ -125,11 +125,21 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     }
 
     public enable() {
-        this._isActive = true;
+        if (this._isActive === false) {
+            this._isActive = true;
+            this.application.gameManager.currentScene?.notifyEnable(this.id);
+
+            recursiveEvent(this, 'onEnable');
+        }
     }
 
     public disable() {
-        this._isActive = false;
+        if (this._isActive === true) {
+            this._isActive = false;
+            this.application.gameManager.currentScene?.notifyDisable(this.id);
+
+            recursiveEvent(this, 'onDisable');
+        }
     }
 
     public getChildren() {
