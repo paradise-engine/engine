@@ -5,9 +5,7 @@ import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
 import { Renderer, BaseTexture } from "../renderer";
 import { Dictionary, MicroListener } from "../util";
-
-export type ResourceLoadCallback = (resource: Resource) => void;
-export type ResourcesLoadCallback = (resources: Resource[]) => void;
+import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 
 interface ResourceLoadTask {
     name: string;
@@ -15,7 +13,7 @@ interface ResourceLoadTask {
     callback?: ResourceLoadCallback;
 }
 
-export class ResourceLoader {
+export class ResourceLoader implements IResourceLoader {
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};

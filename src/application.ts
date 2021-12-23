@@ -4,13 +4,13 @@ import { IRenderer, Renderer } from "./renderer";
 import { RuntimeInconsistencyError } from "./errors";
 import { __ComponentCreationLock } from "./core/component-creation-lock";
 import { GameManager } from "./lifecycle";
-import { ResourceLoader } from "./resource";
+import { IResourceLoader, ResourceLoader } from "./resource";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
 
 export interface ApplicationOptions {
     id?: string;
     renderer?: IRenderer<any>;
-    loader?: ResourceLoader;
+    loader?: IResourceLoader;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
 }
@@ -46,7 +46,7 @@ export class Application implements ISerializable<SerializableApplication> {
 
     private _id: string;
     private __ccLock: __ComponentCreationLock;
-    private _loader: ResourceLoader;
+    private _loader: IResourceLoader;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
     private _renderer: IRenderer<any>;
@@ -76,14 +76,8 @@ export class Application implements ISerializable<SerializableApplication> {
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
         this._renderer = options.renderer || new Renderer(options.renderer);
-
-        if ((this.renderer as Renderer).context) {
-            this._loader = new ResourceLoader(this.renderer as Renderer);
-            this._gameManager = new GameManager(this._loader);
-        } else {
-            this._loader = undefined as any;
-            this._gameManager = undefined as any;
-        }
+        this._loader = options.loader || new ResourceLoader(this.renderer as Renderer);
+        this._gameManager = new GameManager(this._loader);
     }
 
     public setRenderer(renderer: IRenderer<any>) {

@@ -1,11 +1,11 @@
 import { Behaviour, GameObject, Scene } from "../core";
 import { LifecycleError, SceneLoadError } from "../errors";
-import { ResourceLoader } from "../resource";
+import { IResourceLoader } from "../resource";
 import { Time } from "../time";
 import { recursiveEvent } from "../util";
 
 export class GameManager {
-    private _loader: ResourceLoader;
+    private _loader: IResourceLoader;
 
     private _currentScene?: Scene;
     private _isRunning = false;
@@ -66,7 +66,7 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: ResourceLoader) {
+    constructor(loader: IResourceLoader) {
         this._loader = loader;
     }
 
@@ -174,7 +174,7 @@ export class GameManager {
 
     // #region Public
 
-    public setLoader(loader: ResourceLoader) {
+    public setLoader(loader: IResourceLoader) {
         this._loader = loader;
     }
 
