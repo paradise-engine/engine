@@ -1,7 +1,8 @@
-import { Behaviour, GameObject, IBehaviour } from "../core";
+import { Behaviour, GameObject, IBehaviour, ManagedObject } from "../core";
 
 export interface RecursiveEventOptions {
     raiseOnInactive?: boolean;
+    onCall?: (object: ManagedObject) => void;
 }
 
 export function recursiveEvent(obj: GameObject, event: keyof IBehaviour, options: RecursiveEventOptions = {}) {
@@ -10,6 +11,9 @@ export function recursiveEvent(obj: GameObject, event: keyof IBehaviour, options
         for (const behaviour of behaviours) {
             if (options.raiseOnInactive || (behaviour.isActive && !behaviour.isDestroyed)) {
                 behaviour[event]();
+                if (options.onCall) {
+                    options.onCall(behaviour);
+                }
             }
         }
 

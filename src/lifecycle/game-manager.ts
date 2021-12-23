@@ -23,6 +23,9 @@ export class GameManager {
     // objects that have been enabled since last lifecycle run
     private _enabledObjects: Set<string> = new Set();
 
+    // objects that have been awakened already
+    private _awakenedObjects: Set<string> = new Set();
+
     // #endregion
 
     // #region Getters
@@ -56,6 +59,9 @@ export class GameManager {
     }
     private _onSceneObjectDisabled = (id: string) => {
         this._enabledObjects.delete(id);
+    }
+    private _onSceneObjectAwakened = (id: string) => {
+        this._awakenedObjects.add(id);
     }
 
     // #endregion
@@ -131,21 +137,37 @@ export class GameManager {
         this._transitionFlag = null;
         this._currentScene = scene;
 
-        for (const { id } of scene.getAllGameObjects()) {
-            this._enabledObjects.add(id);
+        for (const obj of scene.getAllGameObjects()) {
+            recursiveEvent(obj, 'onAwake', {
+                onCall: (obj) => {
+                    this._awakenedObjects.add(obj.id);
+                }
+            });
+            this._enabledObjects.add(obj.id);
         }
 
         scene.on('objectEnabled', this._onSceneObjectEnabled);
         scene.on('objectDisabled', this._onSceneObjectDisabled);
+        scene.on('objectAwakened', this._onSceneObjectAwakened);
     }
 
     private _unloadScene() {
         this.loader.preparePurge();
         this._currentScene?.off('objectEnabled', this._onSceneObjectEnabled);
         this._currentScene?.off('objectDisabled', this._onSceneObjectDisabled);
+        this._currentScene?.off('objectAwakened', this._onSceneObjectAwakened);
+
+        for (const gameObject of this._currentScene?.getAllGameObjects() || []) {
+            if (!gameObject.isDestroyed) {
+                gameObject.destroy();
+            }
+        }
 
         this._currentScene = undefined;
         this._enabledObjects = new Set();
+        this._awakenedObjects = new Set();
+
+
     }
 
     // #endregion

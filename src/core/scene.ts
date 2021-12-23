@@ -13,6 +13,7 @@ export interface SerializableScene extends SerializableObject {
 interface SceneEvents {
     objectEnabled: string;
     objectDisabled: string;
+    objectAwakened: string;
 }
 
 export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<SerializableScene> {
@@ -119,6 +120,10 @@ export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<Se
 
     public notifyDisable(objectId: string) {
         this.emit('objectDisabled', objectId);
+    }
+
+    public notifyAwake(objectId: string) {
+        this.emit('objectAwakened', objectId);
     }
 }
 

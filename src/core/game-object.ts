@@ -5,6 +5,7 @@ import { Component, ComponentConstructor, SerializableComponent } from "./compon
 import { ManagedObject } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
 import { Application } from "../application";
+import { Behaviour } from "./behaviour";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
@@ -67,6 +68,15 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         return this._isActive;
     }
 
+    public get parentIsActive(): boolean {
+        const parent = this.getParent();
+        if (parent) {
+            return parent.parentIsActive;
+        }
+
+        return this.isActive;
+    }
+
     constructor(application: Application, name?: string) {
         super(application);
         this.name = name || 'EmptyObject';
@@ -86,6 +96,12 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         this._application['__ccLock'].lockComponentCreation();
 
         this._componentIds.push(component.id);
+
+        if (component instanceof Behaviour) {
+            component.onAwake();
+            this.application.gameManager.currentScene?.notifyAwake(component.id);
+        }
+
         return component;
     }
 
@@ -127,18 +143,22 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     public enable() {
         if (this._isActive === false) {
             this._isActive = true;
-            this.application.gameManager.currentScene?.notifyEnable(this.id);
 
-            recursiveEvent(this, 'onEnable');
+            if (this.parentIsActive) {
+                this.application.gameManager.currentScene?.notifyEnable(this.id);
+                recursiveEvent(this, 'onEnable');
+            }
         }
     }
 
     public disable() {
         if (this._isActive === true) {
             this._isActive = false;
-            this.application.gameManager.currentScene?.notifyDisable(this.id);
 
-            recursiveEvent(this, 'onDisable');
+            if (this.parentIsActive) {
+                this.application.gameManager.currentScene?.notifyDisable(this.id);
+                recursiveEvent(this, 'onDisable');
+            }
         }
     }
 

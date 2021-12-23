@@ -28,14 +28,22 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
     public enable() {
         if (this._isActive === false) {
             this._isActive = true;
-            this.application.gameManager.currentScene?.notifyEnable(this.id);
+
+            if (this.gameObject.isActive && this.gameObject.parentIsActive) {
+                this.application.gameManager.currentScene?.notifyEnable(this.id);
+                this.onEnable();
+            }
         }
     }
 
     public disable() {
         if (this._isActive === true) {
             this._isActive = false;
-            this.application.gameManager.currentScene?.notifyDisable(this.id);
+
+            if (this.gameObject.isActive && this.gameObject.parentIsActive) {
+                this.application.gameManager.currentScene?.notifyDisable(this.id);
+                this.onDisable();
+            }
         }
     }
 
@@ -45,6 +53,11 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
             isActive: this._isActive,
             id: this.id
         }
+    }
+
+    public override destroy() {
+        this.onDestroy();
+        super.destroy();
     }
 
     // #region lifecycle methods
