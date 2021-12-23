@@ -1,17 +1,38 @@
-import { Scene } from "../core";
-import { SceneLoadError } from "../errors";
-import { ResourceLoader } from "../resource";
+import { Behaviour, GameObject, Scene } from "../core";
+import { LifecycleError, SceneLoadError } from "../errors";
+import { IResourceLoader } from "../resource";
 import { Time } from "../time";
+import { recursiveEvent } from "../util";
 
 export class GameManager {
+    private _loader: IResourceLoader<any>;
+
     private _currentScene?: Scene;
     private _isRunning = false;
 
-    private _pauseFlag = false;
-    private _transitionFlag = false;
-    private _transitionScene?: Scene;
+    // #region Flags
 
-    public readonly loader: ResourceLoader;
+    private _transitionFlag: Scene | null = null;
+
+    // #endregion
+
+    // #region Caches
+
+    // caches
+
+    // objects that have been enabled since last lifecycle run
+    private _enabledObjects: Set<string> = new Set();
+
+    // objects that have been awakened already
+    private _awakenedObjects: Set<string> = new Set();
+
+    // #endregion
+
+    // #region Getters
+
+    public get loader() {
+        return this._loader;
+    }
 
     public get isRunning() {
         return this._isRunning;
@@ -21,22 +42,38 @@ export class GameManager {
         return this._currentScene;
     }
 
-    public get aboutToPause() {
-        return this._pauseFlag;
-    }
-
     public get aboutToTransition() {
-        return this._transitionFlag;
+        return this._transitionFlag !== null;
     }
 
     public get nextTransition() {
-        return this._transitionScene;
+        return this._transitionFlag;
     }
 
-    constructor(loader: ResourceLoader) {
-        this.loader = loader;
+    // #endregion
+
+    // #region Event Handlers
+
+    private _onSceneObjectEnabled = (id: string) => {
+        this._enabledObjects.add(id);
+    }
+    private _onSceneObjectDisabled = (id: string) => {
+        this._enabledObjects.delete(id);
+    }
+    private _onSceneObjectAwakened = (id: string) => {
+        this._awakenedObjects.add(id);
     }
 
+    // #endregion
+
+    constructor(loader: IResourceLoader<any>) {
+        this._loader = loader;
+    }
+
+    /**
+     * Main game loop that runs once per frame
+     * @param msElapsed 
+     */
     private _gameLoop = (msElapsed: number) => {
         Time.tick(msElapsed);
 
@@ -44,12 +81,35 @@ export class GameManager {
             this._executeTransition();
         }
 
+        const scene = this.currentScene;
+        if (!scene) {
+            throw new LifecycleError('No scene loaded');
+        }
+
         // TODO handle lifecycle
 
-        if (!this._pauseFlag) {
-            requestAnimationFrame(this._gameLoop);
+        // Start cycle
+        for (const id of this._enabledObjects) {
+            const obj = scene.application.managedObjectRepository.getObjectById(id);
+            if (obj) {
+                if (obj instanceof GameObject) {
+                    recursiveEvent(obj, 'onStart');
+                } else if (obj instanceof Behaviour) {
+                    obj.onEnable();
+                }
+            }
         }
+        this._enabledObjects.clear();
+
+        // Update cycle
+        for (const obj of scene.getAllGameObjects()) {
+            recursiveEvent(obj, 'onUpdate');
+        }
+
+        requestAnimationFrame(this._gameLoop);
     }
+
+    // #region Private
 
     private _queueSceneResources(scene: Scene) {
         // TODO add scene resources to load (or unflag them if they are already loaded)
@@ -58,19 +118,64 @@ export class GameManager {
     }
 
     private _executeTransition() {
-        if (!this._transitionScene) {
+        if (!this._transitionFlag) {
             throw new SceneLoadError('Cannot transition scene: No scene selected for transition');
         }
 
-        this._transitionFlag = false;
-        this._currentScene = this._transitionScene;
+        this._unloadScene();
+        this._loadScene(this._transitionFlag);
 
-        this.loader.preparePurge();
-        this._queueSceneResources(this._transitionScene);
+
+        this._queueSceneResources(this._transitionFlag);
         this.loader.purge();
         this.loader.load(() => {
             // TODO emit an event
         });
+    }
+
+    private _loadScene(scene: Scene) {
+        this._transitionFlag = null;
+        this._currentScene = scene;
+
+        for (const obj of scene.getAllGameObjects()) {
+            recursiveEvent(obj, 'onAwake', {
+                onCall: (obj) => {
+                    this._awakenedObjects.add(obj.id);
+                }
+            });
+            this._enabledObjects.add(obj.id);
+        }
+
+        scene.on('objectEnabled', this._onSceneObjectEnabled);
+        scene.on('objectDisabled', this._onSceneObjectDisabled);
+        scene.on('objectAwakened', this._onSceneObjectAwakened);
+    }
+
+    private _unloadScene() {
+        this.loader.preparePurge();
+        this._currentScene?.off('objectEnabled', this._onSceneObjectEnabled);
+        this._currentScene?.off('objectDisabled', this._onSceneObjectDisabled);
+        this._currentScene?.off('objectAwakened', this._onSceneObjectAwakened);
+
+        for (const gameObject of this._currentScene?.getAllGameObjects() || []) {
+            if (!gameObject.isDestroyed) {
+                gameObject.destroy();
+            }
+        }
+
+        this._currentScene = undefined;
+        this._enabledObjects = new Set();
+        this._awakenedObjects = new Set();
+
+
+    }
+
+    // #endregion
+
+    // #region Public
+
+    public setLoader(loader: IResourceLoader<any>) {
+        this._loader = loader;
     }
 
     public loadScene(scene: Scene) {
@@ -78,9 +183,7 @@ export class GameManager {
             throw new SceneLoadError('Cannot load scene: A scene is already loaded. Use transitionScene instead');
         }
 
-        // TODO
-
-        this._currentScene = scene;
+        this._loadScene(scene);
     }
 
     public transitionScene(scene: Scene) {
@@ -88,8 +191,7 @@ export class GameManager {
             throw new SceneLoadError('Cannot transition scene: There is no active scene to transition from. For initial scene load use loadScene');
         }
 
-        this._transitionFlag = true;
-        this._transitionScene = scene;
+        this._transitionFlag = scene;
     }
 
     public unloadScene() {
@@ -101,21 +203,15 @@ export class GameManager {
             throw new SceneLoadError('Cannot unload scene: Game loop is running');
         }
 
-        // TODO
-
-        this._currentScene = undefined;
+        this._unloadScene();
     }
 
     public start() {
         if (!this._isRunning) {
+            this._isRunning = true;
             requestAnimationFrame(this._gameLoop);
         }
-        this._pauseFlag = false;
     }
 
-    public pause() {
-        if (this._isRunning && !this._pauseFlag) {
-            this._pauseFlag = true;
-        }
-    }
+    // #endregion
 }

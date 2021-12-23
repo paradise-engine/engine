@@ -3,3 +3,4 @@ export * from './resource-type';
 export * from './resource';
 export * from './mime-types';
 export * from './resource-status';
+export * from './i-resource-loader';

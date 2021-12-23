@@ -4,13 +4,13 @@ import { IRenderer, Renderer } from "./renderer";
 import { RuntimeInconsistencyError } from "./errors";
 import { __ComponentCreationLock } from "./core/component-creation-lock";
 import { GameManager } from "./lifecycle";
-import { ResourceLoader } from "./resource";
+import { IResourceLoader, ResourceLoader } from "./resource";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
 
 export interface ApplicationOptions {
     id?: string;
     renderer?: IRenderer<any>;
-    loader?: ResourceLoader;
+    loader?: IResourceLoader<any>;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
 }
@@ -18,6 +18,7 @@ export interface ApplicationOptions {
 export interface SerializableApplication extends SerializableObject {
     id: string;
     renderer: SerializableObject;
+    loader: SerializableObject;
     objectRepository: SerializableManagedObjectRepository;
 }
 
@@ -25,7 +26,8 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
         const app = new Application({
-            renderer: deserialize(s.renderer, options) as IRenderer<any>
+            renderer: deserialize(s.renderer, options) as IRenderer<any>,
+            loader: deserialize(s.loader, options) as IResourceLoader<any>
         });
 
         app._managedObjectRepository = deserialize(s.objectRepository, options);
@@ -46,7 +48,7 @@ export class Application implements ISerializable<SerializableApplication> {
 
     private _id: string;
     private __ccLock: __ComponentCreationLock;
-    private _loader: ResourceLoader;
+    private _loader: IResourceLoader<any>;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
     private _renderer: IRenderer<any>;
@@ -76,14 +78,8 @@ export class Application implements ISerializable<SerializableApplication> {
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
         this._renderer = options.renderer || new Renderer(options.renderer);
-
-        if ((this.renderer as Renderer).context) {
-            this._loader = new ResourceLoader(this.renderer as Renderer);
-            this._gameManager = new GameManager(this._loader);
-        } else {
-            this._loader = undefined as any;
-            this._gameManager = undefined as any;
-        }
+        this._loader = options.loader || new ResourceLoader(this.renderer as Renderer);
+        this._gameManager = new GameManager(this._loader);
     }
 
     public setRenderer(renderer: IRenderer<any>) {
@@ -124,6 +120,7 @@ export class Application implements ISerializable<SerializableApplication> {
             _ctor: Application.name,
             id: this._id,
             renderer: this.renderer.getSerializableObject(),
+            loader: this.loader.getSerializableObject(),
             objectRepository: this.managedObjectRepository.getSerializableObject()
         }
     }
