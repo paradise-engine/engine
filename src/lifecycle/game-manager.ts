@@ -5,7 +5,7 @@ import { Time } from "../time";
 import { recursiveEvent } from "../util";
 
 export class GameManager {
-    private _loader: IResourceLoader;
+    private _loader: IResourceLoader<any>;
 
     private _currentScene?: Scene;
     private _isRunning = false;
@@ -66,7 +66,7 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: IResourceLoader) {
+    constructor(loader: IResourceLoader<any>) {
         this._loader = loader;
     }
 
@@ -174,7 +174,7 @@ export class GameManager {
 
     // #region Public
 
-    public setLoader(loader: IResourceLoader) {
+    public setLoader(loader: IResourceLoader<any>) {
         this._loader = loader;
     }
 

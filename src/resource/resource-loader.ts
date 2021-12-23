@@ -3,9 +3,11 @@ import { MimeTypeExtensions } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { Renderer, BaseTexture } from "../renderer";
+import { Renderer, BaseTexture, SerializableRenderer } from "../renderer";
 import { Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
+import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
+
 
 interface ResourceLoadTask {
     name: string;
@@ -13,7 +15,15 @@ interface ResourceLoadTask {
     callback?: ResourceLoadCallback;
 }
 
-export class ResourceLoader implements IResourceLoader {
+export interface SerializableResourceLoader extends SerializableObject {
+    renderer: SerializableRenderer;
+}
+
+export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
+
+    public static fromSerializable(s: SerializableResourceLoader, options: DeserializationOptions) {
+        return new ResourceLoader(deserialize(s.renderer, options));
+    }
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
@@ -301,4 +311,12 @@ export class ResourceLoader implements IResourceLoader {
         resource.unload();
     }
 
+    public getSerializableObject(): SerializableResourceLoader {
+        return {
+            _ctor: ResourceLoader.name,
+            renderer: this.renderer.getSerializableObject()
+        }
+    }
+
 }
+registerDeserializable(ResourceLoader);

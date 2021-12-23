@@ -10,7 +10,7 @@ import { DeserializationOptions, deserialize, ISerializable, registerDeserializa
 export interface ApplicationOptions {
     id?: string;
     renderer?: IRenderer<any>;
-    loader?: IResourceLoader;
+    loader?: IResourceLoader<any>;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
 }
@@ -18,6 +18,7 @@ export interface ApplicationOptions {
 export interface SerializableApplication extends SerializableObject {
     id: string;
     renderer: SerializableObject;
+    loader: SerializableObject;
     objectRepository: SerializableManagedObjectRepository;
 }
 
@@ -25,7 +26,8 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
         const app = new Application({
-            renderer: deserialize(s.renderer, options) as IRenderer<any>
+            renderer: deserialize(s.renderer, options) as IRenderer<any>,
+            loader: deserialize(s.loader, options) as IResourceLoader<any>
         });
 
         app._managedObjectRepository = deserialize(s.objectRepository, options);
@@ -46,7 +48,7 @@ export class Application implements ISerializable<SerializableApplication> {
 
     private _id: string;
     private __ccLock: __ComponentCreationLock;
-    private _loader: IResourceLoader;
+    private _loader: IResourceLoader<any>;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
     private _renderer: IRenderer<any>;
@@ -118,6 +120,7 @@ export class Application implements ISerializable<SerializableApplication> {
             _ctor: Application.name,
             id: this._id,
             renderer: this.renderer.getSerializableObject(),
+            loader: this.loader.getSerializableObject(),
             objectRepository: this.managedObjectRepository.getSerializableObject()
         }
     }

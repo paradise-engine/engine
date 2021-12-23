@@ -1,10 +1,11 @@
 import { IRenderer } from "../renderer";
+import { ISerializable, SerializableObject } from "../serialization";
 import { Resource } from "./resource";
 
 export type ResourceLoadCallback = (resource: Resource) => void;
 export type ResourcesLoadCallback = (resources: Resource[]) => void;
 
-export interface IResourceLoader {
+export interface IResourceLoader<T extends SerializableObject> extends ISerializable<T> {
     renderer: IRenderer<any>;
     isFlaggedForPurge(resource: Resource): void;
     preparePurge(): void;
