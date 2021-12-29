@@ -50,4 +50,12 @@ export class InputManager extends MicroEmitter<InputManagerEvents> {
             this.emit('gamepadDisconnected', input);
         });
     }
+
+    public getGamepadByIndex(index: number) {
+        const gamepad = this.gamepads.get(index);
+        if (!gamepad) {
+            return null;
+        }
+        return gamepad;
+    }
 }

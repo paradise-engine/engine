@@ -33,6 +33,18 @@ export class GamepadInput extends MicroEmitter<GamepadInputEvents> {
         return this._nativeGamepad.index;
     }
 
+    public get connected() {
+        return this._nativeGamepad.connected;
+    }
+
+    public get axes() {
+        return this._nativeGamepad.axes;
+    }
+
+    public get buttons() {
+        return this._nativeGamepad.buttons;
+    }
+
     public get hasHapticActuator() {
         const act = (this._nativeGamepad as any).vibrationActuator;
         return act !== null && act !== undefined;
