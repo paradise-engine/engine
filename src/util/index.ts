@@ -7,3 +7,4 @@ export * from './micro-emitter';
 export * from './random-string-generator';
 export * from './array-move';
 export * from './recursive-event';
+export * from './array-permutate';
