@@ -6,6 +6,8 @@ import { ManagedObject } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
 import { Application } from "../application";
 import { Behaviour } from "./behaviour";
+import { Rect } from "./rect";
+import { IBoundingBoxModifier } from "./i-bounding-box-modifier";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
@@ -49,6 +51,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     }
 
     private _componentIds: string[] = [];
+    private _bboxComponentId?: string;
 
     // internal representation of the active field
     protected _isActive: boolean = true;
@@ -102,6 +105,10 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             this.application.gameManager.currentScene?.notifyAwake(component.id);
         }
 
+        if ((component as unknown as IBoundingBoxModifier).getBoundingBox) {
+            this._bboxComponentId = component.id;
+        }
+
         return component;
     }
 
@@ -109,7 +116,11 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         const componentIndex = this._componentIds.indexOf(component.id);
         if (componentIndex !== -1) {
             const del = this._componentIds.splice(componentIndex, 1);
-            this._application.managedObjectRepository.getObjectById<Component>(del[0]).destroy();
+            const delId = del[0];
+            this._application.managedObjectRepository.getObjectById<Component>(delId).destroy();
+            if (this._bboxComponentId === delId) {
+                this._bboxComponentId = undefined;
+            }
         }
     }
 
@@ -177,6 +188,17 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
 
     public removeChild(child: GameObject) {
         this.transform.removeChild(child.transform);
+    }
+
+    public getBoundingBox() {
+        if (this._bboxComponentId) {
+            const bboxComp = this.application.managedObjectRepository
+                .getObjectById(this._bboxComponentId) as unknown as IBoundingBoxModifier;
+
+            return bboxComp.getBoundingBox();
+        }
+
+        return new Rect(this.transform.position.x, this.transform.position.y, 0, 0);
     }
 
     public destroy() {

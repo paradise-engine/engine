@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { InvalidControlTypeError } from '../errors';
-import { BaseControlOptions, ControlDescriptor, TypeConstructor } from "./control-descriptor";
+import { TypeConstructor } from '../util';
+import { BaseControlOptions, ControlDescriptor } from "./control-descriptor";
 import { isControlType } from "./control-type";
 
 export const ValidPrimitiveTypes: TypeConstructor[] = [

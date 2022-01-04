@@ -8,7 +8,14 @@ enum ListenerType {
     single = 2
 }
 
-export class MicroEmitter<T extends Dictionary<any>> {
+export interface IEmitter<T extends Dictionary<any>> {
+    on<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    once<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    off<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    emit<K extends keyof T>(event: K, ...data: T[K] extends undefined ? [undefined?] : [T[K]]): void;
+}
+
+export class MicroEmitter<T extends Dictionary<any>> implements IEmitter<T> {
 
     private _listeners: Dictionary<Map<MicroListener<this>, ListenerType>> = {}
 

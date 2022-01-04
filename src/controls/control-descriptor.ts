@@ -1,4 +1,4 @@
-export type TypeConstructor = new (...args: any[]) => any;
+import { TypeConstructor } from "../util";
 
 export interface BaseControlOptions {
     hiddenInInspector?: boolean;
