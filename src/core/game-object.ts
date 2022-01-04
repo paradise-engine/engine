@@ -1,4 +1,4 @@
-import { isInstanceOf, recursiveEvent } from "../util";
+import { isInstanceOf, MicroEmitter, recursiveEvent } from "../util";
 import { MultipleTransformsError } from "../errors";
 import { applySerializable, DeserializationOptions, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
@@ -8,6 +8,7 @@ import { Application } from "../application";
 import { Behaviour } from "./behaviour";
 import { Rect } from "./rect";
 import { IBoundingBoxModifier } from "./i-bounding-box-modifier";
+import { MouseInputMoveEvent, MouseInputState } from "../input";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
@@ -16,6 +17,15 @@ export interface SerializableGameObject extends SerializableObject {
     transform: SerializableTransform;
     components: SerializableComponent[];
     children: SerializableGameObject[];
+}
+
+export type GameObjectEventPayload<T> = { event: T, gameObject: GameObject }
+
+export interface GameObjectEvents {
+    onMouseEnter: GameObjectEventPayload<MouseInputMoveEvent>;
+    onMouseLeave: GameObjectEventPayload<MouseInputMoveEvent>;
+    onMouseDown: GameObjectEventPayload<MouseInputState>;
+    onMouseUp: GameObjectEventPayload<MouseInputState>;
 }
 
 /**
@@ -58,6 +68,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     protected _transform: Transform;
 
     public name: string;
+    public readonly events: MicroEmitter<GameObjectEvents> = new MicroEmitter();
 
     public get transform() {
         return this._transform;
@@ -80,10 +91,23 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         return this.isActive;
     }
 
+    private _handleMouseMove = (ev: MouseInputMoveEvent) => { }
+
+    private _handleMouseDown = (ev: MouseInputState) => { }
+
+    private _handleMouseUp = (ev: MouseInputState) => { }
+
     constructor(application: Application, name?: string) {
         super(application);
         this.name = name || 'EmptyObject';
         this._transform = this.addComponent(Transform);
+
+        const inputManager = this.application.inputManager;
+        if (inputManager.mouse) {
+            inputManager.mouse.on('move', this._handleMouseMove);
+            inputManager.mouse.on('down', this._handleMouseDown);
+            inputManager.mouse.on('up', this._handleMouseUp);
+        }
     }
 
     public addComponent<T extends Component>(componentType: ComponentConstructor<T>): T {
@@ -206,6 +230,13 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             super.destroy();
             this._transform.children.forEach(c => c.gameObject.destroy());
             this.getAllComponents().forEach(c => c.destroy());
+
+            const inputManager = this.application.inputManager;
+            if (inputManager.mouse) {
+                inputManager.mouse.off('move', this._handleMouseMove);
+                inputManager.mouse.off('down', this._handleMouseDown);
+                inputManager.mouse.off('up', this._handleMouseUp);
+            }
         }
     }
 
