@@ -1,0 +1,1 @@
+export type TypeConstructor = new (...args: any[]) => any;
