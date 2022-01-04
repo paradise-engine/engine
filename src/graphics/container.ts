@@ -1,7 +1,7 @@
 import { mat4, vec3 } from "gl-matrix";
 import { IPositionable } from "./i-positionable";
 import { IRenderable } from "./i-renderable";
-import { IRenderer } from "./i-renderer";
+import { IRenderPipeline } from "./i-render-pipeline";
 import { RenderablePrimitive } from "./renderable-primitive";
 import { ShaderTarget } from "./shader-target";
 
@@ -37,11 +37,11 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
         this._globalMatrix = globalMatrix;
     }
 
-    public render(renderer: IRenderer<any>) {
+    public render(renderPipeline: IRenderPipeline<any>) {
 
         const containerShaderCount = this._shaders.length;
 
-        renderer.openContainer(this.worldSpacePosition);
+        renderPipeline.openContainer(this.worldSpacePosition);
 
         for (const child of this._children) {
             const childShaderCount = child.getShaders().length;
@@ -50,7 +50,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
                 child.addShader(shader);
             }
 
-            child.render(renderer);
+            child.render(renderPipeline);
 
             let shaderCount = childShaderCount + containerShaderCount;
             while (shaderCount > childShaderCount) {
@@ -59,7 +59,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
             }
         }
 
-        renderer.closeContainer();
+        renderPipeline.closeContainer();
     }
 
     public addChild(child: Container | RenderablePrimitive) {

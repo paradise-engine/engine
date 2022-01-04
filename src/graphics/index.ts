@@ -1,4 +1,4 @@
-export * from './renderer';
+export * from './webgl-render-pipeline';
 export * from './base-texture';
 export * from './texture';
 export * from './i-renderable';
@@ -9,4 +9,4 @@ export * from './shader-pipeline';
 export * from './shader-target';
 export * from './container';
 export * from './i-positionable';
-export * from './i-renderer';
+export * from './i-render-pipeline';

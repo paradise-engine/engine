@@ -1,12 +1,12 @@
 import { resetViewport, Shader } from "./webgl";
-import { RendererRanOutOfContainersError, RenderingContextError } from "../errors";
+import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../errors";
 import { DefaultShader } from './shader';
 import { ShaderPipeline } from "./shader-pipeline";
 import { GlobalShaderData } from "./global-shader-data";
-import { IRenderer } from "./i-renderer";
+import { IRenderPipeline } from "./i-render-pipeline";
 import { registerDeserializable, SerializableObject } from "../serialization";
 
-export interface RendererOptions {
+export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
     width?: number;
     height?: number;
@@ -54,12 +54,12 @@ function drawQueueItem(item: RenderQueueItem) {
     }
 }
 
-export interface SerializableRenderer extends SerializableObject { }
+export interface SerializableRenderPipeline extends SerializableObject { }
 
-export class Renderer implements IRenderer<SerializableRenderer> {
+export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPipeline> {
 
-    public static fromSerializable(s: SerializableRenderer) {
-        return new Renderer();
+    public static fromSerializable(s: SerializableRenderPipeline) {
+        return new WebGLRenderPipeline();
     }
 
     private _renderQueue: RenderQueue = [];
@@ -75,7 +75,7 @@ export class Renderer implements IRenderer<SerializableRenderer> {
     public readonly baseShader: Shader;
     public readonly shaderPipeline: ShaderPipeline;
 
-    constructor(options?: RendererOptions) {
+    constructor(options?: WebGLRenderPipelineOptions) {
         options = options || {};
 
         this.view = options.view || document.createElement('canvas');
@@ -127,7 +127,7 @@ export class Renderer implements IRenderer<SerializableRenderer> {
 
     public closeContainer() {
         if (this._activeQueueStack.length === 1) {
-            throw new RendererRanOutOfContainersError();
+            throw new RenderPipelineRanOutOfContainersError();
         }
         this._activeQueueStack.pop();
     }
@@ -143,11 +143,11 @@ export class Renderer implements IRenderer<SerializableRenderer> {
         this.clearRenderQueue();
     }
 
-    public getSerializableObject(): SerializableRenderer {
+    public getSerializableObject(): SerializableRenderPipeline {
         return {
-            _ctor: Renderer.name
+            _ctor: WebGLRenderPipeline.name
         }
     }
 }
 
-registerDeserializable(Renderer);
+registerDeserializable(WebGLRenderPipeline);

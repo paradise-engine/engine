@@ -1,4 +1,4 @@
-import { BaseTexture } from "../renderer";
+import { BaseTexture } from "../graphics";
 import { MicroEmitter } from "../util";
 import { ResourceStatus } from "./resource-status";
 import { ResourceType } from "./resource-type";

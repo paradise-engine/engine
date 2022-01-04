@@ -3,7 +3,7 @@ import { MimeTypeExtensions } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
 import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { Renderer, BaseTexture, SerializableRenderer } from "../renderer";
+import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline } from "../graphics";
 import { Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
@@ -16,33 +16,33 @@ interface ResourceLoadTask {
 }
 
 export interface SerializableResourceLoader extends SerializableObject {
-    renderer: SerializableRenderer;
+    renderPipeline: SerializableRenderPipeline;
 }
 
 export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
 
     public static fromSerializable(s: SerializableResourceLoader, options: DeserializationOptions) {
-        return new ResourceLoader(deserialize(s.renderer, options));
+        return new ResourceLoader(deserialize(s.renderPipeline, options));
     }
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
     private _flaggedForPurge: Resource[] = [];
-    private _renderer: Renderer;
+    private _renderPipeline: WebGLRenderPipeline;
 
-    public get renderer() {
-        return this._renderer;
+    public get renderPipeline() {
+        return this._renderPipeline;
     }
 
-    constructor(renderer: Renderer) {
-        this._renderer = renderer;
+    constructor(renderPipeline: WebGLRenderPipeline) {
+        this._renderPipeline = renderPipeline;
     }
 
-    public setRenderer(renderer: Renderer) {
-        this._renderer = renderer;
+    public setRenderPipeline(pipeline: WebGLRenderPipeline) {
+        this._renderPipeline = pipeline;
         for (const resource of Object.values(this._resourceMap)) {
             if (resource.texture) {
-                resource.texture.setContext(renderer.context);
+                resource.texture.setContext(pipeline.context);
             }
         }
     }
@@ -147,7 +147,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
             image.crossOrigin = 'anonymous';
             image.onload = () => {
 
-                const texture = BaseTexture.createImageTexture(this.renderer.context, image);
+                const texture = BaseTexture.createImageTexture(this.renderPipeline.context, image);
 
                 const resource = new Resource({
                     name: task.name,
@@ -181,7 +181,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
 
             video.oncanplaythrough = () => {
 
-                const texture = BaseTexture.createVideoTexture(this.renderer.context, video);
+                const texture = BaseTexture.createVideoTexture(this.renderPipeline.context, video);
 
                 const resource = new Resource({
                     name: task.name,
@@ -314,7 +314,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     public getSerializableObject(): SerializableResourceLoader {
         return {
             _ctor: ResourceLoader.name,
-            renderer: this.renderer.getSerializableObject()
+            renderPipeline: this.renderPipeline.getSerializableObject()
         }
     }
 

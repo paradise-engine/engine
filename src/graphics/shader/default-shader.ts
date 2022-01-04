@@ -1,15 +1,15 @@
-import type { Renderer } from "../renderer";
+import type { WebGLRenderPipeline } from "../webgl-render-pipeline";
 import { Shader } from "../webgl";
 import defaultVert from './default.vert';
 import defaultFrag from './default.frag';
 
 export class DefaultShader extends Shader {
-    constructor(renderer: Renderer, vertexSource?: string, fragmentSource?: string) {
+    constructor(renderPipeline: WebGLRenderPipeline, vertexSource?: string, fragmentSource?: string) {
         super(
-            renderer.context,
+            renderPipeline.context,
             vertexSource || defaultVert,
             fragmentSource || defaultFrag,
-            renderer.globalShaderData.bufferInfo
+            renderPipeline.globalShaderData.bufferInfo
         );
     }
 }

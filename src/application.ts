@@ -1,6 +1,6 @@
 import { generateRandomString } from "./util";
 import { ManagedObjectRepository, SerializableManagedObjectRepository } from "./core";
-import { IRenderer, Renderer } from "./renderer";
+import { IRenderPipeline, WebGLRenderPipeline } from "./graphics";
 import { RuntimeInconsistencyError } from "./errors";
 import { __ComponentCreationLock } from "./core/component-creation-lock";
 import { GameManager } from "./lifecycle";
@@ -10,7 +10,7 @@ import { IInputManager, InputManager } from "./input";
 
 export interface ApplicationOptions {
     id?: string;
-    renderer?: IRenderer<any>;
+    renderPipeline?: IRenderPipeline<any>;
     loader?: IResourceLoader<any>;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
@@ -19,7 +19,7 @@ export interface ApplicationOptions {
 
 export interface SerializableApplication extends SerializableObject {
     id: string;
-    renderer: SerializableObject;
+    renderPipeline: SerializableObject;
     loader: SerializableObject;
     objectRepository: SerializableManagedObjectRepository;
 }
@@ -28,7 +28,7 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
         const app = new Application({
-            renderer: deserialize(s.renderer, options) as IRenderer<any>,
+            renderPipeline: deserialize(s.renderPipeline, options) as IRenderPipeline<any>,
             loader: deserialize(s.loader, options) as IResourceLoader<any>
         });
 
@@ -53,7 +53,7 @@ export class Application implements ISerializable<SerializableApplication> {
     private _loader: IResourceLoader<any>;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
-    private _renderer: IRenderer<any>;
+    private _renderPipeline: IRenderPipeline<any>;
     private _inputManager: IInputManager;
 
     public get loader() {
@@ -72,8 +72,8 @@ export class Application implements ISerializable<SerializableApplication> {
         return this._id;
     }
 
-    public get renderer() {
-        return this._renderer;
+    public get renderPipeline() {
+        return this._renderPipeline;
     }
 
     public get inputManager() {
@@ -84,21 +84,21 @@ export class Application implements ISerializable<SerializableApplication> {
         this._id = options.id || generateRandomString();
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
-        this._renderer = options.renderer || new Renderer(options.renderer);
-        this._loader = options.loader || new ResourceLoader(this.renderer as Renderer);
+        this._renderPipeline = options.renderPipeline || new WebGLRenderPipeline(options.renderPipeline);
+        this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
         this._gameManager = new GameManager(this._loader);
         this._inputManager = options.inputManager || new InputManager(this);
     }
 
-    public setRenderer(renderer: IRenderer<any>) {
-        this._renderer = renderer;
+    public setRenderPipeline(pipeline: IRenderPipeline<any>) {
+        this._renderPipeline = pipeline;
 
-        if ((renderer as Renderer).context && !this.loader) {
-            this._loader = new ResourceLoader(renderer as Renderer);
+        if ((pipeline as WebGLRenderPipeline).context && !this.loader) {
+            this._loader = new ResourceLoader(pipeline as WebGLRenderPipeline);
         }
 
         if (this.loader) {
-            this.loader.setRenderer(renderer as Renderer);
+            this.loader.setRenderPipeline(pipeline as WebGLRenderPipeline);
         }
     }
 
@@ -116,7 +116,7 @@ export class Application implements ISerializable<SerializableApplication> {
     }
 
     public snapshot(): Application {
-        const cloneApp = new Application({ renderer: this.renderer });
+        const cloneApp = new Application({ renderPipeline: this.renderPipeline });
 
         cloneApp._managedObjectRepository = deserialize(this.managedObjectRepository.getSerializableObject(), { application: cloneApp });
 
@@ -127,7 +127,7 @@ export class Application implements ISerializable<SerializableApplication> {
         return {
             _ctor: Application.name,
             id: this._id,
-            renderer: this.renderer.getSerializableObject(),
+            renderPipeline: this.renderPipeline.getSerializableObject(),
             loader: this.loader.getSerializableObject(),
             objectRepository: this.managedObjectRepository.getSerializableObject()
         }

@@ -1,6 +1,6 @@
 import { ISerializable, SerializableObject } from "../serialization";
 
-export interface IRendererView {
+export interface IRenderPipelineView {
     width: number;
     height: number;
     clientWidth: number;
@@ -13,11 +13,11 @@ export interface IRendererView {
     removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLCanvasElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
 }
 
-export interface IRenderer<T extends SerializableObject> extends ISerializable<T> {
+export interface IRenderPipeline<T extends SerializableObject> extends ISerializable<T> {
     clearRenderQueue(): void;
     enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void): void;
     openContainer(worldSpacePosition: [number, number]): void;
     closeContainer(): void;
     drawFrame(): void;
-    view: IRendererView;
+    view: IRenderPipelineView;
 }

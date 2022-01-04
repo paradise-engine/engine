@@ -11,7 +11,7 @@ export * from './micro-emitter-duplicate-listener';
 export * from './multiple-transforms';
 export * from './object-not-found';
 export * from './paradise-error';
-export * from './renderer-ran-out-of-containers';
+export * from './render-pipeline-ran-out-of-containers';
 export * from './rendering-context';
 export * from './resource-loader';
 export * from './runtime-inconsistency';

@@ -1,6 +1,6 @@
 import { Dictionary, createDictionaryProxy } from "../util";
 import { BufferInfo, BufferInput, createBufferInfo, UniformData } from "./webgl";
-import type { Renderer } from "./renderer";
+import type { WebGLRenderPipeline } from "./webgl-render-pipeline";
 
 const initialUniforms: Dictionary<UniformData> = {
     'u_resolution': [1.0, 1.0]
@@ -42,7 +42,7 @@ Object.freeze(globalAttributes);
 export type GlobalUniformsChangeHandler = (name: string, value: UniformData) => void;
 
 export class GlobalShaderData {
-    private _renderer: Renderer;
+    private _renderPipeline: WebGLRenderPipeline;
 
     private _onUniformsUpdate = (key: string, value: UniformData) => {
         for (const listener of this._uniformUpdateListeners) {
@@ -54,9 +54,9 @@ export class GlobalShaderData {
     private _uniforms: Dictionary<UniformData> = createDictionaryProxy(this._onUniformsUpdate, initialUniforms);
     private _bufferInfo: BufferInfo;
 
-    constructor(renderer: Renderer) {
-        this._renderer = renderer;
-        this._bufferInfo = createBufferInfo(this._renderer.context, globalAttributes);
+    constructor(renderPipeline: WebGLRenderPipeline) {
+        this._renderPipeline = renderPipeline;
+        this._bufferInfo = createBufferInfo(this._renderPipeline.context, globalAttributes);
     }
 
     public addUpdateListener(listener: GlobalUniformsChangeHandler) {

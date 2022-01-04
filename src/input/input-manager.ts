@@ -21,7 +21,7 @@ export class InputManager extends MicroEmitter<InputManagerEvents> implements II
 
         // mouse challenge
         if (matchMedia('(pointer:fine)')) {
-            this.mouse = new MouseInput(application.renderer.view);
+            this.mouse = new MouseInput(application.renderPipeline.view);
         }
 
         this.keyboard = new KeyboardInput();

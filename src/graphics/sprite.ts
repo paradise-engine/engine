@@ -1,7 +1,7 @@
 import { mat4 } from "gl-matrix";
 import { drawImage, DrawImageOptions } from "./webgl";
 import { RenderablePrimitive } from "./renderable-primitive";
-import { Renderer } from "./renderer";
+import { WebGLRenderPipeline } from "./webgl-render-pipeline";
 import { Texture } from "./texture";
 
 export class Sprite extends RenderablePrimitive {
@@ -12,13 +12,13 @@ export class Sprite extends RenderablePrimitive {
         this.texture = texture;
     }
 
-    render(renderer: Renderer) {
-        const textureToRender = renderer.shaderPipeline.applyShaders(this.texture.baseTexture, this.getShaders());
+    render(renderPipeline: WebGLRenderPipeline) {
+        const textureToRender = renderPipeline.shaderPipeline.applyShaders(this.texture.baseTexture, this.getShaders());
 
         const drawOptions: DrawImageOptions = {
-            gl: renderer.context,
-            shader: renderer.baseShader,
-            globalUniforms: renderer.globalShaderData.uniforms,
+            gl: renderPipeline.context,
+            shader: renderPipeline.baseShader,
+            globalUniforms: renderPipeline.globalShaderData.uniforms,
             texture: textureToRender,
             textureWidth: this.texture.baseTexture.width,
             textureHeight: this.texture.baseTexture.height,
@@ -34,7 +34,7 @@ export class Sprite extends RenderablePrimitive {
             rotationRadian: this.rotationZ
         };
 
-        renderer.enqueueRenderable([this.x, this.y], () => {
+        renderPipeline.enqueueRenderable([this.x, this.y], () => {
             drawImage(drawOptions);
         });
     }

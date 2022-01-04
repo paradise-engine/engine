@@ -1,4 +1,4 @@
-# paradise-engine/renderer/webgl
+# paradise-engine/graphics/webgl
 
 Contains boilerplate code for WebGL.
 
