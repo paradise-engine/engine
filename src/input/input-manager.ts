@@ -1,15 +1,11 @@
 import { Application } from "../application";
 import { MicroEmitter } from "../util";
 import { GamepadInput } from "./gamepad-input";
+import { IInputManager, InputManagerEvents } from "./i-input-manager";
 import { KeyboardInput } from "./keyboard-input";
 import { MouseInput } from "./mouse-input";
 
-export interface InputManagerEvents {
-    gamepadConnected: GamepadInput;
-    gamepadDisconnected: GamepadInput;
-}
-
-export class InputManager extends MicroEmitter<InputManagerEvents> {
+export class InputManager extends MicroEmitter<InputManagerEvents> implements IInputManager {
     public readonly mouse: MouseInput | null = null;
     public readonly keyboard: KeyboardInput;
     public readonly gamepads: Map<number, GamepadInput> = new Map();

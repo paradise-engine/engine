@@ -1,23 +1,7 @@
 import { MicroEmitter } from "../util";
+import { GamepadActuatorEffect, GamepadActuatorEffectOptions, GamepadInputEvents, IGamepadInput } from "./i-gamepad-input";
 
-export interface GamepadActuatorEffectOptions {
-    duration: number;
-    startDelay: number;
-    strongMagnitude: number;
-    weakMagnitude: number;
-}
-
-export interface GamepadActuatorEffect extends Readonly<GamepadActuatorEffectOptions> {
-    id: number;
-}
-
-export interface GamepadInputEvents {
-    disconnected: GamepadInput;
-    actuatorEffectStarted: GamepadActuatorEffect;
-    actuatorEffectFinished: GamepadActuatorEffect;
-}
-
-export class GamepadInput extends MicroEmitter<GamepadInputEvents> {
+export class GamepadInput extends MicroEmitter<GamepadInputEvents> implements IGamepadInput {
     private _nextEffectId = 0;
     private _nativeGamepad: Gamepad;
 

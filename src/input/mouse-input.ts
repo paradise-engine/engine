@@ -1,14 +1,7 @@
 import { Vector } from "../core";
 import { IRendererView } from "../renderer";
 import { arrayPermutate, Indexable, MicroEmitter } from "../util";
-
-export enum MouseInputButton {
-    primary = 'primary',
-    secondary = 'secondary',
-    auxiliary = 'auxiliary',
-    mouse4 = 'mouse4',
-    mouse5 = 'mouse5'
-}
+import { IMouseInput, MouseInputButton, MouseInputButtonsState, MouseInputEvents, MouseInputState } from "./i-mouse-input";
 
 interface MIButtonsState {
     primary: boolean;
@@ -16,28 +9,6 @@ interface MIButtonsState {
     auxiliary: boolean;
     mouse4: boolean;
     mouse5: boolean;
-}
-
-export type MouseInputButtonsState = Readonly<MIButtonsState>;
-
-export interface MouseInputState {
-    readonly screenPos: Vector;
-    readonly clientPos: Vector;
-    readonly viewPos: Vector;
-    readonly buttons: MouseInputButtonsState;
-    readonly triggerButton: MouseInputButton;
-}
-
-export interface MouseInputMoveEvent extends MouseInputState {
-    readonly delta: Vector;
-}
-
-export interface MouseInputEvents {
-    'move': MouseInputMoveEvent;
-    'down': MouseInputState;
-    'up': MouseInputState;
-    'wheelup': void;
-    'wheeldown': void;
 }
 
 const BUTTON_FLAGS: Indexable<MouseInputButton> = {
@@ -69,7 +40,7 @@ for (const combination of arrayPermutate(Object.keys(BUTTON_FLAGS).map(k => pars
     BUTTONS_FLAG_MAP[combinedFlag] = freezed;
 }
 
-export class MouseInput extends MicroEmitter<MouseInputEvents> {
+export class MouseInput extends MicroEmitter<MouseInputEvents> implements IMouseInput {
 
     private _view: IRendererView;
     private _state: MouseInputState;

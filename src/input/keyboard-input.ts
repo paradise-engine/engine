@@ -1,12 +1,7 @@
 import { MicroEmitter } from "../util";
+import { IKeyboardInput, KeyboardInputEvents } from "./i-keyboard-input";
 
-export interface KeyboardInputEvents {
-    layoutMapLoaded: KeyboardLayoutMap;
-    keyDown: KeyboardEventCode;
-    keyUp: KeyboardEventCode;
-}
-
-export class KeyboardInput extends MicroEmitter<KeyboardInputEvents> {
+export class KeyboardInput extends MicroEmitter<KeyboardInputEvents> implements IKeyboardInput {
     private _nativeKeyboard?: Keyboard;
     private _keyboardLayoutMap?: KeyboardLayoutMap;
     private _layoutMapReady = false;
