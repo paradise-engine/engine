@@ -1,8 +1,10 @@
+import { NativeBuffer } from "./native-buffer";
+
 export interface AttributeData {
     /**
      * The buffer that contains the data for this attribute
      */
-    buffer: WebGLBuffer;
+    buffer: NativeBuffer;
     /**
      * The number of components for this attribute.
      */

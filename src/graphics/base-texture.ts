@@ -1,5 +1,6 @@
 import { MicroEmitter } from "../util";
-import { createTextureFromImage, initTextureFromVideo, TextureInfo } from "./webgl";
+import { IRenderContext } from "./i-render-context";
+import { NativeTexture, NativeTextureInfo } from "./types";
 
 export enum BaseTextureType {
     Image = 'image',
@@ -12,27 +13,27 @@ interface BaseTextureEvents {
 
 export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
 
-    public static createVideoTexture(gl: WebGLRenderingContext, video: HTMLVideoElement) {
-        const { texture, update } = initTextureFromVideo(gl, video);
-        return new BaseTexture(gl, texture, BaseTextureType.Video, video, update);
+    public static createVideoTexture(context: IRenderContext, video: HTMLVideoElement) {
+        const { texture, update } = context.initTextureFromVideo(video);
+        return new BaseTexture(context, texture, BaseTextureType.Video, video, update);
     }
 
-    public static createImageTexture(gl: WebGLRenderingContext, image: HTMLImageElement) {
-        const texture = createTextureFromImage(gl, image);
-        return new BaseTexture(gl, texture, BaseTextureType.Image, image);
+    public static createImageTexture(context: IRenderContext, image: HTMLImageElement) {
+        const texture = context.createTextureFromImage(image);
+        return new BaseTexture(context, texture, BaseTextureType.Image, image);
     }
 
     private _destroyed = false;
     private _updateFn?: () => void;
-    private _context: WebGLRenderingContext;
-    private _glTexture: WebGLTexture;
+    private _context: IRenderContext;
+    private _nativeTexture: NativeTexture;
 
     public get context() {
         return this._context;
     }
 
-    public get glTexture() {
-        return this._glTexture;
+    public get nativeTexture() {
+        return this._nativeTexture;
     }
 
     public readonly type: BaseTextureType;
@@ -40,9 +41,9 @@ export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
     public readonly width: number;
     public readonly height: number;
 
-    public get textureInfo(): TextureInfo {
+    public get textureInfo(): NativeTextureInfo {
         return {
-            texture: this.glTexture,
+            texture: this.nativeTexture,
             width: this.width,
             height: this.height,
             offsetX: 0,
@@ -50,10 +51,10 @@ export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
         };
     }
 
-    private constructor(context: WebGLRenderingContext, glTexture: WebGLTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
+    private constructor(context: IRenderContext, nativeTexture: NativeTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
         super();
         this._context = context;
-        this._glTexture = glTexture;
+        this._nativeTexture = nativeTexture;
         this.type = type;
         this.srcElement = srcElement;
         this.width = srcElement.width;
@@ -61,14 +62,14 @@ export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
         this._updateFn = updateFn;
     }
 
-    public setContext(context: WebGLRenderingContext) {
+    public setContext(context: IRenderContext) {
         this._context = context;
 
         if (this.srcElement instanceof HTMLImageElement) {
-            this._glTexture = createTextureFromImage(context, this.srcElement);
+            this._nativeTexture = context.createTextureFromImage(this.srcElement);
         } else {
-            const { texture, update } = initTextureFromVideo(context, this.srcElement);
-            this._glTexture = texture;
+            const { texture, update } = context.initTextureFromVideo(this.srcElement);
+            this._nativeTexture = texture;
             this._updateFn = update;
         }
     }
@@ -82,7 +83,7 @@ export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
     public destroy() {
         if (!this._destroyed) {
             this._destroyed = true;
-            this.context.deleteTexture(this.glTexture);
+            this.context.deleteTexture(this.nativeTexture);
             this.emit('destroyed');
         }
     }

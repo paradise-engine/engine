@@ -1,5 +1,4 @@
-import { AttributeSetters } from "./attribute-setters";
-import { BufferInfo } from "./buffer-info";
+import { AttributeSetters, BufferInfo } from "../types";
 
 /**
  * Sets attributes and buffers including the `ELEMENT_ARRAY_BUFFER` if appropriate

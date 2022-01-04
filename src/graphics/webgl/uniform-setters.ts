@@ -1,15 +1,6 @@
 import { RenderingContextError } from "../../errors";
-import { Dictionary } from "../../util";
+import { UniformSetterFunction, UniformSetters } from "../types";
 import { glEnumToString } from "./gl-enum-to-string";
-
-export type UniformData = number |
-    Float32List |
-    Int32List |
-    WebGLTexture[] |
-    WebGLTexture;
-
-export type UniformSetterFunction = (value: UniformData) => void;
-export type UniformSetters = Dictionary<UniformSetterFunction>;
 
 /**
  * Creates setter functions for all uniforms of a shader

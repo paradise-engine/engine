@@ -1,10 +1,11 @@
-import { resetViewport, Shader } from "./webgl";
-import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../errors";
-import { DefaultShader } from './shader';
-import { ShaderPipeline } from "./shader-pipeline";
-import { GlobalShaderData } from "./global-shader-data";
-import { IRenderPipeline } from "./i-render-pipeline";
-import { registerDeserializable, SerializableObject } from "../serialization";
+import { resetViewport } from "../webgl";
+import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../../errors";
+import { DefaultShader, Shader } from '../shader';
+import { ShaderPipeline } from "../shader-pipeline";
+import { GlobalShaderData } from "../global-shader-data";
+import { IRenderPipeline } from "../i-render-pipeline";
+import { registerDeserializable, SerializableObject } from "../../serialization";
+import { WebGLPipelineRenderContext } from "./webgl-render-context";
 
 export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
@@ -66,7 +67,7 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
     private _activeQueueStack: RenderQueue[] = [];
 
     public readonly view: HTMLCanvasElement;
-    public readonly context: WebGLRenderingContext;
+    public readonly context: WebGLPipelineRenderContext;
 
     public readonly width: number;
     public readonly height: number;
@@ -87,7 +88,7 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
             throw new RenderingContextError('Could not get rendering context');
         }
 
-        this.context = context;
+        this.context = new WebGLPipelineRenderContext(context);
 
         this.width = options.width || 800;
         this.height = options.height || 600;

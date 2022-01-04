@@ -1,8 +1,8 @@
 import { mat4 } from 'gl-matrix';
-import { Shader, ShaderState } from "./shader";
 import { Dictionary } from "../../util";
-import { UniformData } from "./uniform-setters";
 import { InactiveShaderError } from "../../errors";
+import { DrawImageOptions, UniformData } from '../types';
+import { Shader, ShaderState } from '../shader';
 
 /**
  * Tell WebGL to use the program of the specified shader and update shader uniforms
@@ -15,7 +15,7 @@ function prepareShader(gl: WebGLRenderingContext, shader: Shader, globalUniforms
         throw new InactiveShaderError();
     }
 
-    gl.useProgram(shader.program);
+    gl.useProgram(shader.program.program);
 
     let uniforms: Dictionary<UniformData>[] = [
         globalUniforms
@@ -44,79 +44,14 @@ export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dic
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-export interface DrawImageOptions {
+export interface WebGLDrawImageOptions extends DrawImageOptions {
     /**
      * The WebGL rendering context
      */
     gl: WebGLRenderingContext;
-    /**
-     * The Shader to use for rendering
-     */
-    shader: Shader;
-    /**
-     * Global uniforms to pass into shader program
-     */
-    globalUniforms: Dictionary<UniformData>;
-    /**
-     * The texture to receive color information from
-     */
-    texture: WebGLTexture;
-    /**
-     * The original width of the texture
-     */
-    textureWidth: number;
-    /**
-     * The original height of the texture
-     */
-    textureHeight: number;
-    /**
-     * The x-location of the texture section to render
-     */
-    sourceX?: number;
-    /**
-     * The y-location of the texture section to render
-     */
-    sourceY?: number;
-    /**
-     * The width of the texture section to render
-     */
-    sourceWidth?: number;
-    /**
-    * The height of the texture section to render
-    */
-    sourceHeight?: number;
-    /**
-     * The destination x-location on the canvas in pixels
-     */
-    destinationX: number;
-    /**
-     * The destination y-location on the canvas in pixels
-     */
-    destinationY: number;
-    /**
-     * The destination width to render in pixels. Defaults to `textureWidth`
-     */
-    destinationWidth?: number;
-    /**
-     * The destination height to render in pixels. Defaults to `textureHeight`
-     */
-    destinationHeight?: number;
-    /**
-     * The angle to rotate by in radians (clockwise)
-     */
-    rotationRadian?: number;
-    /**
-     * The x-location of the rotation center, with `0` being the left edge of the rect
-     */
-    rotationOffsetX?: number;
-    /**
-     * The y-location of the rotation center, with `0` being the top edge of the rect
-     */
-    rotationOffsetY?: number;
 }
 
-
-export function drawImage(options: DrawImageOptions) {
+export function drawImage(options: WebGLDrawImageOptions) {
     const gl = options.gl;
 
     if (options.destinationWidth === undefined) {
@@ -176,7 +111,7 @@ export function drawImage(options: DrawImageOptions) {
     prepareShader(gl, options.shader, options.globalUniforms, {
         'u_matrix': matrix,
         'u_textureMatrix': texMatrix,
-        'u_texture': options.texture
+        'u_texture': options.texture.texture
     });
 
     // draw the quad (2 triangles, 6 vertices)

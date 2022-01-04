@@ -1,4 +1,8 @@
 import { ISerializable, SerializableObject } from "../serialization";
+import { GlobalShaderData } from "./global-shader-data";
+import { IRenderContext } from "./i-render-context";
+import { Shader } from "./shader";
+import { ShaderPipeline } from "./shader-pipeline";
 
 export interface IRenderPipelineView {
     width: number;
@@ -13,11 +17,16 @@ export interface IRenderPipelineView {
     removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLCanvasElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
 }
 
-export interface IRenderPipeline<T extends SerializableObject> extends ISerializable<T> {
+export interface IRenderPipeline<T extends SerializableObject = any> extends ISerializable<T> {
+    context: IRenderContext;
+    view: IRenderPipelineView;
+    globalShaderData: GlobalShaderData;
+    shaderPipeline: ShaderPipeline;
+    baseShader: Shader;
+
     clearRenderQueue(): void;
     enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void): void;
     openContainer(worldSpacePosition: [number, number]): void;
     closeContainer(): void;
     drawFrame(): void;
-    view: IRenderPipelineView;
 }

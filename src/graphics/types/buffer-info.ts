@@ -1,5 +1,6 @@
 import { Dictionary } from "../../util";
 import { AttributeData } from "./attribute-data";
+import { NativeBuffer } from "./native-buffer";
 
 export interface BufferInfo {
     /**
@@ -9,7 +10,7 @@ export interface BufferInfo {
     /**
      * The indices `ELEMENT_ARRAY_BUFFER` if any indices exist.
      */
-    indices?: WebGLBuffer;
+    indices?: NativeBuffer;
     /**
      * The attribute data.
      */

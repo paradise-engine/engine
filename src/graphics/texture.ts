@@ -1,15 +1,15 @@
 import { Rect } from "../core";
-import { TextureInfo } from "./webgl";
 import { BaseTexture } from "./base-texture";
+import { NativeTextureInfo } from "./types";
 
 export class Texture {
 
     public readonly baseTexture: BaseTexture;
     public readonly frame: Rect;
 
-    public get textureInfo(): TextureInfo {
+    public get textureInfo(): NativeTextureInfo {
         return {
-            texture: this.baseTexture.glTexture,
+            texture: this.baseTexture.nativeTexture,
             width: this.frame.width,
             height: this.frame.height,
             offsetX: this.frame.x,

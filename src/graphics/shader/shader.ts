@@ -1,16 +1,12 @@
 import { createDictionaryProxy, Dictionary } from "../../util";
-import { AttributeSetters, createAttributeSetters } from "./attribute-setters";
-import { BufferInfo } from "./buffer-info";
-import { createShaderProgram } from "./create-shader-program";
-import { setAttributes } from "./set-attributes";
-import { setUniforms } from "./set-uniforms";
-import { createUniformSetters, UniformData, UniformSetters } from "./uniform-setters";
+import { IRenderContext } from "../i-render-context";
+import { AttributeSetters, BufferInfo, NativeShader, NativeShaderProgram, UniformData, UniformSetters } from "../types";
 
 export interface ShaderInternals {
     vertexSource: string;
     fragmentSource: string;
-    vertexShader: WebGLShader;
-    fragmentShader: WebGLShader;
+    vertexShader: NativeShader;
+    fragmentShader: NativeShader;
 }
 
 export enum ShaderState {
@@ -21,22 +17,22 @@ export enum ShaderState {
 
 export class Shader {
 
-    protected _gl: WebGLRenderingContext;
+    protected _context: IRenderContext;
 
+    protected _program: NativeShaderProgram;
     protected _internals: ShaderInternals;
-    protected _program: WebGLProgram;
-    protected _attributeSetters: AttributeSetters;
-    protected _uniformSetters: UniformSetters;
     protected _state: ShaderState;
     protected _isActive: boolean;
     protected _bufferInfo: BufferInfo;
-
-    public get internals() {
-        return this._internals;
-    }
+    protected _attributeSetters: AttributeSetters;
+    protected _uniformSetters: UniformSetters;
 
     public get program() {
         return this._program;
+    }
+
+    public get internals() {
+        return this._internals;
     }
 
     public get state() {
@@ -59,10 +55,10 @@ export class Shader {
         }
     }
 
-    constructor(gl: WebGLRenderingContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
-        this._gl = gl;
+    constructor(context: IRenderContext, vertexSource: string, fragmentSource: string, bufferInfo: BufferInfo) {
+        this._context = context;
 
-        const { program, vertexShader, fragmentShader } = createShaderProgram(gl, vertexSource, fragmentSource);
+        const { program, vertexShader, fragmentShader } = context.createShaderProgram(vertexSource, fragmentSource);
         this._internals = {
             vertexSource,
             fragmentSource,
@@ -71,8 +67,8 @@ export class Shader {
         }
         this._program = program;
 
-        this._attributeSetters = createAttributeSetters(gl, program);
-        this._uniformSetters = createUniformSetters(gl, program);
+        this._attributeSetters = context.createAttributeSetters(program);
+        this._uniformSetters = context.createUniformSetters(program);
         this._state = ShaderState.Dirty;
         this._isActive = true;
 
@@ -99,10 +95,10 @@ export class Shader {
     }
 
     public updateAttributes(data?: BufferInfo) {
-        setAttributes(this._gl, this._attributeSetters, data || this.bufferInfo);
+        this._context.setAttributes(this._attributeSetters, data || this.bufferInfo);
     }
 
     public updateUniforms(...data: Dictionary<UniformData>[]) {
-        setUniforms(this._uniformSetters, ...data);
+        this._context.setUniforms(this._uniformSetters, data);
     }
 }

@@ -10,7 +10,7 @@ import { IInputManager, InputManager } from "./input";
 
 export interface ApplicationOptions {
     id?: string;
-    renderPipeline?: IRenderPipeline<any>;
+    renderPipeline?: IRenderPipeline;
     loader?: IResourceLoader<any>;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
@@ -28,7 +28,7 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
         const app = new Application({
-            renderPipeline: deserialize(s.renderPipeline, options) as IRenderPipeline<any>,
+            renderPipeline: deserialize(s.renderPipeline, options) as IRenderPipeline,
             loader: deserialize(s.loader, options) as IResourceLoader<any>
         });
 
@@ -53,7 +53,7 @@ export class Application implements ISerializable<SerializableApplication> {
     private _loader: IResourceLoader<any>;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
-    private _renderPipeline: IRenderPipeline<any>;
+    private _renderPipeline: IRenderPipeline;
     private _inputManager: IInputManager;
 
     public get loader() {

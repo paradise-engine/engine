@@ -1,4 +1,4 @@
-import { Shader } from "./webgl";
+import { Shader } from "./shader";
 
 /**
  * Base class for all objects that can be target to

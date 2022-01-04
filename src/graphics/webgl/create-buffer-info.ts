@@ -1,17 +1,7 @@
-import { AttributeData } from "./attribute-data";
 import { RenderingContextError } from "../../errors";
 import { Dictionary } from "../../util";
-import { BufferInfo } from "./buffer-info";
-import { TypedArrayConstructor, TypedArray } from "./typed-array";
 import { glEnumToString } from "./gl-enum-to-string";
-
-export type BufferInput = Dictionary<BufferInputData>;
-
-export interface BufferInputData {
-    numComponents: number;
-    data: number[];
-    type: TypedArrayConstructor;
-}
+import { AttributeData, BufferInfo, BufferInput, BufferInputData, TypedArray } from "../types";
 
 /**
  * Creates a BufferInfo from an object of arrays.
@@ -29,7 +19,7 @@ export function createBufferInfo(gl: WebGLRenderingContext, input: BufferInput, 
         return {
             attribs,
             numElements: typedIndices.length,
-            indices: createBufferFromTypedArray(gl, typedIndices, gl.ELEMENT_ARRAY_BUFFER)
+            indices: { buffer: createBufferFromTypedArray(gl, typedIndices, gl.ELEMENT_ARRAY_BUFFER) }
         }
     }
 
@@ -82,7 +72,7 @@ function createAttribs(gl: WebGLRenderingContext, input: BufferInput): Dictionar
             const array = makeTypedArray(item);
 
             attribs[attribName] = {
-                buffer: createBufferFromTypedArray(gl, array),
+                buffer: { buffer: createBufferFromTypedArray(gl, array) },
                 numComponents: item.numComponents,
                 type: getGLTypeForTypedArray(gl, array),
                 normalized: getNormalizationForTypedArray(array),

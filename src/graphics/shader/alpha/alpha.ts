@@ -1,4 +1,4 @@
-import type { WebGLRenderPipeline } from '../../webgl-render-pipeline';
+import type { WebGLRenderPipeline } from '../../webgl-pipeline';
 import defaultVert from '../default.vert';
 import frag from './alpha.frag';
 import { DefaultShader } from "../default-shader";

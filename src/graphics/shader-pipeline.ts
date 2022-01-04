@@ -1,21 +1,22 @@
-import { attachTextureToFramebuffer, createFramebuffer, createGeneralPurposeTexture, drawToFramebuffer, setFramebuffer, Shader } from "./webgl";
 import { BaseTexture } from "./base-texture";
-import type { WebGLRenderPipeline } from "./webgl-render-pipeline";
+import { NativeFramebuffer, NativeTexture } from "./types";
+import { Shader } from "./shader";
+import type { IRenderPipeline } from "./i-render-pipeline";
 
 
 export class ShaderPipeline {
 
-    private _renderPipeline: WebGLRenderPipeline;
+    private _renderPipeline: IRenderPipeline;
 
-    constructor(renderPipeline: WebGLRenderPipeline) {
+    constructor(renderPipeline: IRenderPipeline) {
         this._renderPipeline = renderPipeline;
     }
 
     private _createAndResizeTexture(width: number, height: number) {
-        const gl = this._renderPipeline.context;
-        const tex = createGeneralPurposeTexture(gl);
-
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        const context = this._renderPipeline.context;
+        const tex = this._renderPipeline.context.createGeneralPurposeTexture();
+        context.bindTexture(tex);
+        context.specifyTextureImage(width, height);
         return tex;
     }
 
@@ -23,26 +24,26 @@ export class ShaderPipeline {
         shaders = shaders.filter(s => s.isActive);
 
         if (shaders.length === 0) {
-            return texture.glTexture;
+            return texture.nativeTexture;
         }
 
-        const textures = [];
-        const fbos = [];
+        const textures: NativeTexture[] = [];
+        const fbos: NativeFramebuffer[] = [];
 
         for (let i = 0; i < 2; i++) {
             const tex = this._createAndResizeTexture(texture.width, texture.height);
-            const fbo = createFramebuffer(this._renderPipeline.context);
-            attachTextureToFramebuffer(this._renderPipeline.context, tex, fbo);
+            const fbo = this._renderPipeline.context.createFramebuffer();
+            this._renderPipeline.context.attachTextureToFramebuffer(tex, fbo);
 
             textures.push(tex);
             fbos.push(fbo);
         }
 
-        const outputTexture = createGeneralPurposeTexture(this._renderPipeline.context);
-        const outputFbo = createFramebuffer(this._renderPipeline.context);
-        attachTextureToFramebuffer(this._renderPipeline.context, outputTexture, outputFbo);
+        const outputTexture = this._renderPipeline.context.createGeneralPurposeTexture();
+        const outputFbo = this._renderPipeline.context.createFramebuffer();
+        this._renderPipeline.context.attachTextureToFramebuffer(outputTexture, outputFbo);
 
-        let nextSource: WebGLTexture = texture.glTexture;
+        let nextSource: NativeTexture = texture.nativeTexture;
         let nextTargetIndex = 0;
 
         for (let i = 0; i < shaders.length; i++) {
@@ -52,7 +53,7 @@ export class ShaderPipeline {
 
             // apply shader
             this._setFramebuffer(targetFramebuffer, texture.width, texture.height);
-            drawToFramebuffer(this._renderPipeline.context, this._renderPipeline.globalShaderData.uniforms, shaders[i], sourceTexture);
+            this._renderPipeline.context.drawToFramebuffer(this._renderPipeline.globalShaderData.uniforms, shaders[i], sourceTexture);
 
             // set next source and target
             if (nextSource !== textures[0]) {
@@ -68,7 +69,7 @@ export class ShaderPipeline {
         return outputTexture;
     }
 
-    private _setFramebuffer(fbo: WebGLFramebuffer | null, width?: number, height?: number) {
+    private _setFramebuffer(fbo: NativeFramebuffer | null, width?: number, height?: number) {
         width = width || 1;
         height = height || 1;
 
@@ -78,7 +79,7 @@ export class ShaderPipeline {
         }
 
         this._renderPipeline.globalShaderData.setUniform('u_resolution', [width, height]);
-        setFramebuffer(this._renderPipeline.context, fbo, width, height);
+        this._renderPipeline.context.bindFramebuffer(fbo, width, height);
     }
 
 }

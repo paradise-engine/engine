@@ -1,5 +1,5 @@
 import { Dictionary } from "../../util";
-import { UniformSetters, UniformData } from "./uniform-setters";
+import { UniformData, UniformSetters } from "../types";
 
 /**
  * Set uniforms and binds related textures.
