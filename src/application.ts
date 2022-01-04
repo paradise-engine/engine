@@ -6,6 +6,7 @@ import { __ComponentCreationLock } from "./core/component-creation-lock";
 import { GameManager } from "./lifecycle";
 import { IResourceLoader, ResourceLoader } from "./resource";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
+import { IInputManager, InputManager } from "./input";
 
 export interface ApplicationOptions {
     id?: string;
@@ -13,6 +14,7 @@ export interface ApplicationOptions {
     loader?: IResourceLoader<any>;
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
+    inputManager?: IInputManager;
 }
 
 export interface SerializableApplication extends SerializableObject {
@@ -52,6 +54,7 @@ export class Application implements ISerializable<SerializableApplication> {
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
     private _renderer: IRenderer<any>;
+    private _inputManager: IInputManager;
 
     public get loader() {
         return this._loader;
@@ -73,6 +76,10 @@ export class Application implements ISerializable<SerializableApplication> {
         return this._renderer;
     }
 
+    public get inputManager() {
+        return this._inputManager;
+    }
+
     constructor(options: ApplicationOptions = {}) {
         this._id = options.id || generateRandomString();
         this.__ccLock = new __ComponentCreationLock();
@@ -80,6 +87,7 @@ export class Application implements ISerializable<SerializableApplication> {
         this._renderer = options.renderer || new Renderer(options.renderer);
         this._loader = options.loader || new ResourceLoader(this.renderer as Renderer);
         this._gameManager = new GameManager(this._loader);
+        this._inputManager = options.inputManager || new InputManager(this);
     }
 
     public setRenderer(renderer: IRenderer<any>) {
