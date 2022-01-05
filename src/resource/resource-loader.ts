@@ -8,6 +8,7 @@ import { Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
 
+const EMPTY_IMAGE_KEY = 'paradise::reserved::loader_empty_image';
 
 interface ResourceLoadTask {
     name: string;
@@ -34,8 +35,27 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         return this._renderPipeline;
     }
 
+    public get EMPTY_IMAGE() {
+        return this._resourceMap[EMPTY_IMAGE_KEY];
+    }
+
     constructor(renderPipeline: WebGLRenderPipeline) {
         this._renderPipeline = renderPipeline;
+        this._createEmptyImage();
+    }
+
+    private _createEmptyImage() {
+        const baseTexture = BaseTexture.emptyImage(this._renderPipeline.context);
+        const res = new Resource({
+            name: EMPTY_IMAGE_KEY,
+            url: EMPTY_IMAGE_KEY,
+            type: ResourceType.Image,
+            status: ResourceStatus.Loaded,
+            sourceElement: baseTexture.srcElement,
+            texture: baseTexture
+        });
+
+        this._resourceMap[EMPTY_IMAGE_KEY] = res;
     }
 
     public setRenderPipeline(pipeline: WebGLRenderPipeline) {
@@ -45,6 +65,8 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
                 resource.texture.setContext(pipeline.context);
             }
         }
+
+        this._createEmptyImage();
     }
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {
@@ -55,6 +77,10 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         };
         this._batchLoadingQueue.push(task);
     };
+
+    public getResource(name: string): Resource | undefined {
+        return this._resourceMap[name];
+    }
 
     public load(onload?: ResourcesLoadCallback) {
         const tasks = this._batchLoadingQueue.concat([]);

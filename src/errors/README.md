@@ -2,8 +2,9 @@
 
 | Error Class                             | Error Description                                                                                                |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| [ColorComponentOutOfBoundsError]        | A RGBA-component of a `Color` was set to an invalid number                                                       |
 | [ParadiseError]                         | Base class for all engine errors                                                                                 |
+| [AbstractRendererError]                 | Occurs when `Renderer` component is used directly or it's `getPrimitive` function is not overridden in sub-class |
+| [ColorComponentOutOfBoundsError]        | A RGBA-component of a `Color` was set to an invalid number                                                       |
 | [DestroyBoundTransformError]            | A Transform object is destroyed before its GameObject is destroyed                                               |
 | [DuplicateGameObjectError]              | A GameObject is added to a Scene it already belongs to                                                           |
 | [HierarchyInconsistencyError]           | A GameObject that is another Object's child is added to a Scene                                                  |
@@ -24,6 +25,7 @@
 | [UnknownDeserializableError]            | Attempted to deserialize object whose deserializer class has not been registered                                 |
 
 [paradiseerror]: ./paradise-error.ts
+[abstractrenderererror]: ./abstract-renderer.ts
 [colorcomponentoutofboundserror]: ./color-component-out-of-bounds.ts
 [destroyboundtransformerror]: ./destroy-bound-transform.ts
 [duplicategameobjecterror]: ./duplicate-game-object.ts

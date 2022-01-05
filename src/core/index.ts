@@ -12,3 +12,5 @@ export * from './behaviour';
 export * from './managed-object-repository';
 export * from './i-behaviour';
 export * from './i-bounding-box-modifier';
+export * from './sprite';
+export * from './resource-reference';

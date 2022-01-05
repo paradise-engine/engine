@@ -12,3 +12,4 @@ export * from './texture';
 export * from './types';
 export * from './webgl-pipeline';
 export * from './shader';
+export * from './sprite-primitive';

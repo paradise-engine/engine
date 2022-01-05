@@ -4,7 +4,7 @@ import { RenderablePrimitive } from "./renderable-primitive";
 import { Texture } from "./texture";
 import { DrawImageOptions } from "./types";
 
-export class Sprite extends RenderablePrimitive {
+export class SpritePrimitive extends RenderablePrimitive {
     public texture: Texture;
 
     constructor(texture: Texture, globalMatrix?: mat4) {

@@ -16,4 +16,7 @@ export interface IResourceLoader<T extends SerializableObject> extends ISerializ
     setRenderPipeline(renderPipeline: IRenderPipeline): void;
     add(url: string, name?: string, onload?: ResourceLoadCallback): void;
     load(onload?: ResourcesLoadCallback): void;
+    getResource(name: string): Resource | undefined;
+
+    EMPTY_IMAGE: Resource;
 }

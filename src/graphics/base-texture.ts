@@ -1,5 +1,6 @@
 import { MicroEmitter } from "../util";
 import { IRenderContext } from "./i-render-context";
+import { IRenderPipeline } from "./i-render-pipeline";
 import { NativeTexture, NativeTextureInfo } from "./types";
 
 export enum BaseTextureType {
@@ -12,6 +13,10 @@ interface BaseTextureEvents {
 }
 
 export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
+
+    public static emptyImage(context: IRenderContext) {
+        return this.createImageTexture(context, new Image());
+    }
 
     public static createVideoTexture(context: IRenderContext, video: HTMLVideoElement) {
         const { texture, update } = context.initTextureFromVideo(video);
