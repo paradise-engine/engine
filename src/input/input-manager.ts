@@ -1,11 +1,18 @@
 import { Application } from "../application";
+import { DeserializationOptions, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { MicroEmitter } from "../util";
 import { GamepadInput } from "./gamepad-input";
 import { IInputManager, InputManagerEvents } from "./i-input-manager";
 import { KeyboardInput } from "./keyboard-input";
 import { MouseInput } from "./mouse-input";
 
-export class InputManager extends MicroEmitter<InputManagerEvents> implements IInputManager {
+export interface SerializableInputManager extends SerializableObject { }
+
+export class InputManager extends MicroEmitter<InputManagerEvents> implements IInputManager, ISerializable<SerializableInputManager> {
+    public static fromSerializable(s: SerializableInputManager, options: DeserializationOptions) {
+        return new InputManager(options.application);
+    }
+
     public readonly mouse: MouseInput | null = null;
     public readonly keyboard: KeyboardInput;
     public readonly gamepads: Map<number, GamepadInput> = new Map();
@@ -54,4 +61,12 @@ export class InputManager extends MicroEmitter<InputManagerEvents> implements II
         }
         return gamepad;
     }
+
+    public getSerializableObject(): SerializableInputManager {
+        return {
+            _ctor: InputManager.name
+        }
+    }
 }
+
+registerDeserializable(InputManager);

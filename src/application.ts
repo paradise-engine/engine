@@ -22,17 +22,21 @@ export interface SerializableApplication extends SerializableObject {
     renderPipeline: SerializableObject;
     loader: SerializableObject;
     objectRepository: SerializableManagedObjectRepository;
+    inputManager: SerializableObject;
 }
 
 export class Application implements ISerializable<SerializableApplication> {
 
     public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
+        const loader = deserialize(s.loader, options) as IResourceLoader<any>;
+
         const app = new Application({
-            renderPipeline: deserialize(s.renderPipeline, options) as IRenderPipeline,
-            loader: deserialize(s.loader, options) as IResourceLoader<any>
+            renderPipeline: loader.renderPipeline,
+            loader: loader,
         });
 
         app._managedObjectRepository = deserialize(s.objectRepository, options);
+        app._inputManager = deserialize(s.inputManager, options) as unknown as IInputManager;
         app._id = s.id;
 
         return app;
@@ -117,8 +121,12 @@ export class Application implements ISerializable<SerializableApplication> {
         this._gameManager = gm;
     }
 
+    public setInputManager(im: InputManager) {
+        this._inputManager = im;
+    }
+
     public snapshot(): Application {
-        const cloneApp = new Application({ renderPipeline: this.renderPipeline });
+        const cloneApp = new Application({ renderPipeline: this.renderPipeline, loader: this.loader, inputManager: this.inputManager });
 
         cloneApp._managedObjectRepository = deserialize(this.managedObjectRepository.getSerializableObject(), { application: cloneApp });
 
@@ -131,7 +139,8 @@ export class Application implements ISerializable<SerializableApplication> {
             id: this._id,
             renderPipeline: this.renderPipeline.getSerializableObject(),
             loader: this.loader.getSerializableObject(),
-            objectRepository: this.managedObjectRepository.getSerializableObject()
+            objectRepository: this.managedObjectRepository.getSerializableObject(),
+            inputManager: (this.inputManager as unknown as ISerializable<SerializableObject>).getSerializableObject()
         }
     }
 }
