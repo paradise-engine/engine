@@ -97,7 +97,7 @@ export class Application implements ISerializable<SerializableApplication> {
     public setRenderPipeline(pipeline: IRenderPipeline<any>) {
         this._renderPipeline = pipeline;
 
-        if ((pipeline as WebGLRenderPipeline).context && !this.loader) {
+        if (pipeline instanceof WebGLRenderPipeline && !this.loader) {
             this._loader = new ResourceLoader(pipeline as WebGLRenderPipeline);
         }
 

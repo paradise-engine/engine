@@ -1,10 +1,10 @@
 import { ResourceType } from "./resource-type";
 import { MimeTypeExtensions } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
-import { ParadiseError, ResourceLoaderError } from "../errors";
+import { BrowserApiError, ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
 import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline } from "../graphics";
-import { Dictionary, MicroListener } from "../util";
+import { browserApisAvailable, Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
 
@@ -18,6 +18,12 @@ interface ResourceLoadTask {
 
 export interface SerializableResourceLoader extends SerializableObject {
     renderPipeline: SerializableRenderPipeline;
+}
+
+let emptyImg: HTMLImageElement | null = null;
+if (browserApisAvailable()) {
+    emptyImg = new Image(1, 1);
+    emptyImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg==';
 }
 
 export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
@@ -45,17 +51,32 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     private _createEmptyImage() {
-        const baseTexture = BaseTexture.emptyImage(this._renderPipeline.context);
-        const res = new Resource({
-            name: EMPTY_IMAGE_KEY,
-            url: EMPTY_IMAGE_KEY,
-            type: ResourceType.Image,
-            status: ResourceStatus.Loaded,
-            sourceElement: baseTexture.srcElement,
-            texture: baseTexture
-        });
+        if (!emptyImg) {
+            throw new BrowserApiError();
+        }
 
-        this._resourceMap[EMPTY_IMAGE_KEY] = res;
+        const img = emptyImg;
+
+        const createResource = () => {
+            const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
+
+            const res = new Resource({
+                name: EMPTY_IMAGE_KEY,
+                url: EMPTY_IMAGE_KEY,
+                type: ResourceType.Image,
+                status: ResourceStatus.Loaded,
+                sourceElement: baseTexture.srcElement,
+                texture: baseTexture
+            });
+
+            this._resourceMap[EMPTY_IMAGE_KEY] = res;
+        }
+
+        if (img.complete) {
+            createResource();
+        } else {
+            img.onload = createResource;
+        }
     }
 
     public setRenderPipeline(pipeline: WebGLRenderPipeline) {

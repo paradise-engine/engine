@@ -4,6 +4,7 @@
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | [ParadiseError]                         | Base class for all engine errors                                                                                 |
 | [AbstractRendererError]                 | Occurs when `Renderer` component is used directly or it's `getPrimitive` function is not overridden in sub-class |
+| [BrowserApiError]                       | Occurs when an operation that needs a Browser API executes in an non-browser environment                         |
 | [ColorComponentOutOfBoundsError]        | A RGBA-component of a `Color` was set to an invalid number                                                       |
 | [DestroyBoundTransformError]            | A Transform object is destroyed before its GameObject is destroyed                                               |
 | [DuplicateGameObjectError]              | A GameObject is added to a Scene it already belongs to                                                           |
@@ -26,6 +27,7 @@
 
 [paradiseerror]: ./paradise-error.ts
 [abstractrenderererror]: ./abstract-renderer.ts
+[browserapierror]: ./browser-api.ts
 [colorcomponentoutofboundserror]: ./color-component-out-of-bounds.ts
 [destroyboundtransformerror]: ./destroy-bound-transform.ts
 [duplicategameobjecterror]: ./duplicate-game-object.ts

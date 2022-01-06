@@ -1,4 +1,5 @@
 export * from './abstract-renderer';
+export * from './browser-api';
 export * from './color-component-out-of-bounds';
 export * from './destroy-bound-transform';
 export * from './duplicate-game-object';

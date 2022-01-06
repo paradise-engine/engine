@@ -27,6 +27,7 @@ import {
     drawImage,
     drawToFramebuffer,
     initTextureFromVideo,
+    resetViewport,
     setAttributes,
     setFramebuffer,
     setUniforms,
@@ -136,5 +137,9 @@ export class WebGLPipelineRenderContext implements IRenderContext {
         };
 
         drawImage(augmentedOptions);
+    }
+
+    resetViewport(width: number, height: number): void {
+        resetViewport(this._glContext);
     }
 }

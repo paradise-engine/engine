@@ -4,6 +4,7 @@ import { DeserializationOptions, deserialize, ISerializable, registerDeserializa
 import { Application } from "../application";
 import { MicroEmitter } from "../util";
 import { Rect, SerializableRect } from "../data-structures";
+import { ResourceLoaderError } from "../errors";
 
 export interface SerializableResourceReference extends SerializableObject {
     url: string;
@@ -69,7 +70,11 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
             application.loader.add(url, name, this._handleResourceLoaded);
         }
 
-        this._texture = new Texture(BaseTexture.emptyImage(this._application.renderPipeline.context));
+        const emptyImgResource = application.loader.EMPTY_IMAGE;
+        if (!emptyImgResource.texture) {
+            throw new ResourceLoaderError('Cannot create resource reference to resource without texture');
+        }
+        this._texture = new Texture(emptyImgResource.texture);
     }
 
     public getSerializableObject(): SerializableResourceReference {

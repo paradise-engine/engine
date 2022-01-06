@@ -13,10 +13,6 @@ interface BaseTextureEvents {
 
 export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
 
-    public static emptyImage(context: IRenderContext) {
-        return this.createImageTexture(context, new Image());
-    }
-
     public static createVideoTexture(context: IRenderContext, video: HTMLVideoElement) {
         const { texture, update } = context.initTextureFromVideo(video);
         return new BaseTexture(context, texture, BaseTextureType.Video, video, update);

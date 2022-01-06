@@ -29,4 +29,6 @@ export interface IRenderPipeline<T extends SerializableObject = any> extends ISe
     openContainer(worldSpacePosition: [number, number]): void;
     closeContainer(): void;
     drawFrame(): void;
+
+    resizeView(width: number, height: number): void;
 }

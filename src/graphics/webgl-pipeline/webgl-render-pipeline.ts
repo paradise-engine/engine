@@ -66,11 +66,18 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
     private _renderQueue: RenderQueue = [];
     private _activeQueueStack: RenderQueue[] = [];
 
+    public _width: number;
+    public _height: number;
+
     public readonly view: HTMLCanvasElement;
     public readonly context: WebGLPipelineRenderContext;
 
-    public readonly width: number;
-    public readonly height: number;
+    public get width() {
+        return this._width;
+    }
+    public get height() {
+        return this._height;
+    }
 
     public readonly globalShaderData: GlobalShaderData;
     public readonly baseShader: Shader;
@@ -90,8 +97,8 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
 
         this.context = new WebGLPipelineRenderContext(context);
 
-        this.width = options.width || 800;
-        this.height = options.height || 600;
+        this._width = options.width || 800;
+        this._height = options.height || 600;
 
         this.view.width = this.width;
         this.view.height = this.height;
@@ -148,6 +155,16 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         return {
             _ctor: WebGLRenderPipeline.name
         }
+    }
+
+    public resizeView(width: number, height: number) {
+        this._width = width;
+        this._height = height;
+
+        this.view.width = width;
+        this.view.height = height;
+
+        this.context.resetViewport(width, height);
     }
 }
 

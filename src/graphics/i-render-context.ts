@@ -35,4 +35,5 @@ export interface IRenderContext {
     setUniforms(setters: UniformSetters, data: Dictionary<UniformData>[]): void;
 
     drawImage(options: DrawImageOptions): void;
+    resetViewport(width: number, height: number): void;
 }
