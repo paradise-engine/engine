@@ -1,6 +1,7 @@
 import { BaseControlOptions, ControlType } from "../controls";
 import { ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { IComparable } from "./i-comparable";
+import { Vector } from "./vector";
 
 export interface SerializableRect extends SerializableObject {
     x: number;
@@ -27,6 +28,29 @@ export class Rect implements IComparable, ISerializable<SerializableRect> {
     }
 
     /**
+     * Check if two rectangles overlap
+     * @param a First rectangle
+     * @param b Second rectangle
+     * @returns A boolean that indicates if the rectangles overlap
+     */
+    public static overlap(a: Rect, b: Rect): boolean {
+        const aX1 = a.topLeft.x;
+        const aX2 = a.topRight.x;
+        const aY1 = a.topLeft.y;
+        const aY2 = a.bottomLeft.y;
+
+        const bX1 = b.topLeft.x;
+        const bX2 = b.topRight.x;
+        const bY1 = b.topLeft.y;
+        const bY2 = b.bottomLeft.y;
+
+        return aX1 < bX2
+            && aX2 > bX1
+            && aY1 < bY2
+            && aY2 > bY1;
+    }
+
+    /**
      * The x-position of the rectangle's top-left corner
      */
     public x: number;
@@ -42,6 +66,22 @@ export class Rect implements IComparable, ISerializable<SerializableRect> {
      * The height of the rectangle
      */
     public height: number;
+
+    public get topLeft(): Vector {
+        return new Vector(this.x, this.y);
+    }
+
+    public get topRight(): Vector {
+        return new Vector(this.x + this.width, this.y);
+    }
+
+    public get bottomLeft(): Vector {
+        return new Vector(this.x, this.y + this.height);
+    }
+
+    public get bottomRight(): Vector {
+        return new Vector(this.x + this.width, this.y + this.height);
+    }
 
     /**
      * 

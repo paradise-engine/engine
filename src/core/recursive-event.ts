@@ -1,4 +1,7 @@
-import { Behaviour, GameObject, IBehaviour, ManagedObject } from "../core";
+import { Behaviour } from "./behaviour";
+import { GameObject } from "./game-object";
+import { IBehaviour } from "./i-behaviour";
+import { ManagedObject } from "./managed-object";
 
 export interface RecursiveEventOptions {
     raiseOnInactive?: boolean;

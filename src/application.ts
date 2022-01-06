@@ -86,7 +86,7 @@ export class Application implements ISerializable<SerializableApplication> {
         this._managedObjectRepository = new ManagedObjectRepository();
         this._renderPipeline = options.renderPipeline || new WebGLRenderPipeline(options.renderPipeline);
         this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
-        this._gameManager = new GameManager(this._loader);
+        this._gameManager = new GameManager(this._loader, this._renderPipeline);
         this._inputManager = options.inputManager || new InputManager(this);
     }
 
@@ -100,11 +100,13 @@ export class Application implements ISerializable<SerializableApplication> {
         if (this.loader) {
             this.loader.setRenderPipeline(pipeline as WebGLRenderPipeline);
         }
+
+        this._gameManager = new GameManager(this.loader, this._renderPipeline);
     }
 
     public setLoader(loader: ResourceLoader) {
         this._loader = loader;
-        this._gameManager = new GameManager(this.loader);
+        this._gameManager = new GameManager(this.loader, this._renderPipeline);
     }
 
     public setManagedObjectRepo(repo: ManagedObjectRepository) {

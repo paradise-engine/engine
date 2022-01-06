@@ -1,9 +1,9 @@
 import { Resource } from "../resource";
 import { BaseTexture, Texture } from "../graphics";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
-import { Rect, SerializableRect } from "./rect";
 import { Application } from "../application";
 import { MicroEmitter } from "../util";
+import { Rect, SerializableRect } from "../data-structures";
 
 export interface SerializableResourceReference extends SerializableObject {
     url: string;

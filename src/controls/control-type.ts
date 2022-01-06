@@ -13,7 +13,7 @@ export function ControlType() {
 }
 
 export function isControlType(ctor: Function) {
-    const val = Reflect.getMetadata(MKEY_IS_CONTROL_TYPE, ctor);
+    const val = Reflect.getOwnMetadata(MKEY_IS_CONTROL_TYPE, ctor);
     if (val === true) {
         return true;
     }

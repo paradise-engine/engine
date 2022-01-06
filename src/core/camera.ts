@@ -1,7 +1,10 @@
 import { Application } from "../application";
 import { Control, NumberControlOptions } from "../controls";
-import { Color, ColorControlOptions, Behaviour, GameObject, Rect, SerializableColor, SerializableBehaviour, SerializableRect, RectControlOptions } from "../core";
+import { Color, ColorControlOptions, Rect, RectControlOptions, SerializableColor, SerializableRect, Vector } from "../data-structures";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { Renderer } from "./renderer";
+import { Behaviour, SerializableBehaviour } from "./behaviour";
+import { GameObject } from "./game-object";
 
 export interface SerializableCamera extends SerializableBehaviour {
     backgroundColor: SerializableColor;
@@ -78,6 +81,54 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         this.farClipPane = 1000;
         this.viewportRect = new Rect(0, 0, 1, 1);
         this.depth = -1;
+    }
+
+    public performCulling() {
+        const scene = this.application.gameManager.currentScene;
+        const inView: GameObject[] = [];
+
+        if (scene) {
+            const viewSize = new Vector(
+                this.application.renderPipeline.view.width,
+                this.application.renderPipeline.view.height
+            );
+
+            const viewExtends = Vector.divide(viewSize, new Vector(2, 2));
+
+            const viewRect = new Rect(
+                this.transform.position.x - viewExtends.x,
+                this.transform.position.y - viewExtends.y,
+                viewSize.x,
+                viewSize.y
+            );
+
+            const cullFn = (obj: GameObject): GameObject[] => {
+                const results: GameObject[] = [];
+
+                let boundingBox = new Rect(obj.transform.position.x, obj.transform.position.y);
+                const renderer = obj.getComponent(Renderer);
+
+                if (renderer) {
+                    boundingBox = renderer.getBounds();
+                }
+
+                if (Rect.overlap(viewRect, boundingBox)) {
+                    results.push(obj);
+                }
+
+                for (const child of obj.getChildren()) {
+                    results.push(...cullFn(child));
+                }
+
+                return results;
+            }
+
+            for (const gameObject of scene.getAllGameObjects()) {
+                inView.push(...cullFn(gameObject));
+            }
+        }
+
+        return inView;
     }
 
     public getSerializableObject(): SerializableCamera {

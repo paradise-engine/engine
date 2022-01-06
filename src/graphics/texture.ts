@@ -1,4 +1,4 @@
-import { Rect } from "../core";
+import { Rect } from "../data-structures";
 import { BaseTexture } from "./base-texture";
 import { NativeTextureInfo } from "./types";
 

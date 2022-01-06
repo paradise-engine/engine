@@ -4,8 +4,7 @@ import { DestroyBoundTransformError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { arrayMove } from "../util";
 import { Component } from "./component";
-import { Rotation, RotationControlOptions, SerializableRotation } from "./rotation";
-import { SerializableVector, Vector, VectorControlOptions } from "./vector";
+import { SerializableVector, Vector, VectorControlOptions, Rotation, RotationControlOptions, SerializableRotation } from "../data-structures";
 
 export interface SerializableTransform extends SerializableObject {
     id: string;

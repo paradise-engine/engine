@@ -1,8 +1,8 @@
-import { ISerializable, SerializableObject } from "../serialization";
-import { GlobalShaderData } from "./global-shader-data";
-import { IRenderContext } from "./i-render-context";
-import { Shader } from "./shader";
-import { ShaderPipeline } from "./shader-pipeline";
+import type { ISerializable, SerializableObject } from "../serialization";
+import type { GlobalShaderData } from "./global-shader-data";
+import type { IRenderContext } from "./i-render-context";
+import type { Shader } from "./shader";
+import type { ShaderPipeline } from "./shader-pipeline";
 
 export interface IRenderPipelineView {
     width: number;

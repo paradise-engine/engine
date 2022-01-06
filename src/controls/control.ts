@@ -27,8 +27,8 @@ function camelCaseToDisplay(str: string): string {
 
 export function Control<T extends BaseControlOptions>(options?: ControlDecoratorOptions<T>) {
     return function ControlDecorator(target: any, propertyKey: string) {
-        const descriptors: ControlDescriptor[] = Reflect.getMetadata(MKEY_CONTROL_DESCRIPTORS, target) || [];
-        const type = Reflect.getMetadata('design:type', target, propertyKey) as TypeConstructor;
+        const descriptors: ControlDescriptor[] = Reflect.getOwnMetadata(MKEY_CONTROL_DESCRIPTORS, target) || [];
+        const type = Reflect.getOwnMetadata('design:type', target, propertyKey) as TypeConstructor;
 
         const isControl = isControlType(type);
 

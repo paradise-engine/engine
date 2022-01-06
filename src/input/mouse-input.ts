@@ -1,4 +1,4 @@
-import { Vector } from "../core";
+import { Vector } from "../data-structures";
 import { IRenderPipelineView } from "../graphics";
 import { arrayPermutate, Indexable, MicroEmitter } from "../util";
 import { IMouseInput, MouseInputButton, MouseInputButtonsState, MouseInputEvents, MouseInputState } from "./i-mouse-input";

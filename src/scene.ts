@@ -1,8 +1,8 @@
-import { Application } from "../application";
-import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "../errors";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
-import { arrayMove, Dictionary, generateRandomString, MicroEmitter } from "../util";
-import { GameObject, SerializableGameObject } from "./game-object";
+import { Application } from "./application";
+import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "./errors";
+import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
+import { arrayMove, Dictionary, generateRandomString, MicroEmitter } from "./util";
+import { Camera, GameObject, SerializableGameObject } from "./core";
 
 export interface SerializableScene extends SerializableObject {
     name: string;
@@ -103,6 +103,30 @@ export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<Se
 
     public moveGameObject(fromIndex: number, toIndex: number) {
         this._gameObjectIds = arrayMove(this._gameObjectIds, fromIndex, toIndex);
+    }
+
+    public getAllCameras() {
+        const cameras: Camera[] = [];
+
+        const getObjCameras = (obj: GameObject): Camera[] => {
+            const results: Camera[] = [];
+            const cameraComp = obj.getComponent(Camera);
+            if (cameraComp) {
+                results.push(cameraComp);
+            }
+
+            for (const child of obj.getChildren()) {
+                results.push(...getObjCameras(child));
+            }
+
+            return results;
+        }
+
+        for (const obj of this.getAllGameObjects()) {
+            cameras.push(...getObjCameras(obj));
+        }
+
+        return cameras;
     }
 
     public getSerializableObject(): SerializableScene {

@@ -1,11 +1,13 @@
-import { Behaviour, GameObject, Scene } from "../core";
+import { Behaviour, GameObject, recursiveEvent, Renderer } from "../core";
 import { LifecycleError, SceneLoadError } from "../errors";
+import { IRenderPipeline } from "../graphics";
 import { IResourceLoader } from "../resource";
+import { Scene } from "../scene";
 import { Time } from "../time";
-import { recursiveEvent } from "../util";
 
 export class GameManager {
     private _loader: IResourceLoader<any>;
+    private _renderPipeline: IRenderPipeline;
 
     private _currentScene?: Scene;
     private _isRunning = false;
@@ -66,8 +68,9 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: IResourceLoader<any>) {
+    constructor(loader: IResourceLoader<any>, pipeline: IRenderPipeline) {
         this._loader = loader;
+        this._renderPipeline = pipeline;
     }
 
     /**
@@ -88,7 +91,7 @@ export class GameManager {
 
         // TODO handle lifecycle
 
-        // Start cycle
+        // Start phase
         for (const id of this._enabledObjects) {
             const obj = scene.application.managedObjectRepository.getObjectById(id);
             if (obj) {
@@ -101,9 +104,21 @@ export class GameManager {
         }
         this._enabledObjects.clear();
 
-        // Update cycle
+        // Update phase
         for (const obj of scene.getAllGameObjects()) {
             recursiveEvent(obj, 'onUpdate');
+        }
+
+        // Draw phase
+        for (const camera of scene.getAllCameras()) {
+            const cullingResults = camera.performCulling();
+            for (const res of cullingResults) {
+                const renderer = res.getComponent(Renderer);
+                if (renderer) {
+                    const primitive = renderer.getPrimitive();
+                    primitive.render(this._renderPipeline);
+                }
+            }
         }
 
         requestAnimationFrame(this._gameLoop);

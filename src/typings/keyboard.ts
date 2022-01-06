@@ -169,8 +169,8 @@ declare global {
 
     interface KeyboardLayoutMap {
         /**
-         * Returns an array of a given object's own enumerable property `[key, value]` pairs, 
-         * in the same order as that provided by a `for...in` loop (the difference being that a 
+         * Returns an array of a given object's own enumerable property `[key, value]` pairs,
+         * in the same order as that provided by a `for...in` loop (the difference being that a
          * `for-in` loop enumerates properties in the prototype chain as well).
          */
         entries(): Iterator<[string, string]>;
@@ -183,7 +183,7 @@ declare global {
          */
         size: number;
         /**
-         * Returns a new _array iterator_ object that contains the values for each index in the 
+         * Returns a new _array iterator_ object that contains the values for each index in the
          * `KeyboardLayoutMap` object.
          */
         values(): Iterator<string>;
@@ -193,7 +193,7 @@ declare global {
          */
         get(key: string): string;
         /**
-         * Returns a boolean indicating whether the `KeyboardLayoutMap` object has an element 
+         * Returns a boolean indicating whether the `KeyboardLayoutMap` object has an element
          * with the specified key.
          * @param key The key of an element to search for in the map.
          */
@@ -202,13 +202,13 @@ declare global {
 
     interface Keyboard {
         /**
-         * Returns a `Promise` that resolves with an instance of `KeyboardLayoutMap` which is a 
-         * map-like object with functions for retrieving the strings associated with specific 
+         * Returns a `Promise` that resolves with an instance of `KeyboardLayoutMap` which is a
+         * map-like object with functions for retrieving the strings associated with specific
          * physical keys.
          */
         getLayoutMap(): Promise<KeyboardLayoutMap>;
         /**
-         * Returns a `Promise` after enabling the capture of keypresses for any or all of the keys 
+         * Returns a `Promise` after enabling the capture of keypresses for any or all of the keys
          * on the physical keyboard.
          * @param keyCodes An `Array` of one or more key codes to lock. If no keycodes are provided all keys will be locked. A list of valid code values is found in the `UI Events KeyboardEvent code Values` spec.
          */
@@ -221,7 +221,7 @@ declare global {
 
     interface Navigator {
         /**
-         * Returns a `Keyboard` object which provides access to functions that retrieve 
+         * Returns a `Keyboard` object which provides access to functions that retrieve
          * keyboard layout maps and toggle capturing of key presses from the physical keyboard.
          */
         readonly keyboard: Keyboard;

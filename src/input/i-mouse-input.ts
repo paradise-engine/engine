@@ -1,4 +1,4 @@
-import { Vector } from "../core";
+import { Vector } from "../data-structures";
 import { IRenderPipelineView } from "../graphics";
 import { IEmitter } from "../util";
 

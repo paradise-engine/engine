@@ -1,6 +1,5 @@
 import { MicroEmitter } from "../util";
 import { IRenderContext } from "./i-render-context";
-import { IRenderPipeline } from "./i-render-pipeline";
 import { NativeTexture, NativeTextureInfo } from "./types";
 
 export enum BaseTextureType {
