@@ -13,6 +13,7 @@ export interface WebGLRenderPipelineOptions {
     height?: number;
     baseShader?: Shader;
     antialias?: boolean;
+    debugMode?: boolean;
 }
 
 interface RenderQueueItem {
@@ -87,9 +88,18 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         options = options || {};
 
         this.view = options.view || document.createElement('canvas');
-        const context = this.view.getContext('webgl', {
+
+        let context: WebGLRenderingContext | null = this.view.getContext('webgl', {
             antialias: options.antialias || false
         });
+
+        if (options.debugMode) {
+            try {
+                context = (window as any).WebGLDebugUtils.makeDebugContext(context);
+            } catch (err) {
+                console.error(err);
+            }
+        }
 
         if (!context) {
             throw new RenderingContextError('Could not get rendering context');

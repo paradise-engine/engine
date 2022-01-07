@@ -3,7 +3,7 @@ import { BaseTexture, Texture } from "../graphics";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Application } from "../application";
 import { MicroEmitter } from "../util";
-import { Rect, SerializableRect } from "../data-structures";
+import { IComparable, Rect, SerializableRect } from "../data-structures";
 import { ResourceLoaderError } from "../errors";
 
 export interface SerializableResourceReference extends SerializableObject {
@@ -16,7 +16,7 @@ export interface ResourceReferenceEvents {
     resourceLoaded: ResourceReference;
 }
 
-export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> implements ISerializable<SerializableResourceReference> {
+export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> implements IComparable, ISerializable<SerializableResourceReference> {
     public static fromSerializable(s: SerializableResourceReference, options: DeserializationOptions) {
         const frame: Rect | undefined = s.textureFrame ? deserialize(s.textureFrame, options) as Rect : undefined;
         const ref = new ResourceReference(
@@ -75,6 +75,26 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
             throw new ResourceLoaderError('Cannot create resource reference to resource without texture');
         }
         this._texture = new Texture(emptyImgResource.texture);
+    }
+
+    public equals(compare: ResourceReference): boolean {
+        if (this.url !== compare.url) {
+            return false;
+        }
+
+        if (this.name !== compare.name) {
+            return false;
+        }
+
+        if ([this._textureFrame, compare._textureFrame].filter(tf => tf === undefined).length === 1) {
+            return false;
+        }
+
+        if (this._textureFrame && compare._textureFrame && !this._textureFrame.equals(compare._textureFrame)) {
+            return false;
+        }
+
+        return true;
     }
 
     public getSerializableObject(): SerializableResourceReference {

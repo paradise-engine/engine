@@ -1,5 +1,6 @@
 import { BaseControlOptions, ControlType } from "../controls";
-import { DeserializationOptions, deserialize, ISerializable, SerializableObject } from "../serialization";
+import { IComparable } from "../data-structures";
+import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { ResourceReference, SerializableResourceReference } from "./resource-reference";
 
 export interface SerializableSprite extends SerializableObject {
@@ -9,12 +10,16 @@ export interface SerializableSprite extends SerializableObject {
 export interface SpriteControlOptions extends BaseControlOptions { }
 
 @ControlType()
-export class Sprite implements ISerializable<SerializableSprite> {
+export class Sprite implements IComparable, ISerializable<SerializableSprite> {
     public static fromSerializable(s: SerializableSprite, options: DeserializationOptions) {
         return new Sprite(deserialize(s.resourceRef, options));
     }
 
     private _resourceReference: ResourceReference;
+
+    public get resourceReference() {
+        return this._resourceReference;
+    }
 
     public get texture() {
         return this._resourceReference.texture;
@@ -32,6 +37,10 @@ export class Sprite implements ISerializable<SerializableSprite> {
         this._resourceReference = resourceRef;
     }
 
+    public equals(compare: Sprite): boolean {
+        return this._resourceReference.equals(compare._resourceReference);
+    }
+
     public getSerializableObject(): SerializableSprite {
         return {
             _ctor: Sprite.name,
@@ -39,3 +48,5 @@ export class Sprite implements ISerializable<SerializableSprite> {
         }
     }
 }
+
+registerDeserializable(Sprite);

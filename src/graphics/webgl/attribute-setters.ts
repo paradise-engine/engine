@@ -13,7 +13,7 @@ export function createAttributeSetters(gl: WebGLRenderingContext, program: WebGL
 
     function createAttribSetter(index: number): AttributeSetterFunction {
         return function (b) {
-            gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, b.buffer.buffer);
             gl.enableVertexAttribArray(index);
             gl.vertexAttribPointer(index, b.numComponents, b.type, b.normalized || false, b.stride || 0, b.offset || 0);
         };

@@ -51,7 +51,7 @@ export class BaseTexture extends MicroEmitter<BaseTextureEvents> {
         };
     }
 
-    private constructor(context: IRenderContext, nativeTexture: NativeTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
+    constructor(context: IRenderContext, nativeTexture: NativeTexture, type: BaseTextureType, srcElement: HTMLImageElement | HTMLVideoElement, updateFn?: () => void) {
         super();
         this._context = context;
         this._nativeTexture = nativeTexture;

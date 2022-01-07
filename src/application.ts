@@ -15,6 +15,7 @@ export interface ApplicationOptions {
     gameManager?: GameManager;
     managedObjectRepository?: ManagedObjectRepository;
     inputManager?: IInputManager;
+    debugMode?: boolean;
 }
 
 export interface SerializableApplication extends SerializableObject {
@@ -88,7 +89,10 @@ export class Application implements ISerializable<SerializableApplication> {
         this._id = options.id || generateRandomString();
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
-        this._renderPipeline = options.renderPipeline || new WebGLRenderPipeline(options.renderPipeline);
+        this._renderPipeline = options.renderPipeline || new WebGLRenderPipeline({
+            ...(options.renderPipeline || {}),
+            debugMode: options.debugMode
+        });
         this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
         this._gameManager = new GameManager(this._loader, this._renderPipeline);
         this._inputManager = options.inputManager || new InputManager(this);
@@ -123,14 +127,6 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public setInputManager(im: InputManager) {
         this._inputManager = im;
-    }
-
-    public snapshot(): Application {
-        const cloneApp = new Application({ renderPipeline: this.renderPipeline, loader: this.loader, inputManager: this.inputManager });
-
-        cloneApp._managedObjectRepository = deserialize(this.managedObjectRepository.getSerializableObject(), { application: cloneApp });
-
-        return cloneApp;
     }
 
     public getSerializableObject(): SerializableApplication {

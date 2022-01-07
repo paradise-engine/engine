@@ -119,6 +119,7 @@ export class GameManager {
                     primitive.render(this._renderPipeline);
                 }
             }
+            this._renderPipeline.drawFrame();
         }
 
         requestAnimationFrame(this._gameLoop);

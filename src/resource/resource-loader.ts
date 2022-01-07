@@ -3,7 +3,7 @@ import { MimeTypeExtensions } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
 import { BrowserApiError, ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline } from "../graphics";
+import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline, BaseTextureType } from "../graphics";
 import { browserApisAvailable, Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
@@ -51,14 +51,37 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     private _createEmptyImage() {
-        if (!emptyImg) {
-            throw new BrowserApiError();
-        }
+        if (emptyImg) {
+            const img = emptyImg;
 
-        const img = emptyImg;
+            const createResource = () => {
+                const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
 
-        const createResource = () => {
-            const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
+                const res = new Resource({
+                    name: EMPTY_IMAGE_KEY,
+                    url: EMPTY_IMAGE_KEY,
+                    type: ResourceType.Image,
+                    status: ResourceStatus.Loaded,
+                    sourceElement: baseTexture.srcElement,
+                    texture: baseTexture
+                });
+
+                this._resourceMap[EMPTY_IMAGE_KEY] = res;
+            }
+
+            if (img.complete) {
+                createResource();
+            } else {
+                img.onload = createResource;
+            }
+        } else {
+
+            const baseTexture = new BaseTexture(
+                this._renderPipeline.context,
+                { texture: {} },
+                BaseTextureType.Image,
+                {} as any
+            );
 
             const res = new Resource({
                 name: EMPTY_IMAGE_KEY,
@@ -70,13 +93,10 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
             });
 
             this._resourceMap[EMPTY_IMAGE_KEY] = res;
+
         }
 
-        if (img.complete) {
-            createResource();
-        } else {
-            img.onload = createResource;
-        }
+
     }
 
     public setRenderPipeline(pipeline: WebGLRenderPipeline) {
