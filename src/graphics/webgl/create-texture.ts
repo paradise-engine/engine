@@ -1,12 +1,13 @@
 import { RenderingContextError } from "../../errors";
+import { registerContextObject, taggedMessage } from "./context-debug";
 
 export interface GLVideoTextureInfo {
     update(): void;
     texture: WebGLTexture;
 }
 
-export function createTextureFromImage(gl: WebGLRenderingContext, image: TexImageSource) {
-    const texture = createTextureOrThrow(gl);
+export function createTextureFromImage(gl: WebGLRenderingContext, image: TexImageSource, debug?: boolean) {
+    const texture = createTextureOrThrow(gl, debug);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     const level = 0;
@@ -34,8 +35,8 @@ export function createTextureFromImage(gl: WebGLRenderingContext, image: TexImag
     return texture;
 }
 
-export function createGeneralPurposeTexture(gl: WebGLRenderingContext) {
-    const texture = createTextureOrThrow(gl);
+export function createGeneralPurposeTexture(gl: WebGLRenderingContext, debug?: boolean) {
+    const texture = createTextureOrThrow(gl, debug);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -46,9 +47,9 @@ export function createGeneralPurposeTexture(gl: WebGLRenderingContext) {
     return texture
 }
 
-export function initTextureFromVideo(gl: WebGLRenderingContext, video: TexImageSource): GLVideoTextureInfo {
+export function initTextureFromVideo(gl: WebGLRenderingContext, video: TexImageSource, debug?: boolean): GLVideoTextureInfo {
 
-    const texture = createTextureOrThrow(gl);
+    const texture = createTextureOrThrow(gl, debug);
     gl.bindTexture(gl.TEXTURE_2D, texture);
 
     // Because video has to be download over the internet
@@ -84,41 +85,64 @@ export function initTextureFromVideo(gl: WebGLRenderingContext, video: TexImageS
     return { update, texture };
 }
 
-export function createFramebuffer(gl: WebGLRenderingContext) {
-    return createFramebufferOrThrow(gl);
+export function createFramebuffer(gl: WebGLRenderingContext, debug?: boolean) {
+    return createFramebufferOrThrow(gl, debug);
 }
 
-export function resizeTexture(gl: WebGLRenderingContext, texture: WebGLTexture, width: number, height: number) {
+export function resizeTexture(gl: WebGLRenderingContext, texture: WebGLTexture, width: number, height: number, debug?: boolean) {
+    if (debug) {
+        taggedMessage(gl, 'Binding Texture', true, texture);
+    }
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 }
 
-export function attachTextureToFramebuffer(gl: WebGLRenderingContext, texture: WebGLTexture, fbo: WebGLFramebuffer) {
+export function attachTextureToFramebuffer(gl: WebGLRenderingContext, texture: WebGLTexture, fbo: WebGLFramebuffer, debug?: boolean) {
+    if (debug) {
+        taggedMessage(gl, 'Binding Texture', true, texture);
+    }
     gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    if (debug) {
+        taggedMessage(gl, 'Binding Frame Buffer', true, fbo);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
 }
 
-export function setFramebuffer(gl: WebGLRenderingContext, fbo: WebGLFramebuffer | null, width: number, height: number) {
+export function setFramebuffer(gl: WebGLRenderingContext, fbo: WebGLFramebuffer | null, width: number, height: number, debug?: boolean) {
+    if (debug) {
+        taggedMessage(gl, 'Binding Frame Buffer', true, fbo);
+    }
     gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
     gl.viewport(0, 0, width, height);
 }
 
-function createFramebufferOrThrow(gl: WebGLRenderingContext) {
+function createFramebufferOrThrow(gl: WebGLRenderingContext, debug?: boolean) {
     const fbo = gl.createFramebuffer();
 
     if (!fbo) {
         throw new RenderingContextError('Could not create WebGLFramebuffer');
     }
 
+    if (debug) {
+        registerContextObject(gl, fbo, 'Created Frame Buffer');
+    }
+
     return fbo;
 }
 
-function createTextureOrThrow(gl: WebGLRenderingContext) {
+function createTextureOrThrow(gl: WebGLRenderingContext, debug?: boolean) {
     const texture = gl.createTexture();
 
     if (!texture) {
         throw new RenderingContextError('Could not create WebGLTexture');
+    }
+
+
+
+    if (debug) {
+        registerContextObject(gl, texture, 'Created Texture');
     }
 
     return texture;

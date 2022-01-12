@@ -1,4 +1,4 @@
-import { resetViewport } from "../webgl";
+import { resetViewport, tagContext, taggedMessage } from "../webgl";
 import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../../errors";
 import { DefaultShader, Shader } from '../shader';
 import { ShaderPipeline } from "../shader-pipeline";
@@ -6,6 +6,7 @@ import { GlobalShaderData } from "../global-shader-data";
 import { IRenderPipeline } from "../i-render-pipeline";
 import { registerDeserializable, SerializableObject } from "../../serialization";
 import { WebGLPipelineRenderContext } from "./webgl-render-context";
+import { WebGLDebugUtils } from './webgl_debug';
 
 export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
@@ -56,16 +57,21 @@ function drawQueueItem(item: RenderQueueItem) {
     }
 }
 
-export interface SerializableRenderPipeline extends SerializableObject { }
+export interface SerializableRenderPipeline extends SerializableObject {
+    debugMode: boolean;
+}
 
 export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPipeline> {
 
     public static fromSerializable(s: SerializableRenderPipeline) {
-        return new WebGLRenderPipeline();
+        return new WebGLRenderPipeline({
+            debugMode: s.debugMode
+        });
     }
 
     private _renderQueue: RenderQueue = [];
     private _activeQueueStack: RenderQueue[] = [];
+    private _debugMode: boolean = false;
 
     public _width: number;
     public _height: number;
@@ -87,25 +93,27 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
     constructor(options?: WebGLRenderPipelineOptions) {
         options = options || {};
 
+        this._debugMode = options.debugMode || false;
         this.view = options.view || document.createElement('canvas');
 
         let context: WebGLRenderingContext | null = this.view.getContext('webgl', {
             antialias: options.antialias || false
         });
 
-        if (options.debugMode) {
+        if (!context) {
+            throw new RenderingContextError('Could not get rendering context');
+        }
+
+        if (this._debugMode) {
             try {
-                context = (window as any).WebGLDebugUtils.makeDebugContext(context);
+                context = WebGLDebugUtils.makeDebugContext(context);
+                tagContext(context);
             } catch (err) {
                 console.error(err);
             }
         }
 
-        if (!context) {
-            throw new RenderingContextError('Could not get rendering context');
-        }
-
-        this.context = new WebGLPipelineRenderContext(context);
+        this.context = new WebGLPipelineRenderContext(context, this._debugMode);
 
         this._width = options.width || 800;
         this._height = options.height || 600;
@@ -113,15 +121,22 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         this.view.width = this.width;
         this.view.height = this.height;
 
-        resetViewport(context);
+        resetViewport(context, this._debugMode);
 
         this.globalShaderData = new GlobalShaderData(this);
         this.baseShader = options.baseShader || new DefaultShader(this);
         this.shaderPipeline = new ShaderPipeline(this);
 
-        this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
+        // this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
 
         this._activeQueueStack.push(this._renderQueue);
+    }
+
+    public setViewContainer(container: Element) {
+        if (this.view.parentElement) {
+            this.view.parentElement.removeChild(this.view);
+        }
+        container.appendChild(this.view);
     }
 
     public clearRenderQueue() {
@@ -163,7 +178,8 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
 
     public getSerializableObject(): SerializableRenderPipeline {
         return {
-            _ctor: WebGLRenderPipeline.name
+            _ctor: WebGLRenderPipeline.name,
+            debugMode: this._debugMode
         }
     }
 

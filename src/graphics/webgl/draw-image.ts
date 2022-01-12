@@ -3,6 +3,7 @@ import { Dictionary } from "../../util";
 import { InactiveShaderError } from "../../errors";
 import { DrawImageOptions, UniformData } from '../types';
 import { Shader, ShaderState } from '../shader';
+import { taggedMessage } from './context-debug';
 
 /**
  * Tell WebGL to use the program of the specified shader and update shader uniforms
@@ -10,12 +11,10 @@ import { Shader, ShaderState } from '../shader';
  * @param shader 
  * @param globalUniforms 
  */
-function prepareShader(gl: WebGLRenderingContext, shader: Shader, globalUniforms: Dictionary<UniformData>, localUniforms: Dictionary<UniformData>) {
+function prepareShader(gl: WebGLRenderingContext, shader: Shader, globalUniforms: Dictionary<UniformData>, localUniforms: Dictionary<UniformData>, debug?: boolean) {
     if (shader.state === ShaderState.Inactive) {
         throw new InactiveShaderError();
     }
-
-    gl.useProgram(shader.program.program);
 
     let uniforms: Dictionary<UniformData>[] = [
         globalUniforms
@@ -27,12 +26,18 @@ function prepareShader(gl: WebGLRenderingContext, shader: Shader, globalUniforms
 
     uniforms.push(localUniforms);
 
+    gl.useProgram(shader.program.program);
+
     shader.updateAttributes();
     shader.updateUniforms(...uniforms);
     shader.setPristine();
+
+    if (debug) {
+        taggedMessage(gl, 'Using Program', true, shader.program.program);
+    }
 }
 
-export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dictionary<UniformData>, shader: Shader, texture: WebGLTexture) {
+export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dictionary<UniformData>, shader: Shader, texture: WebGLTexture, debug?: boolean) {
     const identityMatrix = mat4.create();
 
     const localUniforms = {
@@ -40,7 +45,7 @@ export function drawToFramebuffer(gl: WebGLRenderingContext, globalUniforms: Dic
         'u_texture': texture
     }
 
-    prepareShader(gl, shader, globalUniforms, localUniforms);
+    prepareShader(gl, shader, globalUniforms, localUniforms, debug);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
@@ -49,6 +54,7 @@ export interface WebGLDrawImageOptions extends DrawImageOptions {
      * The WebGL rendering context
      */
     gl: WebGLRenderingContext;
+    debug?: boolean;
 }
 
 export function drawImage(options: WebGLDrawImageOptions) {
@@ -112,7 +118,7 @@ export function drawImage(options: WebGLDrawImageOptions) {
         'u_matrix': matrix,
         'u_textureMatrix': texMatrix,
         'u_texture': options.texture.texture
-    });
+    }, options.debug);
 
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);

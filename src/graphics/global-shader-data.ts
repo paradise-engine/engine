@@ -57,6 +57,10 @@ export class GlobalShaderData {
         this._bufferInfo = renderPipeline.context.createBufferInfo(globalAttributes);
     }
 
+    public setRenderPipeline(renderPipeline: IRenderPipeline) {
+        this._bufferInfo = renderPipeline.context.createBufferInfo(globalAttributes);
+    }
+
     public addUpdateListener(listener: GlobalUniformsChangeHandler) {
         this._uniformUpdateListeners.push(listener);
     }

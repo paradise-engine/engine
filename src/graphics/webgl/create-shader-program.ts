@@ -1,5 +1,6 @@
 import { glEnumToString } from "./gl-enum-to-string";
 import { RenderingContextError } from "../../errors";
+import { registerContextObject, taggedMessage } from "./context-debug";
 
 /**
  * Creates and compiles a shader.
@@ -9,12 +10,16 @@ import { RenderingContextError } from "../../errors";
  * @param shaderType The type of shader, VERTEX_SHADER or FRAGMENT_SHADER
  * @return The shader.
  */
-function compileShader(gl: WebGLRenderingContext, shaderSource: string, shaderType: number) {
+function compileShader(gl: WebGLRenderingContext, shaderSource: string, shaderType: number, debug?: boolean) {
     // Create the shader object
     const shader = gl.createShader(shaderType);
 
     if (shader === null) {
         throw new RenderingContextError(`Could not create WebGLShader type ${glEnumToString(gl, shaderType)}`);
+    }
+
+    if (debug) {
+        registerContextObject(gl, shader, 'Created Shader');
     }
 
     // Set the shader source code.
@@ -41,7 +46,7 @@ function compileShader(gl: WebGLRenderingContext, shaderSource: string, shaderTy
  * @param fragmentShader A fragment shader.
  * @return A program.
  */
-function linkShaderProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+function linkShaderProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader, debug?: boolean) {
     // create a program.
     const program = gl.createProgram();
 
@@ -49,7 +54,14 @@ function linkShaderProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader,
         throw new RenderingContextError('Could not create WebGLProgram');
     }
 
+    if (debug) {
+        registerContextObject(gl, program, 'Created Program');
+    }
+
     // attach the shaders.
+    if (debug) {
+        taggedMessage(gl, 'Attaching Shaders to Program', true, program, vertexShader, fragmentShader);
+    }
     gl.attachShader(program, vertexShader);
     gl.attachShader(program, fragmentShader);
 
@@ -74,10 +86,10 @@ function linkShaderProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader,
  * @param fsSource The GLSL source code for the fragment shader.
  * @return The program.
  */
-export function createShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string) {
-    const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER);
-    const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
-    const program = linkShaderProgram(gl, vertexShader, fragmentShader);
+export function createShaderProgram(gl: WebGLRenderingContext, vsSource: string, fsSource: string, debug?: boolean) {
+    const vertexShader = compileShader(gl, vsSource, gl.VERTEX_SHADER, debug);
+    const fragmentShader = compileShader(gl, fsSource, gl.FRAGMENT_SHADER, debug);
+    const program = linkShaderProgram(gl, vertexShader, fragmentShader, debug);
 
     return { vertexShader, fragmentShader, program };
 }

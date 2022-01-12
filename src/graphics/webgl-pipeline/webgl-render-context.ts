@@ -37,13 +37,15 @@ import {
 export class WebGLPipelineRenderContext implements IRenderContext {
 
     private _glContext: WebGLRenderingContext;
+    private _debugMode: boolean;
 
-    constructor(glContext: WebGLRenderingContext) {
+    constructor(glContext: WebGLRenderingContext, debugMode?: boolean) {
         this._glContext = glContext;
+        this._debugMode = debugMode || false;
     }
 
     initTextureFromVideo(video: HTMLVideoElement): NativeVideoTextureInfo {
-        const info = initTextureFromVideo(this._glContext, video);
+        const info = initTextureFromVideo(this._glContext, video, this._debugMode);
         return {
             texture: { texture: info.texture },
             update: info.update
@@ -52,7 +54,7 @@ export class WebGLPipelineRenderContext implements IRenderContext {
 
     createTextureFromImage(image: HTMLImageElement): NativeTexture {
         return {
-            texture: createTextureFromImage(this._glContext, image)
+            texture: createTextureFromImage(this._glContext, image, this._debugMode)
         }
     }
 
@@ -62,7 +64,7 @@ export class WebGLPipelineRenderContext implements IRenderContext {
 
     createGeneralPurposeTexture(): NativeTexture {
         return {
-            texture: createGeneralPurposeTexture(this._glContext)
+            texture: createGeneralPurposeTexture(this._glContext, this._debugMode)
         }
     }
 
@@ -86,28 +88,28 @@ export class WebGLPipelineRenderContext implements IRenderContext {
 
     createFramebuffer(): NativeFramebuffer {
         return {
-            framebuffer: createFramebuffer(this._glContext)
+            framebuffer: createFramebuffer(this._glContext, this._debugMode)
         }
     }
 
     attachTextureToFramebuffer(texture: NativeTexture, fbo: NativeFramebuffer): void {
-        attachTextureToFramebuffer(this._glContext, texture.texture, fbo.framebuffer);
+        attachTextureToFramebuffer(this._glContext, texture.texture, fbo.framebuffer, this._debugMode);
     }
 
     drawToFramebuffer(globalUniforms: Dictionary<UniformData>, shader: Shader, texture: NativeTexture): void {
-        drawToFramebuffer(this._glContext, globalUniforms, shader, texture.texture);
+        drawToFramebuffer(this._glContext, globalUniforms, shader, texture.texture, this._debugMode);
     }
 
     bindFramebuffer(fbo: NativeFramebuffer | null, width: number, height: number): void {
-        setFramebuffer(this._glContext, fbo, width, height);
+        setFramebuffer(this._glContext, fbo, width, height, this._debugMode);
     }
 
     createBufferInfo(input: BufferInput): BufferInfo {
-        return createBufferInfo(this._glContext, input);
+        return createBufferInfo(this._glContext, input, undefined, this._debugMode);
     }
 
     createShaderProgram(fragmentSource: string, vertexSource: string): ShaderInfo {
-        const { program, fragmentShader, vertexShader } = createShaderProgram(this._glContext, fragmentSource, vertexSource);
+        const { program, fragmentShader, vertexShader } = createShaderProgram(this._glContext, fragmentSource, vertexSource, this._debugMode);
         return {
             program: { program },
             fragmentShader: { shader: fragmentShader },
@@ -116,15 +118,15 @@ export class WebGLPipelineRenderContext implements IRenderContext {
     }
 
     createAttributeSetters(program: NativeShaderProgram): AttributeSetters {
-        return createAttributeSetters(this._glContext, program.program);
+        return createAttributeSetters(this._glContext, program.program, this._debugMode);
     }
 
     createUniformSetters(program: NativeShaderProgram): UniformSetters {
-        return createUniformSetters(this._glContext, program.program);
+        return createUniformSetters(this._glContext, program.program, this._debugMode);
     }
 
     setAttributes(setters: AttributeSetters, data: BufferInfo): void {
-        setAttributes(this._glContext, setters, data);
+        setAttributes(this._glContext, setters, data, this._debugMode);
     }
     setUniforms(setters: UniformSetters, data: Dictionary<UniformData>[]): void {
         setUniforms(setters, ...data);
@@ -133,13 +135,14 @@ export class WebGLPipelineRenderContext implements IRenderContext {
     drawImage(options: DrawImageOptions): void {
         const augmentedOptions: WebGLDrawImageOptions = {
             gl: this._glContext,
-            ...options
+            ...options,
+            debug: this._debugMode
         };
 
         drawImage(augmentedOptions);
     }
 
     resetViewport(width: number, height: number): void {
-        resetViewport(this._glContext);
+        resetViewport(this._glContext, this._debugMode);
     }
 }

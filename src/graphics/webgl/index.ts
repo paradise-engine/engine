@@ -9,3 +9,4 @@ export * from './gl-enum-to-string';
 export * from './create-texture';
 export * from './draw-image';
 export * from './reset-viewport';
+export * from './context-debug';

@@ -76,6 +76,23 @@ export class Shader {
         this._bufferInfo = bufferInfo;
     }
 
+    public setRenderContext(context: IRenderContext, bufferInfo: BufferInfo) {
+        this._context = context;
+        const { program, vertexShader, fragmentShader } = context.createShaderProgram(this.internals.vertexSource, this.internals.fragmentSource);
+        this._internals = {
+            ...this._internals,
+            vertexShader,
+            fragmentShader
+        }
+
+        this._program = program;
+        this._attributeSetters = context.createAttributeSetters(program);
+        this._uniformSetters = context.createUniformSetters(program);
+        this._state = ShaderState.Dirty;
+        this._isActive = true;
+        this._bufferInfo = bufferInfo;
+    }
+
     public deactivate() {
         this._isActive = false;
         this._state = ShaderState.Inactive;

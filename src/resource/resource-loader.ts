@@ -1,5 +1,5 @@
 import { ResourceType } from "./resource-type";
-import { MimeTypeExtensions } from "./mime-types";
+import { MimeTypeExtensions, MimeType, MimeTypes } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
 import { BrowserApiError, ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
@@ -188,30 +188,50 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     private async loadSingle(task: ResourceLoadTask): Promise<Resource> {
+        const currentUrl = new URL(location.href);
+        let cors = false;
         const url = new URL(task.url, window.location.origin);
-        const extension = '.' + url.pathname.split('.').pop();
 
-        const mimeType = MimeTypeExtensions[extension];
+        if (url.protocol !== 'file:' && url.origin !== currentUrl.origin) {
+            cors = true;
+        }
+
+        let mimeType: MimeType | null = null;
+        if (url.protocol === 'data:') {
+            mimeType = MimeTypes[url.pathname.split(';')[0]]
+        } else {
+            const extension = '.' + url.pathname.split('.').pop();
+            mimeType = MimeTypeExtensions[extension];
+
+            if (!mimeType) {
+                throw new ParadiseError(`FATAL: Unknown extension '${extension}'`);
+            }
+        }
+
         if (mimeType) {
             switch (mimeType.type) {
                 case ResourceType.Image:
-                    return await this.loadImage(task);
+                    return await this.loadImage(task, cors);
                 case ResourceType.Audio:
-                    return await this.loadAudio(task);
+                    return await this.loadAudio(task, cors);
                 case ResourceType.Video:
-                    return await this.loadVideo(task);
+                    return await this.loadVideo(task, cors);
                 default:
                     throw new ParadiseError(`FATAL: Unknown MIME type '${mimeType.type}'`);
             }
         } else {
-            throw new ParadiseError(`FATAL: Unknown extension '${extension}'`);
+            throw new ParadiseError(`FATAL: Could not detect MIME type for url '${task.url}'`);
         }
     }
 
-    private loadImage(task: ResourceLoadTask): Promise<Resource> {
+    private loadImage(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const image = new Image();
-            image.crossOrigin = 'anonymous';
+
+            if (cors) {
+                image.crossOrigin = 'anonymous';
+            }
+
             image.onload = () => {
 
                 const texture = BaseTexture.createImageTexture(this.renderPipeline.context, image);
@@ -241,10 +261,13 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         });
     }
 
-    private loadVideo(task: ResourceLoadTask): Promise<Resource> {
+    private loadVideo(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
-            video.crossOrigin = 'anonymous';
+
+            if (cors) {
+                video.crossOrigin = 'anonymous';
+            }
 
             video.oncanplaythrough = () => {
 
@@ -273,9 +296,13 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         });
     }
 
-    private loadAudio(task: ResourceLoadTask): Promise<Resource> {
+    private loadAudio(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const audio = new Audio();
+
+            if (cors) {
+                audio.crossOrigin = 'anonymous';
+            }
 
             audio.oncanplaythrough = () => {
 

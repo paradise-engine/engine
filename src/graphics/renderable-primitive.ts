@@ -5,10 +5,10 @@ import { IPositionable } from "./i-positionable";
 import { IRenderPipeline } from "./i-render-pipeline";
 
 export abstract class RenderablePrimitive extends ShaderTarget implements IRenderable, IPositionable {
-    private _globalMatrix: mat4;
-    private _translation: vec3 = vec3.create();
-    private _rotation: quat = quat.create();
-    private _scaling: vec3 = vec3.create();
+    protected _globalMatrix: mat4;
+    protected _translation: vec3 = vec3.create();
+    protected _rotation: quat = quat.create();
+    protected _scaling: vec3 = vec3.create();
 
     public get globalMatrix() {
         return mat4.clone(this._globalMatrix);

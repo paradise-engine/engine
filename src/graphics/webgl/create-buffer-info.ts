@@ -2,6 +2,7 @@ import { RenderingContextError } from "../../errors";
 import { Dictionary } from "../../util";
 import { glEnumToString } from "./gl-enum-to-string";
 import { AttributeData, BufferInfo, BufferInput, BufferInputData, TypedArray } from "../types";
+import { registerContextObject, taggedMessage } from "./context-debug";
 
 /**
  * Creates a BufferInfo from an object of arrays.
@@ -10,16 +11,16 @@ import { AttributeData, BufferInfo, BufferInput, BufferInputData, TypedArray } f
  * @param arrays Your data
  * @return A BufferInfo
  */
-export function createBufferInfo(gl: WebGLRenderingContext, input: BufferInput, indices?: number[]): BufferInfo {
+export function createBufferInfo(gl: WebGLRenderingContext, input: BufferInput, indices?: number[], debug?: boolean): BufferInfo {
 
-    const attribs: Dictionary<AttributeData> = createAttribs(gl, input);
+    const attribs: Dictionary<AttributeData> = createAttribs(gl, input, debug);
 
     if (indices) {
         const typedIndices = makeTypedArrayForIndices(indices);
         return {
             attribs,
             numElements: typedIndices.length,
-            indices: { buffer: createBufferFromTypedArray(gl, typedIndices, gl.ELEMENT_ARRAY_BUFFER) }
+            indices: { buffer: createBufferFromTypedArray(gl, typedIndices, gl.ELEMENT_ARRAY_BUFFER, undefined, debug) }
         }
     }
 
@@ -61,7 +62,7 @@ function getNumElementsFromNonIndexedArrays(input: BufferInput) {
  * @param input The input data.
  * @return the attribs
  */
-function createAttribs(gl: WebGLRenderingContext, input: BufferInput): Dictionary<AttributeData> {
+function createAttribs(gl: WebGLRenderingContext, input: BufferInput, debug?: boolean): Dictionary<AttributeData> {
 
     const attribs: Dictionary<AttributeData> = {};
 
@@ -72,7 +73,7 @@ function createAttribs(gl: WebGLRenderingContext, input: BufferInput): Dictionar
             const array = makeTypedArray(item);
 
             attribs[attribName] = {
-                buffer: { buffer: createBufferFromTypedArray(gl, array) },
+                buffer: { buffer: createBufferFromTypedArray(gl, array, undefined, undefined, debug) },
                 numComponents: item.numComponents,
                 type: getGLTypeForTypedArray(gl, array),
                 normalized: getNormalizationForTypedArray(array),
@@ -106,7 +107,7 @@ function makeTypedArrayForIndices(indices: number[]): TypedArray {
     return typedArray;
 }
 
-function createBufferFromTypedArray(gl: WebGLRenderingContext, array: TypedArray, type?: number, drawType?: number) {
+function createBufferFromTypedArray(gl: WebGLRenderingContext, array: TypedArray, type?: number, drawType?: number, debug?: boolean) {
     type = type || gl.ARRAY_BUFFER;
     const buffer = gl.createBuffer();
 
@@ -114,7 +115,17 @@ function createBufferFromTypedArray(gl: WebGLRenderingContext, array: TypedArray
         throw new RenderingContextError(`Could not create WebGLBuffer of type ${glEnumToString(gl, type)}`);
     }
 
+    if (debug) {
+        registerContextObject(gl, buffer, 'Created Buffer');
+    }
+
+    if (debug) {
+        taggedMessage(gl, 'Binding Buffer', true, buffer);
+    }
     gl.bindBuffer(type, buffer);
+    if (debug) {
+        taggedMessage(gl, 'Writing Buffer Data', false, array);
+    }
     gl.bufferData(type, array, drawType || gl.STATIC_DRAW);
 
     return buffer;

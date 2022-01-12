@@ -69,6 +69,7 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
         } else {
             application.loader.add(url, name, this._handleResourceLoaded);
         }
+        application.loader.load();
 
         const emptyImgResource = application.loader.EMPTY_IMAGE;
         if (!emptyImgResource.texture) {

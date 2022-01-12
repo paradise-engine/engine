@@ -12,6 +12,8 @@ export class GameManager {
     private _currentScene?: Scene;
     private _isRunning = false;
 
+    private _debugMode = false;
+
     // #region Flags
 
     private _transitionFlag: Scene | null = null;
@@ -68,9 +70,10 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: IResourceLoader<any>, pipeline: IRenderPipeline) {
+    constructor(loader: IResourceLoader<any>, pipeline: IRenderPipeline, debugMode?: boolean) {
         this._loader = loader;
         this._renderPipeline = pipeline;
+        this._debugMode = debugMode || false;
     }
 
     /**
@@ -110,6 +113,11 @@ export class GameManager {
         }
 
         // Draw phase
+        console.log(`
+        ....
+        ....
+        ....
+        DRAW PHASE START`);
         for (const camera of scene.getAllCameras()) {
             const cullingResults = camera.performCulling();
             for (const res of cullingResults) {
@@ -121,6 +129,11 @@ export class GameManager {
             }
             this._renderPipeline.drawFrame();
         }
+        console.log(`
+        DRAW PHASE END
+        ....
+        ....
+        ....`);
 
         requestAnimationFrame(this._gameLoop);
     }
