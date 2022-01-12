@@ -1,5 +1,5 @@
 import path from 'path';
-import { Configuration } from 'webpack';
+import { Configuration, NormalModuleReplacementPlugin } from 'webpack';
 
 const config: Configuration = {
     entry: './src/index.ts',
@@ -8,6 +8,17 @@ const config: Configuration = {
         minimize: false,
     },
     mode: 'development',
+    plugins: [
+        new NormalModuleReplacementPlugin(
+            /(.*)-PLATFORM_TARGET(\.*)/,
+            function (resource) {
+                resource.request = resource.request.replace(
+                    /-PLATFORM_TARGET/,
+                    '-editor'
+                )
+            }
+        )
+    ],
     module: {
         rules: [
             {

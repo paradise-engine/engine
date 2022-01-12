@@ -42,6 +42,7 @@
     "webpack-cli": "^4.9.0"
   },
   "dependencies": {
+    "@capacitor/filesystem": "^1.0.7",
     "gl-matrix": "^3.4.3",
     "reflect-metadata": "^0.1.13"
   }
