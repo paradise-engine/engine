@@ -1,13 +1,14 @@
 import { ResourceType } from "./resource-type";
-import { MimeTypeExtensions } from "./mime-types";
+import { MimeTypeExtensions, MimeType, MimeTypes } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
-import { ParadiseError, ResourceLoaderError } from "../errors";
+import { BrowserApiError, ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { Renderer, BaseTexture, SerializableRenderer } from "../renderer";
-import { Dictionary, MicroListener } from "../util";
+import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline, BaseTextureType } from "../graphics";
+import { browserApisAvailable, Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
 
+const EMPTY_IMAGE_KEY = 'paradise::reserved::loader_empty_image';
 
 interface ResourceLoadTask {
     name: string;
@@ -16,35 +17,97 @@ interface ResourceLoadTask {
 }
 
 export interface SerializableResourceLoader extends SerializableObject {
-    renderer: SerializableRenderer;
+    renderPipeline: SerializableRenderPipeline;
+}
+
+let emptyImg: HTMLImageElement | null = null;
+if (browserApisAvailable()) {
+    emptyImg = new Image(1, 1);
+    emptyImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg==';
 }
 
 export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
 
     public static fromSerializable(s: SerializableResourceLoader, options: DeserializationOptions) {
-        return new ResourceLoader(deserialize(s.renderer, options));
+        return new ResourceLoader(deserialize(s.renderPipeline, options));
     }
 
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
     private _flaggedForPurge: Resource[] = [];
-    private _renderer: Renderer;
+    private _renderPipeline: WebGLRenderPipeline;
 
-    public get renderer() {
-        return this._renderer;
+    public get renderPipeline() {
+        return this._renderPipeline;
     }
 
-    constructor(renderer: Renderer) {
-        this._renderer = renderer;
+    public get EMPTY_IMAGE() {
+        return this._resourceMap[EMPTY_IMAGE_KEY];
     }
 
-    public setRenderer(renderer: Renderer) {
-        this._renderer = renderer;
+    constructor(renderPipeline: WebGLRenderPipeline) {
+        this._renderPipeline = renderPipeline;
+        this._createEmptyImage();
+    }
+
+    private _createEmptyImage() {
+        if (emptyImg) {
+            const img = emptyImg;
+
+            const createResource = () => {
+                const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
+
+                const res = new Resource({
+                    name: EMPTY_IMAGE_KEY,
+                    url: EMPTY_IMAGE_KEY,
+                    type: ResourceType.Image,
+                    status: ResourceStatus.Loaded,
+                    sourceElement: baseTexture.srcElement,
+                    texture: baseTexture
+                });
+
+                this._resourceMap[EMPTY_IMAGE_KEY] = res;
+            }
+
+            if (img.complete) {
+                createResource();
+            } else {
+                img.onload = createResource;
+            }
+        } else {
+
+            const baseTexture = new BaseTexture(
+                this._renderPipeline.context,
+                { texture: {} },
+                BaseTextureType.Image,
+                {} as any
+            );
+
+            const res = new Resource({
+                name: EMPTY_IMAGE_KEY,
+                url: EMPTY_IMAGE_KEY,
+                type: ResourceType.Image,
+                status: ResourceStatus.Loaded,
+                sourceElement: baseTexture.srcElement,
+                texture: baseTexture
+            });
+
+            this._resourceMap[EMPTY_IMAGE_KEY] = res;
+
+        }
+
+
+    }
+
+    public setRenderPipeline(pipeline: WebGLRenderPipeline) {
+        this._renderPipeline = pipeline;
         for (const resource of Object.values(this._resourceMap)) {
             if (resource.texture) {
-                resource.texture.setContext(renderer.context);
+                resource.texture.setContext(pipeline.context);
             }
         }
+
+        this._createEmptyImage();
     }
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {
@@ -55,6 +118,10 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         };
         this._batchLoadingQueue.push(task);
     };
+
+    public getResource(name: string): Resource | undefined {
+        return this._resourceMap[name];
+    }
 
     public load(onload?: ResourcesLoadCallback) {
         const tasks = this._batchLoadingQueue.concat([]);
@@ -121,33 +188,53 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     private async loadSingle(task: ResourceLoadTask): Promise<Resource> {
+        const currentUrl = new URL(location.href);
+        let cors = false;
         const url = new URL(task.url, window.location.origin);
-        const extension = '.' + url.pathname.split('.').pop();
 
-        const mimeType = MimeTypeExtensions[extension];
+        if (url.protocol !== 'file:' && url.origin !== currentUrl.origin) {
+            cors = true;
+        }
+
+        let mimeType: MimeType | null = null;
+        if (url.protocol === 'data:') {
+            mimeType = MimeTypes[url.pathname.split(';')[0]]
+        } else {
+            const extension = '.' + url.pathname.split('.').pop();
+            mimeType = MimeTypeExtensions[extension];
+
+            if (!mimeType) {
+                throw new ParadiseError(`FATAL: Unknown extension '${extension}'`);
+            }
+        }
+
         if (mimeType) {
             switch (mimeType.type) {
                 case ResourceType.Image:
-                    return await this.loadImage(task);
+                    return await this.loadImage(task, cors);
                 case ResourceType.Audio:
-                    return await this.loadAudio(task);
+                    return await this.loadAudio(task, cors);
                 case ResourceType.Video:
-                    return await this.loadVideo(task);
+                    return await this.loadVideo(task, cors);
                 default:
                     throw new ParadiseError(`FATAL: Unknown MIME type '${mimeType.type}'`);
             }
         } else {
-            throw new ParadiseError(`FATAL: Unknown extension '${extension}'`);
+            throw new ParadiseError(`FATAL: Could not detect MIME type for url '${task.url}'`);
         }
     }
 
-    private loadImage(task: ResourceLoadTask): Promise<Resource> {
+    private loadImage(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const image = new Image();
-            image.crossOrigin = 'anonymous';
+
+            if (cors) {
+                image.crossOrigin = 'anonymous';
+            }
+
             image.onload = () => {
 
-                const texture = BaseTexture.createImageTexture(this.renderer.context, image);
+                const texture = BaseTexture.createImageTexture(this.renderPipeline.context, image);
 
                 const resource = new Resource({
                     name: task.name,
@@ -174,14 +261,17 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         });
     }
 
-    private loadVideo(task: ResourceLoadTask): Promise<Resource> {
+    private loadVideo(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const video = document.createElement('video');
-            video.crossOrigin = 'anonymous';
+
+            if (cors) {
+                video.crossOrigin = 'anonymous';
+            }
 
             video.oncanplaythrough = () => {
 
-                const texture = BaseTexture.createVideoTexture(this.renderer.context, video);
+                const texture = BaseTexture.createVideoTexture(this.renderPipeline.context, video);
 
                 const resource = new Resource({
                     name: task.name,
@@ -206,9 +296,13 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         });
     }
 
-    private loadAudio(task: ResourceLoadTask): Promise<Resource> {
+    private loadAudio(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
         return new Promise((resolve, reject) => {
             const audio = new Audio();
+
+            if (cors) {
+                audio.crossOrigin = 'anonymous';
+            }
 
             audio.oncanplaythrough = () => {
 
@@ -314,7 +408,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     public getSerializableObject(): SerializableResourceLoader {
         return {
             _ctor: ResourceLoader.name,
-            renderer: this.renderer.getSerializableObject()
+            renderPipeline: this.renderPipeline.getSerializableObject()
         }
     }
 

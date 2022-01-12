@@ -1,5 +1,5 @@
-import { Vector } from "../core";
-import { IRendererView } from "../renderer";
+import { Vector } from "../data-structures";
+import { IRenderPipelineView } from "../graphics";
 import { arrayPermutate, Indexable, MicroEmitter } from "../util";
 import { IMouseInput, MouseInputButton, MouseInputButtonsState, MouseInputEvents, MouseInputState } from "./i-mouse-input";
 
@@ -42,7 +42,7 @@ for (const combination of arrayPermutate(Object.keys(BUTTON_FLAGS).map(k => pars
 
 export class MouseInput extends MicroEmitter<MouseInputEvents> implements IMouseInput {
 
-    private _view: IRendererView;
+    private _view: IRenderPipelineView;
     private _state: MouseInputState;
 
     public get state() {
@@ -79,7 +79,7 @@ export class MouseInput extends MicroEmitter<MouseInputEvents> implements IMouse
         }
     }
 
-    constructor(view: IRendererView) {
+    constructor(view: IRenderPipelineView) {
         super();
 
         this._view = view;

@@ -1,4 +1,4 @@
-import { isInstanceOf, recursiveEvent } from "../util";
+import { isInstanceOf, MicroEmitter } from "../util";
 import { MultipleTransformsError } from "../errors";
 import { applySerializable, DeserializationOptions, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
@@ -6,8 +6,8 @@ import { ManagedObject } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
 import { Application } from "../application";
 import { Behaviour } from "./behaviour";
-import { Rect } from "./rect";
-import { IBoundingBoxModifier } from "./i-bounding-box-modifier";
+import { MouseInputMoveEvent, MouseInputState } from "../input";
+import { recursiveEvent } from "./recursive-event";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
@@ -16,6 +16,15 @@ export interface SerializableGameObject extends SerializableObject {
     transform: SerializableTransform;
     components: SerializableComponent[];
     children: SerializableGameObject[];
+}
+
+export type GameObjectEventPayload<T> = { event: T, gameObject: GameObject }
+
+export interface GameObjectEvents {
+    onMouseEnter: GameObjectEventPayload<MouseInputMoveEvent>;
+    onMouseLeave: GameObjectEventPayload<MouseInputMoveEvent>;
+    onMouseDown: GameObjectEventPayload<MouseInputState>;
+    onMouseUp: GameObjectEventPayload<MouseInputState>;
 }
 
 /**
@@ -51,13 +60,13 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
     }
 
     private _componentIds: string[] = [];
-    private _bboxComponentId?: string;
 
     // internal representation of the active field
     protected _isActive: boolean = true;
     protected _transform: Transform;
 
     public name: string;
+    public readonly events: MicroEmitter<GameObjectEvents> = new MicroEmitter();
 
     public get transform() {
         return this._transform;
@@ -80,10 +89,23 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         return this.isActive;
     }
 
+    private _handleMouseMove = (ev: MouseInputMoveEvent) => { }
+
+    private _handleMouseDown = (ev: MouseInputState) => { }
+
+    private _handleMouseUp = (ev: MouseInputState) => { }
+
     constructor(application: Application, name?: string) {
         super(application);
         this.name = name || 'EmptyObject';
         this._transform = this.addComponent(Transform);
+
+        const inputManager = this.application.inputManager;
+        if (inputManager.mouse) {
+            inputManager.mouse.on('move', this._handleMouseMove);
+            inputManager.mouse.on('down', this._handleMouseDown);
+            inputManager.mouse.on('up', this._handleMouseUp);
+        }
     }
 
     public addComponent<T extends Component>(componentType: ComponentConstructor<T>): T {
@@ -105,10 +127,6 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             this.application.gameManager.currentScene?.notifyAwake(component.id);
         }
 
-        if ((component as unknown as IBoundingBoxModifier).getBoundingBox) {
-            this._bboxComponentId = component.id;
-        }
-
         return component;
     }
 
@@ -118,9 +136,6 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             const del = this._componentIds.splice(componentIndex, 1);
             const delId = del[0];
             this._application.managedObjectRepository.getObjectById<Component>(delId).destroy();
-            if (this._bboxComponentId === delId) {
-                this._bboxComponentId = undefined;
-            }
         }
     }
 
@@ -190,22 +205,18 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         this.transform.removeChild(child.transform);
     }
 
-    public getBoundingBox() {
-        if (this._bboxComponentId) {
-            const bboxComp = this.application.managedObjectRepository
-                .getObjectById(this._bboxComponentId) as unknown as IBoundingBoxModifier;
-
-            return bboxComp.getBoundingBox();
-        }
-
-        return new Rect(this.transform.position.x, this.transform.position.y, 0, 0);
-    }
-
     public destroy() {
         if (!this.isDestroyed) {
             super.destroy();
             this._transform.children.forEach(c => c.gameObject.destroy());
             this.getAllComponents().forEach(c => c.destroy());
+
+            const inputManager = this.application.inputManager;
+            if (inputManager.mouse) {
+                inputManager.mouse.off('move', this._handleMouseMove);
+                inputManager.mouse.off('down', this._handleMouseDown);
+                inputManager.mouse.off('up', this._handleMouseUp);
+            }
         }
     }
 

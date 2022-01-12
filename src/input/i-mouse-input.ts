@@ -1,5 +1,5 @@
-import { Vector } from "../core";
-import { IRendererView } from "../renderer";
+import { Vector } from "../data-structures";
+import { IRenderPipelineView } from "../graphics";
 import { IEmitter } from "../util";
 
 export enum MouseInputButton {
@@ -42,5 +42,5 @@ export interface MouseInputEvents {
 
 export interface IMouseInput extends IEmitter<MouseInputEvents> {
     readonly state: MouseInputState;
-    readonly view: IRendererView;
+    readonly view: IRenderPipelineView;
 }

@@ -10,7 +10,8 @@
     "test": "jest",
     "tsc": "tsc",
     "build": "webpack",
-    "watch": "webpack watch"
+    "watch": "webpack watch",
+    "package": "node -r ts-node/register ./scripts/archive-pkg.ts"
   },
   "repository": {
     "type": "git",
@@ -30,8 +31,10 @@
     "README.md"
   ],
   "devDependencies": {
+    "@types/archiver": "^5.3.1",
     "@types/jest": "^27.0.2",
     "@types/node": "^16.10.3",
+    "archiver": "^5.3.0",
     "jest": "^27.2.5",
     "source-map-loader": "^3.0.0",
     "ts-jest": "^27.0.5",
@@ -42,6 +45,7 @@
     "webpack-cli": "^4.9.0"
   },
   "dependencies": {
+    "@capacitor/filesystem": "^1.0.7",
     "gl-matrix": "^3.4.3",
     "reflect-metadata": "^0.1.13"
   }

@@ -1,7 +1,7 @@
 import { Application } from "../application";
 import { ManagedObjectDestroyedError, RuntimeInconsistencyError } from "../errors";
 import { ISerializable, SerializableObject } from "../serialization";
-import { GameObject } from "./game-object";
+import type { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
 
 export type ComponentConstructor<T extends Component> = new (application: Application, gameObject: GameObject) => T;
@@ -30,6 +30,10 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 		}
 
 		return this._application.managedObjectRepository.getObjectById<GameObject>(objId);
+	}
+
+	public get transform() {
+		return this.gameObject.transform;
 	}
 
 	constructor(application: Application, gameObject: GameObject) {
