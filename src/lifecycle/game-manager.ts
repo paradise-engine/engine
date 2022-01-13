@@ -11,6 +11,7 @@ export class GameManager {
 
     private _currentScene?: Scene;
     private _isRunning = false;
+    private _animationFrameToken: number | null = null;
 
     private _debugMode = false;
 
@@ -83,9 +84,7 @@ export class GameManager {
     private _gameLoop = (msElapsed: number) => {
         Time.tick(msElapsed);
 
-        if (this._transitionFlag) {
-            this._executeTransition();
-        }
+        this.loader.load();
 
         const scene = this.currentScene;
         if (!scene) {
@@ -125,7 +124,13 @@ export class GameManager {
             this._renderPipeline.drawFrame();
         }
 
-        requestAnimationFrame(this._gameLoop);
+        if (this._transitionFlag) {
+            this._executeTransition();
+        } else
+
+            if (this._isRunning) {
+                this._animationFrameToken = requestAnimationFrame(this._gameLoop);
+            }
     }
 
     // #region Private
@@ -140,15 +145,17 @@ export class GameManager {
         if (!this._transitionFlag) {
             throw new SceneLoadError('Cannot transition scene: No scene selected for transition');
         }
+        const nextScene = this._transitionFlag;
+
+        this.stop();
 
         this._unloadScene();
-        this._loadScene(this._transitionFlag);
+        this._loadScene(nextScene);
 
-
-        this._queueSceneResources(this._transitionFlag);
+        this._queueSceneResources(nextScene);
         this.loader.purge();
         this.loader.load(() => {
-            // TODO emit an event
+            this.start();
         });
     }
 
@@ -176,8 +183,13 @@ export class GameManager {
         this._currentScene?.off('objectDisabled', this._onSceneObjectDisabled);
         this._currentScene?.off('objectAwakened', this._onSceneObjectAwakened);
 
-        for (const gameObject of this._currentScene?.getAllGameObjects() || []) {
-            if (!gameObject.isDestroyed) {
+        const currentObjects = this._currentScene?.getAllGameObjects() || [];
+        const nextObjects = this._transitionFlag?.getAllGameObjects() || [];
+
+        for (const gameObject of currentObjects) {
+            const next = nextObjects.find(o => o.id === gameObject.id);
+
+            if (!gameObject.isDestroyed && !next) {
                 gameObject.destroy();
             }
         }
@@ -185,8 +197,6 @@ export class GameManager {
         this._currentScene = undefined;
         this._enabledObjects = new Set();
         this._awakenedObjects = new Set();
-
-
     }
 
     // #endregion
@@ -235,7 +245,22 @@ export class GameManager {
             console.log('################################');
             console.log('################################');
             this._isRunning = true;
-            requestAnimationFrame(this._gameLoop);
+            this._animationFrameToken = requestAnimationFrame(this._gameLoop);
+        }
+    }
+
+    public stop() {
+        if (this._isRunning && this._animationFrameToken !== null) {
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('STOPPING GAME LOOP!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            this._isRunning = false;
+            cancelAnimationFrame(this._animationFrameToken);
+            this._animationFrameToken = null;
         }
     }
 

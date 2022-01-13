@@ -1,4 +1,4 @@
-import { Resource } from "../resource";
+import { Resource, ResourceStatus } from "../resource";
 import { BaseTexture, Texture } from "../graphics";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Application } from "../application";
@@ -63,19 +63,27 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
         this._application = application;
         this._textureFrame = textureFrame;
 
-        const existing = application.loader.getResource(name || url);
-        if (existing) {
-            this._handleResourceLoaded(existing);
-        } else {
-            application.loader.add(url, name, this._handleResourceLoaded);
-        }
-        application.loader.load();
-
         const emptyImgResource = application.loader.EMPTY_IMAGE;
         if (!emptyImgResource.texture) {
             throw new ResourceLoaderError('Cannot create resource reference to resource without texture');
         }
         this._texture = new Texture(emptyImgResource.texture);
+
+        const existing = application.loader.getResource(name || url);
+        if (existing && existing.status !== ResourceStatus.FlaggedForUnload) {
+            this._handleResourceLoaded(existing);
+        } else {
+            application.loader.add(url, name, this._handleResourceLoaded);
+        }
+    }
+
+    public refreshResource() {
+        const existing = this._application.loader.getResource(this.name || this.url);
+        if (existing && existing.status !== ResourceStatus.FlaggedForUnload) {
+            this._handleResourceLoaded(existing);
+        } else {
+            this._application.loader.add(this.url, this.name, this._handleResourceLoaded);
+        }
     }
 
     public equals(compare: ResourceReference): boolean {

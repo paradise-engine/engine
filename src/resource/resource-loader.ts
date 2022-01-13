@@ -118,12 +118,19 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {
-        const task: ResourceLoadTask = {
-            name: name || url,
-            url,
-            callback: onload
-        };
-        this._batchLoadingQueue.push(task);
+        name = name || url;
+        const flaggedRes = this._flaggedForPurge.find(r => r.name === name);
+
+        if (flaggedRes) {
+            this.unflagFromUnload(flaggedRes);
+        } else {
+            const task: ResourceLoadTask = {
+                name: name,
+                url,
+                callback: onload
+            };
+            this._batchLoadingQueue.push(task);
+        }
     };
 
     public getResource(name: string): Resource | undefined {
@@ -379,10 +386,11 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
      */
     public preparePurge() {
         for (const resKey of Object.keys(this._resourceMap)) {
-            if (this._resourceMap.hasOwnProperty(resKey)) {
+            if (resKey !== EMPTY_IMAGE_KEY && this._resourceMap.hasOwnProperty(resKey)) {
                 const resource = this._resourceMap[resKey];
                 if (!resource.isLocked && !this.isFlaggedForPurge(resource)) {
                     this._flaggedForPurge.push(resource);
+                    resource.status = ResourceStatus.FlaggedForUnload;
                 }
             }
         }

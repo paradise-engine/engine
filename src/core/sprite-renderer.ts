@@ -45,6 +45,10 @@ export class SpriteRenderer extends Renderer implements ISerializable<Serializab
         this.color = Color.White;
     }
 
+    public override onAwake(): void {
+        this.sprite.resourceReference.refreshResource();
+    }
+
     public override getPrimitive(): SpritePrimitive {
         return new SpritePrimitive(this.sprite.texture, this.transform.getGlobalMatrix());
     }
