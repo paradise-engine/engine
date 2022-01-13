@@ -1,4 +1,4 @@
-import { RuntimeInconsistencyError, UnknownDeserializableError } from "../errors";
+import { ManagedObjectNotFoundError, UnknownDeserializableError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, isSerializableComponentClass, registerDeserializable, SerializableObject } from "../serialization";
 import { MicroEmitter } from "../util";
 import { Component } from "./component";
@@ -83,7 +83,7 @@ export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents
     public getObjectById<T extends ManagedObject = ManagedObject>(id: string) {
         const obj = this._objectMap.get(id);
         if (!obj) {
-            throw new RuntimeInconsistencyError(`No object with id '${id}' registered`)
+            throw new ManagedObjectNotFoundError(`No object with id '${id}' registered`)
         }
         return obj as T;
     }

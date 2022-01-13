@@ -1,6 +1,6 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { Control } from "../controls";
-import { DestroyBoundTransformError } from "../errors";
+import { DestroyBoundTransformError, ManagedObjectNotFoundError } from "../errors";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { arrayMove } from "../util";
 import { Component } from "./component";
@@ -248,12 +248,24 @@ export class Transform extends Component implements ISerializable<SerializableTr
     }
 
     public override destroy() {
-        if (!this.gameObject.isDestroyed) {
+        let gameObjectDestroyed = true;
+
+        try {
+            if (!this.gameObject.isDestroyed) {
+                gameObjectDestroyed = false;
+            }
+        } catch (err) {
+            if (!(err instanceof ManagedObjectNotFoundError)) {
+                throw err;
+            }
+            gameObjectDestroyed = true;
+        }
+
+        if (!gameObjectDestroyed) {
             throw new DestroyBoundTransformError();
         }
 
         this.setParent(null);
-
         super.destroy();
     }
 

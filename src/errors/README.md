@@ -14,6 +14,7 @@
 | [InvalidHexCodeError]                   | A `Color` was set to an invalid hex code                                                                         |
 | [LifecycleError]                        | An error that occured during the main game loop and indicates that the application has run into an invalid state |
 | [ManagedObjectDestroyedError]           | An already destroyed ManagedObject or its members is accessed                                                    |
+| [ManagedObjectNotFoundError]            | Tried to access an object that is not managed by the object repository                                           |
 | [MicroEmitterDuplicateListenerError]    | Tried to add already registered listener to a `MicroTarget` using a different type than previously               |
 | [MultipleTransformsError]               | A Transform is being added to a GameObject that already owns one                                                 |
 | [ObjectNotFoundError]                   | A GameObject that does not exist in a Scene is accessed in the Scene's context                                   |
@@ -37,6 +38,7 @@
 [invalidhexcodeerror]: './invalid-hex-code.ts'
 [lifecycleerror]: './lifecycle-error.ts'
 [managedobjectdestroyederror]: ./managed-object-destroyed.ts
+[managedobjectnotfounderror]: ./managed-object-not-found.ts
 [microemitterduplicatelistenererror]: ./micro-emitter-duplicate-listener.ts
 [multipletransformserror]: ./multiple-transforms.ts
 [objectnotfounderror]: ./object-not-found.ts

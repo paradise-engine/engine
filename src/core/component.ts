@@ -1,5 +1,5 @@
 import { Application } from "../application";
-import { ManagedObjectDestroyedError, RuntimeInconsistencyError } from "../errors";
+import { ManagedObjectDestroyedError, ManagedObjectNotFoundError, RuntimeInconsistencyError } from "../errors";
 import { ISerializable, SerializableObject } from "../serialization";
 import type { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
@@ -49,7 +49,15 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 	public override destroy() {
 		if (!this._markedForDestruction) {
 			this._markedForDestruction = true;
-			this.gameObject.removeComponent(this);
+
+			try {
+				this.gameObject.removeComponent(this);
+			} catch (err) {
+				if (!(err instanceof ManagedObjectNotFoundError)) {
+					throw err;
+				}
+			}
+
 			this._application.managedObjectRepository['_componentObjectMap'].delete(this.id);
 			super.destroy();
 		}
