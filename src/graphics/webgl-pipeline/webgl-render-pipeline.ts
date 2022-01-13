@@ -113,6 +113,9 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
             }
         }
 
+        context.enable(context.BLEND);
+        context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+
         this.context = new WebGLPipelineRenderContext(context, this._debugMode);
 
         this._width = options.width || 800;
