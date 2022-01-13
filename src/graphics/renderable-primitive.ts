@@ -50,6 +50,7 @@ export abstract class RenderablePrimitive extends ShaderTarget implements IRende
     constructor(globalMatrix: mat4) {
         super();
         this._globalMatrix = globalMatrix;
+        this._updateTransforms();
     }
 
     private _updateTransforms() {

@@ -109,12 +109,12 @@ export class Application implements ISerializable<SerializableApplication> {
             this.loader.setRenderPipeline(pipeline as WebGLRenderPipeline);
         }
 
-        this._gameManager = new GameManager(this.loader, this._renderPipeline);
+        this._gameManager.setRenderPipeline(pipeline);
     }
 
     public setLoader(loader: ResourceLoader) {
         this._loader = loader;
-        this._gameManager = new GameManager(this.loader, this._renderPipeline);
+        this._gameManager.setLoader(loader);
     }
 
     public setManagedObjectRepo(repo: ManagedObjectRepository) {

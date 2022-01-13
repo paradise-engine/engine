@@ -1,5 +1,6 @@
 import type { promises } from 'fs';
 import type { PlatformPath } from 'path';
+import { browserApisAvailable } from '../util';
 import {
     AppendFileOptions,
     DeleteFileOptions,
@@ -16,9 +17,15 @@ interface AugmentedWindow extends Window {
     __node_fs: typeof promises;
 }
 
-const _win = window as unknown as AugmentedWindow;
-const nodePath = _win.__node_path;
-const fs = _win.__node_fs;
+let _win: AugmentedWindow = {} as any;
+let nodePath: PlatformPath = {} as any;
+let fs: typeof promises = {} as any;
+
+if (browserApisAvailable()) {
+    _win = window as unknown as AugmentedWindow;
+    nodePath = _win.__node_path;
+    fs = _win.__node_fs;
+}
 
 const _fileSystem: IFileSystem = {
 

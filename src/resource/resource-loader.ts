@@ -7,6 +7,7 @@ import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline, BaseTextu
 import { browserApisAvailable, Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
 import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
+import { FileEncoding, fileSystem } from "../runtime";
 
 const EMPTY_IMAGE_KEY = 'paradise::reserved::loader_empty_image';
 
@@ -14,6 +15,12 @@ interface ResourceLoadTask {
     name: string;
     url: string;
     callback?: ResourceLoadCallback;
+}
+
+interface ResourceLoadOptions {
+    cors?: boolean;
+    localFile?: boolean;
+    mimeType: MimeType;
 }
 
 export interface SerializableResourceLoader extends SerializableObject {
@@ -188,12 +195,23 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     }
 
     private async loadSingle(task: ResourceLoadTask): Promise<Resource> {
-        const currentUrl = new URL(location.href);
         let cors = false;
+        let localFile = false;
+
+        const currentUrl = new URL(location.href);
         const url = new URL(task.url, window.location.origin);
 
         if (url.protocol !== 'file:' && url.origin !== currentUrl.origin) {
             cors = true;
+        }
+
+        if (url.protocol === 'file:') {
+            localFile = true;
+            let filePath = url.pathname;
+            if (filePath.startsWith('/')) {
+                filePath = filePath.substring(1);
+            }
+            task.url = filePath;
         }
 
         let mimeType: MimeType | null = null;
@@ -211,11 +229,11 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         if (mimeType) {
             switch (mimeType.type) {
                 case ResourceType.Image:
-                    return await this.loadImage(task, cors);
+                    return await this.loadImage(task, { cors, localFile, mimeType });
                 case ResourceType.Audio:
-                    return await this.loadAudio(task, cors);
+                    return await this.loadAudio(task, { cors, localFile, mimeType });
                 case ResourceType.Video:
-                    return await this.loadVideo(task, cors);
+                    return await this.loadVideo(task, { cors, localFile, mimeType });
                 default:
                     throw new ParadiseError(`FATAL: Unknown MIME type '${mimeType.type}'`);
             }
@@ -224,11 +242,17 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         }
     }
 
-    private loadImage(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
-        return new Promise((resolve, reject) => {
+    private loadImage(task: ResourceLoadTask, options: ResourceLoadOptions): Promise<Resource> {
+        return new Promise(async (resolve, reject) => {
+
+            let url = task.url;
+            if (options.localFile) {
+                url = `data:${options.mimeType.name};base64,${await fileSystem.readFile(task.url, { encoding: FileEncoding.BASE64 })}`;
+            }
+
             const image = new Image();
 
-            if (cors) {
+            if (options.cors) {
                 image.crossOrigin = 'anonymous';
             }
 
@@ -257,15 +281,21 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
                 return reject(new Error('Unknown error'));
             }
 
-            image.src = task.url;
+            image.src = url;
         });
     }
 
-    private loadVideo(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
-        return new Promise((resolve, reject) => {
+    private loadVideo(task: ResourceLoadTask, options: ResourceLoadOptions): Promise<Resource> {
+        return new Promise(async (resolve, reject) => {
+
+            let url = task.url;
+            if (options.localFile) {
+                url = `data:${options.mimeType.name};base64,${await fileSystem.readFile(task.url, { encoding: FileEncoding.BASE64 })}`;
+            }
+
             const video = document.createElement('video');
 
-            if (cors) {
+            if (options.cors) {
                 video.crossOrigin = 'anonymous';
             }
 
@@ -293,14 +323,22 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
 
                 return reject(new Error('Unknown error'));
             }
+
+            video.src = url;
         });
     }
 
-    private loadAudio(task: ResourceLoadTask, cors: boolean): Promise<Resource> {
-        return new Promise((resolve, reject) => {
+    private loadAudio(task: ResourceLoadTask, options: ResourceLoadOptions): Promise<Resource> {
+        return new Promise(async (resolve, reject) => {
+
+            let url = task.url;
+            if (options.localFile) {
+                url = `data:${options.mimeType.name};base64,${await fileSystem.readFile(task.url, { encoding: FileEncoding.BASE64 })}`;
+            }
+
             const audio = new Audio();
 
-            if (cors) {
+            if (options.cors) {
                 audio.crossOrigin = 'anonymous';
             }
 
@@ -325,6 +363,8 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
 
                 return reject(new Error('Unknown error'));
             }
+
+            audio.src = url;
         });
     }
 

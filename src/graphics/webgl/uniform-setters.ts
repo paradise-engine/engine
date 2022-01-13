@@ -37,103 +37,103 @@ export function createUniformSetters(gl: WebGLRenderingContext, program: WebGLPr
         const isArray = (uniformInfo.size > 1 && uniformInfo.name.substr(-3) === '[0]');
         if (type === gl.FLOAT && isArray) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform1fv(location, v as Float32List);
             };
         }
         if (type === gl.FLOAT) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform1f(location, v as number);
             };
         }
         if (type === gl.FLOAT_VEC2) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform2fv(location, v as Float32List);
             };
         }
         if (type === gl.FLOAT_VEC3) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform3fv(location, v as Float32List);
             };
         }
         if (type === gl.FLOAT_VEC4) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform4fv(location, v as Float32List);
             };
         }
         if (type === gl.INT && isArray) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform1iv(location, v as Int32List);
             };
         }
         if (type === gl.INT) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform1i(location, v as number);
             };
         }
         if (type === gl.INT_VEC2) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform2iv(location, v as Int32List);
             };
         }
         if (type === gl.INT_VEC3) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform3iv(location, v as Int32List);
             };
         }
         if (type === gl.INT_VEC4) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform4iv(location, v as Int32List);
             };
         }
         if (type === gl.BOOL) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform1iv(location, v as Int32List);
             };
         }
         if (type === gl.BOOL_VEC2) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform2iv(location, v as Int32List);
             };
         }
         if (type === gl.BOOL_VEC3) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform3iv(location, v as Int32List);
             };
         }
         if (type === gl.BOOL_VEC4) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniform4iv(location, v as Int32List);
             };
         }
         if (type === gl.FLOAT_MAT2) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniformMatrix2fv(location, false, v as Float32List);
             };
         }
         if (type === gl.FLOAT_MAT3) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniformMatrix3fv(location, false, v as Float32List);
             };
         }
         if (type === gl.FLOAT_MAT4) {
             return function (v) {
-                console.log('Setting uniform ' + uniformInfo.name, v);
+                taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, v);
                 gl.uniformMatrix4fv(location, false, v as Float32List);
             };
         }
@@ -144,7 +144,7 @@ export function createUniformSetters(gl: WebGLRenderingContext, program: WebGLPr
             }
             return function (bindPoint, units): UniformSetterFunction {
                 return function (textures) {
-                    console.log('Setting uniform ' + uniformInfo.name, textures);
+                    taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, textures);
                     gl.uniform1iv(location, units);
                     (textures as WebGLTexture[]).forEach(function (texture, index) {
                         gl.activeTexture(gl.TEXTURE0 + units[index]);
@@ -159,7 +159,7 @@ export function createUniformSetters(gl: WebGLRenderingContext, program: WebGLPr
         if (type === gl.SAMPLER_2D || type === gl.SAMPLER_CUBE) {
             return function (bindPoint, unit): UniformSetterFunction {
                 return function (texture) {
-                    console.log('Setting uniform ' + uniformInfo.name, texture);
+                    taggedMessage(gl, 'Setting uniform ' + uniformInfo.name, false, texture);
                     gl.uniform1i(location, unit);
                     gl.activeTexture(gl.TEXTURE0 + unit);
                     if (debug) {

@@ -113,11 +113,6 @@ export class GameManager {
         }
 
         // Draw phase
-        console.log(`
-        ....
-        ....
-        ....
-        DRAW PHASE START`);
         for (const camera of scene.getAllCameras()) {
             const cullingResults = camera.performCulling();
             for (const res of cullingResults) {
@@ -129,11 +124,6 @@ export class GameManager {
             }
             this._renderPipeline.drawFrame();
         }
-        console.log(`
-        DRAW PHASE END
-        ....
-        ....
-        ....`);
 
         requestAnimationFrame(this._gameLoop);
     }
@@ -237,9 +227,20 @@ export class GameManager {
 
     public start() {
         if (!this._isRunning) {
+            console.log('################################');
+            console.log('################################');
+            console.log('################################');
+            console.log('STARTING GAME LOOP!!');
+            console.log('################################');
+            console.log('################################');
+            console.log('################################');
             this._isRunning = true;
             requestAnimationFrame(this._gameLoop);
         }
+    }
+
+    public setRenderPipeline(p: IRenderPipeline) {
+        this._renderPipeline = p;
     }
 
     // #endregion
