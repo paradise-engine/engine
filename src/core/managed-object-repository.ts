@@ -59,6 +59,17 @@ export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents
      * @param id The object's new ID
      */
     public changeId(obj: ManagedObject, id: string) {
+
+        const existing = this._objectMap.get(id);
+        if (existing) {
+            existing.destroy();
+            this._componentObjectMap.forEach((val, key) => {
+                if (val === id || key === id) {
+                    this._componentObjectMap.delete(key);
+                }
+            });
+        }
+
         const oldId = obj.id;
         this._objectMap.delete(oldId);
         obj['_id'] = id;
