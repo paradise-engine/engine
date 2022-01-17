@@ -188,16 +188,6 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
             drawQueueItem(item);
         }
         this.clearRenderQueue();
-
-        this.context.drawImage({
-            shader: this.baseShader,
-            globalUniforms: this.globalShaderData.uniforms,
-            texture: this._maskLayer['_maskTexture'],
-            textureWidth: this.view.width,
-            textureHeight: this.view.height,
-            destinationX: 0,
-            destinationY: 0
-        });
     }
 
     public getSerializableObject(): SerializableRenderPipeline {
