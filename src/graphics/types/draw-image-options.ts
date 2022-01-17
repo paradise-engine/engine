@@ -68,4 +68,8 @@ export interface DrawImageOptions {
      * The y-location of the rotation center, with `0` being the top edge of the rect
      */
     rotationOffsetY?: number;
+    /**
+     * Flip Y
+     */
+    flipY?: boolean;
 }

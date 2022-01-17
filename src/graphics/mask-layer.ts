@@ -83,7 +83,8 @@ export class MaskLayer {
 
         this._context.drawImage({
             ...options,
-            shader: this._shader
+            shader: this._shader,
+            flipY: true
         });
 
         this._context.bindFramebuffer(null);
@@ -93,8 +94,6 @@ export class MaskLayer {
         const color = this._context.readPixel(posX, posY, this._fbo);
         const uniqueString = `${color.hex}_${color.alpha}`;
         const id = this._maskMap.get(uniqueString);
-
-        console.log(`Probing ${posX}, ${posY} - ${uniqueString}`);
 
         return id;
     }

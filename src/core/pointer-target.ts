@@ -43,15 +43,6 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
             const mouseInput = this.application.inputManager.mouse;
             if (mouseInput) {
                 mouseInput.on('move', this._handleMouseMove);
-
-                this.events.on('mouseEnter', (gameObject) => {
-                    console.log(`[POINTER TARGET] Enter object ${gameObject.name} (${gameObject.id})`);
-                });
-
-                this.events.on('mouseLeave', (gameObject) => {
-                    console.log(`[POINTER TARGET] Leave object ${gameObject.name} (${gameObject.id})`);
-                });
-
                 this._handlersSetUp = true;
             }
         }

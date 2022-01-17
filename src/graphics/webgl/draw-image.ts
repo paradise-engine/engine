@@ -104,7 +104,7 @@ export function drawImage(options: WebGLDrawImageOptions) {
     mat4.translate(rotationOffsetMatrix, rotationOffsetMatrix, [-options.rotationOffsetX / scaleX, -options.rotationOffsetY / scaleY, 0]);
 
     const matrix = mat4.create();
-    mat4.ortho(matrix, 0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
+    mat4.ortho(matrix, 0, gl.canvas.width, options.flipY ? 0 : gl.canvas.height, options.flipY ? gl.canvas.height : 0, -1, 1);
     mat4.translate(matrix, matrix, [options.destinationX, options.destinationY, 0]);
     mat4.rotate(matrix, matrix, options.rotationRadian, [0, 0, 1]);
     mat4.multiply(matrix, matrix, rotationOffsetMatrix);
