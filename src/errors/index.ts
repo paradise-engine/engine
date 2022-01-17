@@ -10,6 +10,7 @@ export * from './invalid-hex-code';
 export * from './lifecycle-error';
 export * from './managed-object-destroyed';
 export * from './managed-object-not-found';
+export * from './mask-layer-out-of-bounds';
 export * from './micro-emitter-duplicate-listener';
 export * from './multiple-transforms';
 export * from './object-not-found';

@@ -13,3 +13,4 @@ export * from './types';
 export * from './webgl-pipeline';
 export * from './shader';
 export * from './sprite-primitive';
+export * from './mask-layer';

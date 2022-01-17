@@ -7,6 +7,8 @@ import { IRenderPipeline } from "../i-render-pipeline";
 import { registerDeserializable, SerializableObject } from "../../serialization";
 import { WebGLPipelineRenderContext } from "./webgl-render-context";
 import { WebGLDebugUtils } from './webgl_debug';
+import { MaskLayer } from "../mask-layer";
+import { Color } from "../../data-structures";
 
 export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
@@ -72,6 +74,7 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
     private _renderQueue: RenderQueue = [];
     private _activeQueueStack: RenderQueue[] = [];
     private _debugMode: boolean = false;
+    private _maskLayer: MaskLayer;
 
     public _width: number;
     public _height: number;
@@ -84,6 +87,10 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
     }
     public get height() {
         return this._height;
+    }
+
+    public get maskLayer() {
+        return this._maskLayer;
     }
 
     public readonly globalShaderData: GlobalShaderData;
@@ -133,6 +140,8 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         // this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
 
         this._activeQueueStack.push(this._renderQueue);
+
+        this._maskLayer = new MaskLayer(this);
     }
 
     public setViewContainer(container: Element) {
@@ -172,11 +181,23 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
      * Draws every enqueued item
      */
     public drawFrame() {
+        this._maskLayer.clearMaskLayer();
+        this.context.clearViewport(Color.Transparent);
         sortQueueItems(this._renderQueue);
         for (const item of this._renderQueue) {
             drawQueueItem(item);
         }
         this.clearRenderQueue();
+
+        this.context.drawImage({
+            shader: this.baseShader,
+            globalUniforms: this.globalShaderData.uniforms,
+            texture: this._maskLayer['_maskTexture'],
+            textureWidth: this.view.width,
+            textureHeight: this.view.height,
+            destinationX: 0,
+            destinationY: 0
+        });
     }
 
     public getSerializableObject(): SerializableRenderPipeline {

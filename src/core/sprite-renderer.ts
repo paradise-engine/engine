@@ -50,7 +50,7 @@ export class SpriteRenderer extends Renderer implements ISerializable<Serializab
     }
 
     public override getPrimitive(): SpritePrimitive {
-        return new SpritePrimitive(this.sprite.texture, this.transform.getGlobalMatrix());
+        return new SpritePrimitive(this.sprite.texture, this.gameObject.id, this.transform.getGlobalMatrix());
     }
 
     public override getBounds(): Rect {

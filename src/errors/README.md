@@ -15,6 +15,7 @@
 | [LifecycleError]                        | An error that occured during the main game loop and indicates that the application has run into an invalid state |
 | [ManagedObjectDestroyedError]           | An already destroyed ManagedObject or its members is accessed                                                    |
 | [ManagedObjectNotFoundError]            | Tried to access an object that is not managed by the object repository                                           |
+| [MaskLayerOutOfBoundsError]             | Exceeded maximum of interactive objects that can be drawn per frame (`16,777,216`)                               |
 | [MicroEmitterDuplicateListenerError]    | Tried to add already registered listener to a `MicroTarget` using a different type than previously               |
 | [MultipleTransformsError]               | A Transform is being added to a GameObject that already owns one                                                 |
 | [ObjectNotFoundError]                   | A GameObject that does not exist in a Scene is accessed in the Scene's context                                   |
@@ -39,6 +40,7 @@
 [lifecycleerror]: './lifecycle-error.ts'
 [managedobjectdestroyederror]: ./managed-object-destroyed.ts
 [managedobjectnotfounderror]: ./managed-object-not-found.ts
+[masklayeroutofboundserror]: ./mask-layer-out-of-bounds.ts
 [microemitterduplicatelistenererror]: ./micro-emitter-duplicate-listener.ts
 [multipletransformserror]: ./multiple-transforms.ts
 [objectnotfounderror]: ./object-not-found.ts

@@ -1,6 +1,7 @@
 import type { ISerializable, SerializableObject } from "../serialization";
 import type { GlobalShaderData } from "./global-shader-data";
 import type { IRenderContext } from "./i-render-context";
+import { MaskLayer } from "./mask-layer";
 import type { Shader } from "./shader";
 import type { ShaderPipeline } from "./shader-pipeline";
 
@@ -23,6 +24,7 @@ export interface IRenderPipeline<T extends SerializableObject = any> extends ISe
     globalShaderData: GlobalShaderData;
     shaderPipeline: ShaderPipeline;
     baseShader: Shader;
+    maskLayer: MaskLayer;
 
     clearRenderQueue(): void;
     enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void): void;

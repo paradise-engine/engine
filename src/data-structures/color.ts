@@ -69,6 +69,10 @@ export class Color implements ISerializable<SerializableColor> {
         return new Color(s.red, s.green, s.blue, s.alpha);
     }
 
+    public static fromUint8Array(array: Uint8Array) {
+        return new Color(array[0], array[1], array[2], array[3] / 255);
+    }
+
     private _red: number;
     private _green: number;
     private _blue: number;
@@ -113,6 +117,19 @@ export class Color implements ISerializable<SerializableColor> {
         if (a < 0 || a > 255) {
             throw new ColorComponentOutOfBoundsError(0, 1, a);
         }
+    }
+
+    public toUint8Array(): Uint8Array {
+        return new Uint8Array([this._red, this._green, this._blue, Math.floor(this._alpha * 255)]);
+    }
+
+    public getNormalized() {
+        return [
+            this._red / 255,
+            this._green / 255,
+            this._blue / 255,
+            this._alpha
+        ]
     }
 
     public setRgba(r: number, g: number, b: number, a: number) {

@@ -6,10 +6,12 @@ import { DrawImageOptions } from "./types";
 
 export class SpritePrimitive extends RenderablePrimitive {
     public texture: Texture;
+    public objectId: string;
 
-    constructor(texture: Texture, globalMatrix?: mat4) {
+    constructor(texture: Texture, objectId: string, globalMatrix?: mat4) {
         super(globalMatrix || mat4.create());
         this.texture = texture;
+        this.objectId = objectId;
     }
 
     render(renderPipeline: IRenderPipeline) {
@@ -33,6 +35,7 @@ export class SpritePrimitive extends RenderablePrimitive {
         };
 
         renderPipeline.enqueueRenderable([this.x, this.y], () => {
+            renderPipeline.maskLayer.addObjectToMaskLayer(this.objectId, drawOptions);
             renderPipeline.context.drawImage(drawOptions);
         });
     }
