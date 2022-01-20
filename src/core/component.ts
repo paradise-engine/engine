@@ -2,14 +2,16 @@ import { ManagedObjectDestroyedError, ManagedObjectNotFoundError, RuntimeInconsi
 import { ISerializable, SerializableObject } from "../serialization";
 import { __ComponentCreationLock } from "./component-creation-lock";
 import type { GameObject } from "./game-object";
-import { ManagedObject } from "./managed-object";
+import { ManagedObject, ManagedObjectOptions } from "./managed-object";
 
 export type ComponentConstructor<T extends Component> = {
-	new(gameObject: GameObject): T;
+	new(gameObject: GameObject, options?: ManagedObjectOptions): T;
 	_isInternal?: boolean;
 }
 
-export interface SerializableComponent extends SerializableObject { }
+export interface SerializableComponent extends SerializableObject {
+	id: string;
+}
 
 /**
  * Base class for everything that can be attached
@@ -39,12 +41,12 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 		return this.gameObject.transform;
 	}
 
-	constructor(gameObject: GameObject) {
+	constructor(gameObject: GameObject, options?: ManagedObjectOptions) {
 		if (!__ComponentCreationLock.componentsMayBeCreated()) {
 			throw new RuntimeInconsistencyError('Cannot create component: Component creation is locked');
 		}
 
-		super();
+		super(options);
 		this._markedForDestruction = false;
 		this.application.managedObjectRepository['_componentObjectMap'].set(this.id, gameObject.id);
 	}

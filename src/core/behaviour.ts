@@ -5,7 +5,6 @@ import { GameObject } from "./game-object";
 
 export interface SerializableBehaviour extends SerializableComponent {
     isActive: boolean;
-    id: string;
 }
 
 /**
@@ -14,10 +13,6 @@ export interface SerializableBehaviour extends SerializableComponent {
 export class Behaviour extends Component implements ISerializable<SerializableBehaviour>, IBehaviour {
     public static applySerializable(s: SerializableBehaviour, b: Behaviour) {
         b._isActive = s.isActive;
-
-        const compIdIndex = b.gameObject['_componentIds'].indexOf(b.id);
-        b.application.managedObjectRepository.changeId(b, s.id);
-        b.gameObject['_componentIds'][compIdIndex] = s.id;
     }
 
     private _isActive: boolean = true;

@@ -2,7 +2,7 @@ import { isInstanceOf, MicroEmitter } from "../util";
 import { MultipleTransformsError } from "../errors";
 import { applySerializable, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
-import { ManagedObject } from "./managed-object";
+import { ManagedObject, ManagedObjectOptions } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
 import { Behaviour } from "./behaviour";
 import { MouseInputMoveEvent, MouseInputState } from "../input";
@@ -29,14 +29,21 @@ export interface GameObjectEvents {
     onMouseUp: GameObjectEventPayload<MouseInputState>;
 }
 
+export interface GameObjectOptions extends ManagedObjectOptions {
+    name?: string;
+    transformId?: string;
+}
+
 /**
  * Base class for any game object.
  */
 export class GameObject extends ManagedObject implements ISerializable<SerializableGameObject> {
 
     public static fromSerializable(s: SerializableGameObject) {
-        const obj = new GameObject(s.name);
-        obj.application.managedObjectRepository.changeId(obj, s.id);
+        const obj = new GameObject({
+            name: s.name,
+            id: s.id
+        });
         obj._isActive = s.isActive;
         obj._isSelected = s.isSelected;
 
@@ -50,7 +57,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         for (const comp of s.components) {
             const ctor = getSerializableComponentClass(comp._ctor);
             try {
-                const compInstance = obj.addComponent(ctor);
+                const compInstance = obj.addComponent(ctor, { id: comp.id });
                 applySerializable(comp, compInstance);
             } catch (err) {
                 // avoid crashing because another transform is being added to object
@@ -100,11 +107,11 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
 
     private _handleMouseUp = (ev: MouseInputState) => { }
 
-    constructor(name?: string) {
-        super();
-        this.name = name || 'EmptyObject';
+    constructor(options: GameObjectOptions = {}) {
+        super(options);
+        this.name = options.name || 'EmptyObject';
 
-        this._transform = this.addComponent(Transform);
+        this._transform = this.addComponent(Transform, { id: options.transformId });
 
         if (this.application.editorMode === true) {
             this.addComponent(InternalGizmoHandler);
@@ -118,7 +125,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         }
     }
 
-    public addComponent<T extends Component>(componentType: ComponentConstructor<T>): T {
+    public addComponent<T extends Component>(componentType: ComponentConstructor<T>, options?: ManagedObjectOptions): T {
         if (
             (componentType.prototype instanceof Transform || componentType === Transform as any)
             && this._transform !== undefined
@@ -127,7 +134,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         }
 
         __ComponentCreationLock.unlockComponentCreation();
-        const component = new componentType(this);
+        const component = new componentType(this, options);
         __ComponentCreationLock.lockComponentCreation();
 
         this._componentIds.push(component.id);

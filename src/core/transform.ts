@@ -19,10 +19,6 @@ export interface SerializableTransform extends SerializableObject {
 export class Transform extends Component implements ISerializable<SerializableTransform> {
 
     public static applySerializable(s: SerializableTransform, comp: Transform) {
-        const compIdIndex = comp.gameObject['_componentIds'].indexOf(comp.id);
-        comp.application.managedObjectRepository.changeId(comp, s.id);
-        comp.gameObject['_componentIds'][compIdIndex] = s.id;
-
         comp._localPosition = deserialize(s.localPosition);
         comp._localRotation = deserialize(s.localRotation);
         comp._localScale = deserialize(s.localScale);

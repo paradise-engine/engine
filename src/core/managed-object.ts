@@ -1,6 +1,10 @@
 import { Application } from "../application";
 import { generateRandomString } from "../util";
 
+export interface ManagedObjectOptions {
+	id?: string;
+}
+
 /**
  * Base class for managed objects
  * that can be destroyed.
@@ -21,11 +25,9 @@ export abstract class ManagedObject {
 		return this._isDestroyed;
 	}
 
-	constructor() {
-		this._id = generateRandomString();
+	constructor(options: ManagedObjectOptions = {}) {
+		this._id = options.id || generateRandomString();
 		this.application.managedObjectRepository['_objectMap'].set(this.id, this);
-
-		// Object.defineProperty(this, '_application', { enumerable: false });
 	}
 
 	public destroy() {

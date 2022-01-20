@@ -152,7 +152,7 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._horizontal) {
                 hTarget = this._horizontal.getComponent(PointerTarget) || null;
             } else {
-                this._horizontal = new GameObject('internal_gizmo_move_horizontal');
+                this._horizontal = new GameObject({ name: 'internal_gizmo_move_horizontal' });
                 hTarget = this._horizontal.addComponent(PointerTarget);
                 const hSprite = this._horizontal.addComponent(SpriteRenderer);
                 hSprite.sprite = new Sprite(new ResourceReference(
@@ -166,7 +166,7 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._vertical) {
                 vTarget = this._vertical.getComponent(PointerTarget) || null;
             } else {
-                this._vertical = new GameObject('internal_gizmo_move_vertical');
+                this._vertical = new GameObject({ name: 'internal_gizmo_move_vertical' });
                 vTarget = this._vertical.addComponent(PointerTarget);
                 const vSprite = this._vertical.addComponent(SpriteRenderer);
                 vSprite.sprite = new Sprite(new ResourceReference(
@@ -180,7 +180,7 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._dual) {
                 dTarget = this._dual.getComponent(PointerTarget) || null;
             } else {
-                this._dual = new GameObject('internal_gizmo_move_dual');
+                this._dual = new GameObject({ name: 'internal_gizmo_move_dual' });
                 dTarget = this._dual.addComponent(PointerTarget);
                 const dSprite = this._dual.addComponent(SpriteRenderer);
                 dSprite.sprite = new Sprite(new ResourceReference(
