@@ -61,13 +61,6 @@ export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<Se
         this._id = generateRandomString();
         this.name = name;
         Scene._scenes[this.id] = this;
-
-        this._application.managedObjectRepository.on('idChanged', (data) => {
-            const gameObjectIndex = this._gameObjectIds.indexOf(data.oldId);
-            if (gameObjectIndex !== -1) {
-                this._gameObjectIds[gameObjectIndex] = data.newId;
-            }
-        });
     }
 
     public getAllGameObjects() {

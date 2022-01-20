@@ -1,21 +1,16 @@
 import { Application } from "../application";
 import { ManagedObjectNotFoundError, UnknownDeserializableError } from "../errors";
 import { deserialize, ISerializable, isSerializableComponentClass, registerDeserializable, SerializableObject } from "../serialization";
-import { MicroEmitter } from "../util";
 import { Component } from "./component";
 import { GameObject } from "./game-object";
 import type { ManagedObject } from "./managed-object";
-
-interface ObjectRepositoryEvents {
-    idChanged: { oldId: string, newId: string }
-}
 
 export interface SerializableManagedObjectRepository extends SerializableObject {
     objectMap: { [key: string]: SerializableObject };
     componentObjectMap: { [key: string]: string };
 }
 
-export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents> implements ISerializable<SerializableManagedObjectRepository> {
+export class ManagedObjectRepository implements ISerializable<SerializableManagedObjectRepository> {
     public static fromSerializable(s: SerializableManagedObjectRepository) {
         const repo = new ManagedObjectRepository();
 
