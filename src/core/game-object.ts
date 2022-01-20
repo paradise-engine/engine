@@ -239,6 +239,11 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             this._transform.children.forEach(c => c.gameObject.destroy());
             this.getAllComponents().forEach(c => c.destroy());
 
+            const parent = this.getParent();
+            if (parent) {
+                parent.removeChild(this);
+            }
+
             const inputManager = this.application.inputManager;
             if (inputManager.mouse) {
                 inputManager.mouse.off('move', this._handleMouseMove);

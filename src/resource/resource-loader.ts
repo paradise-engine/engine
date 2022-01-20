@@ -157,6 +157,17 @@ export class ResourceLoader implements IResourceLoader {
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {
         name = name || url;
+
+        if (name.startsWith('paradise::reserved::')) {
+            const res = this._resourceMap[name];
+            if (res) {
+                if (onload) {
+                    onload(res);
+                }
+                return;
+            }
+        }
+
         const flaggedRes = this._flaggedForPurge.find(r => r.name === name);
 
         if (flaggedRes) {

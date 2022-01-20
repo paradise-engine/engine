@@ -27,7 +27,7 @@ export abstract class ManagedObject {
 
 	constructor(options: ManagedObjectOptions = {}) {
 		this._id = options.id || generateRandomString();
-		this.application.managedObjectRepository['_objectMap'].set(this.id, this);
+		this.application.managedObjectRepository.addObject(this);
 	}
 
 	public destroy() {

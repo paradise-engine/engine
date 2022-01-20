@@ -16,7 +16,6 @@ export interface ApplicationOptions {
     renderPipeline?: IRenderPipeline;
     loader?: IResourceLoader;
     gameManager?: GameManager;
-    managedObjectRepository?: ManagedObjectRepository;
     inputManager?: IInputManager;
     debugMode?: boolean;
     editorMode?: ApplicationEditorModeOptions;
@@ -32,6 +31,9 @@ export class Application {
 
         const app = new Application(options);
         this._app = app;
+
+        app._createCommonGizmos();
+
         return app;
     }
 
@@ -94,8 +96,10 @@ export class Application {
         this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
         this._gameManager = new GameManager(this._loader, this._renderPipeline, undefined, options.debugMode);
         this._inputManager = options.inputManager || new InputManager();
+    }
 
-        if (options.editorMode) {
+    private _createCommonGizmos() {
+        if (this.editorMode) {
             this._loader.ready(() => {
                 this._commonGizmos = createCommonGizmos();
                 this._editorCamera = deserialize(editor_camera_obj);
@@ -116,19 +120,6 @@ export class Application {
     public setLoader(loader: ResourceLoader) {
         this._loader = loader;
         this._gameManager.setLoader(loader);
-    }
-
-    public setManagedObjectRepo(repo: ManagedObjectRepository) {
-        this._managedObjectRepository = repo;
-
-        if (this.editorMode) {
-            this._loader.ready(() => {
-                if (this._commonGizmos) {
-                    this._commonGizmos.move.destroy();
-                }
-                this._commonGizmos = createCommonGizmos();
-            });
-        }
     }
 
     public setGameManager(gm: GameManager) {
