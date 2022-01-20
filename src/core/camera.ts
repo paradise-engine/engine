@@ -5,6 +5,7 @@ import { DeserializationOptions, deserialize, ISerializable, registerDeserializa
 import { Renderer } from "./renderer";
 import { Behaviour, SerializableBehaviour } from "./behaviour";
 import { GameObject } from "./game-object";
+import { InternalGizmoHandler } from "./internal-gizmo-handler";
 
 export interface SerializableCamera extends SerializableBehaviour {
     backgroundColor: SerializableColor;
@@ -114,6 +115,17 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
 
                 if (Rect.overlap(viewRect, boundingBox)) {
                     results.push(obj);
+                }
+
+                if (this.application.editorMode) {
+                    const comps = obj.getComponents(Behaviour);
+
+                    const gizmos = comps
+                        .map(comp => comp.onDrawGizmos())
+                        .reduce((previous, current) => previous.concat(current), []);
+                    for (const gizmo of gizmos) {
+                        results.push(...cullFn(gizmo));
+                    }
                 }
 
                 for (const child of obj.getChildren()) {

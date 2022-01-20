@@ -1,6 +1,7 @@
 import { IBehaviour } from "./i-behaviour";
 import { ISerializable } from "../serialization";
 import { Component, SerializableComponent } from "./component";
+import { GameObject } from "./game-object";
 
 export interface SerializableBehaviour extends SerializableComponent {
     isActive: boolean;
@@ -77,6 +78,11 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
      * for an enabled object.
      */
     public onStart() { }
+
+    /**
+     * Returns gizmos to be drawn when the game object is selected
+     */
+    public onDrawGizmos(): GameObject[] { return [] }
 
     /**
      * Is called every frame.

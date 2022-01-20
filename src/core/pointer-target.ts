@@ -1,4 +1,5 @@
-import { MouseInputMoveEvent } from "../input";
+import { Application } from "../application";
+import { MouseInputButton, MouseInputMoveEvent, MouseInputState } from "../input";
 import { ISerializable, registerDeserializableComponent } from "../serialization";
 import { MicroEmitter } from "../util/micro-emitter";
 import { Behaviour, SerializableBehaviour } from "./behaviour";
@@ -7,6 +8,17 @@ import { GameObject } from "./game-object";
 export interface PointerTargetEvents {
     mouseEnter: GameObject;
     mouseLeave: GameObject;
+    mouseDown: { object: GameObject, ev: MouseInputState };
+    mouseUp: { object: GameObject, ev: MouseInputState };
+
+    mousePrimaryDown: { object: GameObject, ev: MouseInputState };
+    mousePrimaryUp: { object: GameObject, ev: MouseInputState };
+
+    mouseSecondaryDown: { object: GameObject, ev: MouseInputState };
+    mouseSecondaryUp: { object: GameObject, ev: MouseInputState };
+
+    mouseAuxDown: { object: GameObject, ev: MouseInputState };
+    mouseAuxUp: { object: GameObject, ev: MouseInputState };
 }
 
 export interface SerializablePointerTarget extends SerializableBehaviour { }
@@ -19,6 +31,12 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
     private _handlersSetUp = false;
     private _objectHover = false;
     public events: MicroEmitter<PointerTargetEvents> = new MicroEmitter();
+
+    constructor(application: Application, gameObject: GameObject) {
+        super(application, gameObject);
+
+        console.log(`POINTER TARGET ${this.id} CREATED FOR OBJECT '${gameObject.name}'`);
+    }
 
     private _handleMouseMove = (ev: MouseInputMoveEvent) => {
         const pointerObject = this.application.renderPipeline.maskLayer.probePosition(ev.viewPos.x, ev.viewPos.y);
@@ -38,11 +56,49 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
         this._objectHover = pointerOnSelf;
     }
 
+    private _handleMouseDown = (ev: MouseInputState) => {
+        if (this._objectHover) {
+            this.events.emit('mouseDown', { object: this.gameObject, ev });
+
+            switch (ev.triggerButton) {
+                case MouseInputButton.primary:
+                    this.events.emit('mousePrimaryDown', { object: this.gameObject, ev });
+                    break;
+                case MouseInputButton.secondary:
+                    this.events.emit('mouseSecondaryDown', { object: this.gameObject, ev });
+                    break;
+                case MouseInputButton.auxiliary:
+                    this.events.emit('mouseAuxDown', { object: this.gameObject, ev });
+                    break;
+            }
+        }
+    }
+
+    private _handleMouseUp = (ev: MouseInputState) => {
+        if (this._objectHover) {
+            this.events.emit('mouseUp', { object: this.gameObject, ev });
+
+            switch (ev.triggerButton) {
+                case MouseInputButton.primary:
+                    this.events.emit('mousePrimaryUp', { object: this.gameObject, ev });
+                    break;
+                case MouseInputButton.secondary:
+                    this.events.emit('mouseSecondaryUp', { object: this.gameObject, ev });
+                    break;
+                case MouseInputButton.auxiliary:
+                    this.events.emit('mouseAuxUp', { object: this.gameObject, ev });
+                    break;
+            }
+        }
+    }
+
     private _initHandlers() {
         if (!this._handlersSetUp && this.isActive && !this.isDestroyed) {
             const mouseInput = this.application.inputManager.mouse;
             if (mouseInput) {
                 mouseInput.on('move', this._handleMouseMove);
+                mouseInput.on('down', this._handleMouseDown);
+                mouseInput.on('up', this._handleMouseUp);
                 this._handlersSetUp = true;
             }
         }
@@ -53,6 +109,8 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
             const mouseInput = this.application.inputManager.mouse;
             if (mouseInput) {
                 mouseInput.off('move', this._handleMouseMove);
+                mouseInput.off('down', this._handleMouseDown);
+                mouseInput.off('up', this._handleMouseUp);
                 this._handlersSetUp = false;
             }
         }

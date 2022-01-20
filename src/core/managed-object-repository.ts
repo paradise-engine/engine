@@ -59,31 +59,33 @@ export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents
      * @param id The object's new ID
      */
     public changeId(obj: ManagedObject, id: string) {
+        const oldId = obj.id;
 
-        const existing = this._objectMap.get(id);
-        if (existing) {
-            existing.destroy();
+        if (obj.id !== id) {
+            const existing = this._objectMap.get(id);
+            if (existing) {
+                existing.destroy();
+                this._componentObjectMap.forEach((val, key) => {
+                    if (val === id || key === id) {
+                        this._componentObjectMap.delete(key);
+                    }
+                });
+            }
+
+            this._objectMap.delete(oldId);
+            obj['_id'] = id;
+            this._objectMap.set(obj.id, obj);
+
             this._componentObjectMap.forEach((val, key) => {
-                if (val === id || key === id) {
-                    this._componentObjectMap.delete(key);
+                if (val === oldId) {
+                    this._componentObjectMap.set(key, id);
+                } else if (key === oldId) {
+                    this._componentObjectMap.set(id, val);
                 }
             });
+
+            this.emit('idChanged', { oldId, newId: id });
         }
-
-        const oldId = obj.id;
-        this._objectMap.delete(oldId);
-        obj['_id'] = id;
-        this._objectMap.set(obj.id, obj);
-
-        this._componentObjectMap.forEach((val, key) => {
-            if (val === oldId) {
-                this._componentObjectMap.set(key, id);
-            } else if (key === oldId) {
-                this._componentObjectMap.set(id, val);
-            }
-        });
-
-        this.emit('idChanged', { oldId, newId: id });
     }
 
     /**

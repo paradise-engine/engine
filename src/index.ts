@@ -13,3 +13,4 @@ export * from './scene';
 export * from './data-structures';
 export * from './input';
 export * from './runtime';
+export * from './editor';

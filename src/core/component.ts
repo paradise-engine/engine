@@ -4,7 +4,10 @@ import { ISerializable, SerializableObject } from "../serialization";
 import type { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
 
-export type ComponentConstructor<T extends Component> = new (application: Application, gameObject: GameObject) => T;
+export type ComponentConstructor<T extends Component> = {
+	new(application: Application, gameObject: GameObject): T;
+	_isInternal?: boolean;
+}
 
 export interface SerializableComponent extends SerializableObject { }
 

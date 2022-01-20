@@ -1,5 +1,5 @@
 import { generateRandomString } from "./util";
-import { ManagedObjectRepository, SerializableManagedObjectRepository } from "./core";
+import { Camera, GameObject, ManagedObjectRepository, SerializableManagedObjectRepository } from "./core";
 import { IRenderPipeline, WebGLRenderPipeline } from "./graphics";
 import { RuntimeInconsistencyError } from "./errors";
 import { __ComponentCreationLock } from "./core/component-creation-lock";
@@ -7,6 +7,10 @@ import { GameManager } from "./lifecycle";
 import { IResourceLoader, ResourceLoader } from "./resource";
 import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
 import { IInputManager, InputManager } from "./input";
+import { CommonGizmos, createCommonGizmos } from "./editor";
+import { editor_camera_obj } from "./editor/_editor-camera";
+
+export interface ApplicationEditorModeOptions { }
 
 export interface ApplicationOptions {
     id?: string;
@@ -16,6 +20,7 @@ export interface ApplicationOptions {
     managedObjectRepository?: ManagedObjectRepository;
     inputManager?: IInputManager;
     debugMode?: boolean;
+    editorMode?: ApplicationEditorModeOptions;
 }
 
 export interface SerializableApplication extends SerializableObject {
@@ -60,6 +65,9 @@ export class Application implements ISerializable<SerializableApplication> {
     private _managedObjectRepository: ManagedObjectRepository;
     private _renderPipeline: IRenderPipeline;
     private _inputManager: IInputManager;
+    private _editorMode?: boolean = false;
+    private _commonGizmos?: CommonGizmos;
+    private _editorCamera?: GameObject;
 
     public get loader() {
         return this._loader;
@@ -85,7 +93,20 @@ export class Application implements ISerializable<SerializableApplication> {
         return this._inputManager;
     }
 
+    public get editorMode() {
+        return this._editorMode;
+    }
+
+    public get commonGizmos() {
+        return this._commonGizmos;
+    }
+
     constructor(options: ApplicationOptions = {}) {
+
+        if (options.editorMode) {
+            this._editorMode = true;
+        }
+
         this._id = options.id || generateRandomString();
         this.__ccLock = new __ComponentCreationLock();
         this._managedObjectRepository = new ManagedObjectRepository();
@@ -94,8 +115,19 @@ export class Application implements ISerializable<SerializableApplication> {
             debugMode: options.debugMode
         });
         this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
-        this._gameManager = new GameManager(this._loader, this._renderPipeline);
+        this._gameManager = new GameManager(this, this._loader, this._renderPipeline, undefined, options.debugMode);
         this._inputManager = options.inputManager || new InputManager(this);
+
+        if (options.editorMode) {
+            this._loader.ready(() => {
+                this._commonGizmos = createCommonGizmos(this);
+                this._editorCamera = deserialize(editor_camera_obj, { application: this });
+                const camComp = this._editorCamera.getComponent(Camera);
+                if (camComp) {
+                    this._gameManager.setEditorCamera(camComp);
+                }
+            });
+        }
     }
 
     public setRenderPipeline(pipeline: IRenderPipeline<any>) {
@@ -119,6 +151,15 @@ export class Application implements ISerializable<SerializableApplication> {
 
     public setManagedObjectRepo(repo: ManagedObjectRepository) {
         this._managedObjectRepository = repo;
+
+        if (this.editorMode) {
+            this._loader.ready(() => {
+                if (this._commonGizmos) {
+                    this._commonGizmos.move.destroy();
+                }
+                this._commonGizmos = createCommonGizmos(this);
+            });
+        }
     }
 
     public setGameManager(gm: GameManager) {

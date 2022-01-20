@@ -10,6 +10,9 @@ import { DeserializationOptions, deserialize, registerDeserializable, Serializab
 import { FileEncoding, fileSystem } from "../runtime";
 
 const EMPTY_IMAGE_KEY = 'paradise::reserved::loader_empty_image';
+const EDITOR_MOVE_HANDLE_HORIZONTAL_KEY = 'paradise::reserved::editor_handle_horizontal';
+const EDITOR_MOVE_HANDLE_VERTICAL_KEY = 'paradise::reserved::editor_handle_vertical';
+const EDITOR_MOVE_HANDLE_BOTH_KEY = 'paradise::reserved::editor_handle_both';
 
 interface ResourceLoadTask {
     name: string;
@@ -33,6 +36,24 @@ if (browserApisAvailable()) {
     emptyImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z/C/HgAGgwJ/lK3Q6wAAAABJRU5ErkJggg==';
 }
 
+let editor_moveHandleHorizontalImg: HTMLImageElement | null = null;
+if (browserApisAvailable()) {
+    editor_moveHandleHorizontalImg = new Image(100, 13);
+    editor_moveHandleHorizontalImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAAANCAYAAABfGcvGAAAACXBIWXMAAACNAAAAjQHGZvekAAABoklEQVRYhe2WQUsCQRTH38wb3VmpNI2KSs8hRNCtS4eOQR/GS9+gc9egD1DX9lAEJUKU0qFbRBAVtuawatFmyrq1EwpCRFm6Bor7gznt8Gffe/x4Q6SU4NEZK5MT2xHnPYcAx0nOD7NZ/dVtK72BuGAjFNQSzyakFQX2AqpdQCoA4PYBcV8TxkUnyaxXiutnFi2rfnwAENUZRtOKsrQWCZt5pKJdezxDXNA0pBV1e7SAWn1CWqwScvVE6VEre0g0Oj3X85X3KAnzZf23gXxGZ9gY0KmilPIMBZcy89UesjU8pMVr9sA1sxvEbRtGHKfjpMw39jBSs4FYVi/V2TdcuvzRet+nKFENzsfKiHZNSotthoLJAephV5mtVJYXXsptRZoM4VpVQfj9ooK0ZBOSOhPGQfO7t9RdsBoKavN/2CH3Kocc59UqYt4hcJPjfCeb1Y3v7nrP3n+gzBDuVRUefb7SK0PxRkjq/JMFrfAG0iWaFlhIi2+EXFEJ2kmheNduujcQFwjFD+XwaMMClDKTNoq7bjO9HeKCWGxm/Kdd0BEA8AGyTruUuAGTTAAAAABJRU5ErkJggg==';
+}
+
+let editor_moveHandleVerticalImg: HTMLImageElement | null = null;
+if (browserApisAvailable()) {
+    editor_moveHandleVerticalImg = new Image(13, 100);
+    editor_moveHandleVerticalImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAABkCAYAAABdELruAAAACXBIWXMAAACNAAAAjQHGZvekAAABl0lEQVRYhe3YsU7CQBjA8a+lWCqgUUpbAlQ0MUTRQScWDEYNYZHV0YTB1Wdyc+VNfAInZweNd4XenWm11Lu22NHE+5ImDe2vXP9AB4Axltjsk3rPGph3aceCTYOUoTq9YAbspR0LJhUxjXVJlZpZSBVfcN1WmejUxPvYcMbWKBfCTXz50UEGOsTASmyYCylE6XuOF+6TbVrLhfwycaL9eW/uuG7LWomcU6vnOd7y6ugMAT7HNytRkNqzvfhdGwSYlkzPoSC1XyHcCcQijUwUpRZPwENsOBM+/RJFqUWERhiYwaePl8dgEKUWx2/ERTlE1qmTKgBgcbSo1admh0NhatvbyEJohEDx4ZpDpEzGP1MnltciwX11xeXtiqnFIVtxWTVMXcq+n2iC9NatOQlRmHoHFX9DQXoFK/2v5a1Inbi37/SaigvNzSc+3NvBO1CgUH2sgKrEH6X2UqiF33rxodFuN4/1qT6DB5jZV9Z92oMl8XvKMxJJJJFEEkkk0b9HEkkkkUQSSSTRH0epfwquvRYBnjMEAHwCeYy/m1q5elcAAAAASUVORK5CYII=';
+}
+
+let editor_moveHandleBothImg: HTMLImageElement | null = null;
+if (browserApisAvailable()) {
+    editor_moveHandleBothImg = new Image(30, 30);
+    editor_moveHandleBothImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAC8AAAAvAHPHSQeAAAAa0lEQVRIie3XMQqAMBBE0VG2t9Ai4B28imfVg3gLIYUW6QPKJGBlJ6zNfNj6tTsNpmvFD1khuxzR592FP21EslBhovOxucDLAMKtC/aSYMGCBQsWLFiwYMGCv1eXBGcFP3yPaD1wslDOKwA3pPUS6UPMTu4AAAAASUVORK5CYII=';
+}
+
 export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
 
     public static fromSerializable(s: SerializableResourceLoader, options: DeserializationOptions) {
@@ -43,6 +64,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     private _resourceMap: Dictionary<Resource> = {};
     private _flaggedForPurge: Resource[] = [];
     private _renderPipeline: WebGLRenderPipeline;
+    private _readyPromise: Promise<any>;
 
     public get renderPipeline() {
         return this._renderPipeline;
@@ -52,58 +74,84 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
         return this._resourceMap[EMPTY_IMAGE_KEY];
     }
 
-    constructor(renderPipeline: WebGLRenderPipeline) {
-        this._renderPipeline = renderPipeline;
-        this._createEmptyImage();
+    public get EDITOR_MOVE_HANDLE_HORIZONTAL() {
+        return this._resourceMap[EDITOR_MOVE_HANDLE_HORIZONTAL_KEY];
     }
 
-    private _createEmptyImage() {
-        if (emptyImg) {
-            const img = emptyImg;
+    public get EDITOR_MOVE_HANDLE_VERTICAL() {
+        return this._resourceMap[EDITOR_MOVE_HANDLE_VERTICAL_KEY];
+    }
 
-            const createResource = () => {
-                const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
+    public get EDITOR_MOVE_HANDLE_BOTH() {
+        return this._resourceMap[EDITOR_MOVE_HANDLE_BOTH_KEY];
+    }
+
+    constructor(renderPipeline: WebGLRenderPipeline) {
+        this._renderPipeline = renderPipeline;
+        this._readyPromise = Promise.all(this._createReservedResources());
+    }
+
+    public ready(cb: () => void) {
+        this._readyPromise.then(cb);
+    }
+
+    private _createReservedResources() {
+        return [
+            this._createReserved(emptyImg, EMPTY_IMAGE_KEY),
+            this._createReserved(editor_moveHandleHorizontalImg, EDITOR_MOVE_HANDLE_HORIZONTAL_KEY),
+            this._createReserved(editor_moveHandleVerticalImg, EDITOR_MOVE_HANDLE_VERTICAL_KEY),
+            this._createReserved(editor_moveHandleBothImg, EDITOR_MOVE_HANDLE_BOTH_KEY)
+        ];
+    }
+
+    private _createReserved(img: HTMLImageElement | null, key: string) {
+        return new Promise<void>(resolve => {
+            if (img) {
+                const createResource = () => {
+                    const baseTexture = BaseTexture.createImageTexture(this._renderPipeline.context, img);
+
+                    const res = new Resource({
+                        name: key,
+                        url: key,
+                        type: ResourceType.Image,
+                        status: ResourceStatus.Loaded,
+                        sourceElement: baseTexture.srcElement,
+                        texture: baseTexture,
+                        permanent: true
+                    });
+
+                    this._resourceMap[key] = res;
+
+                    resolve();
+                }
+
+                if (img.complete) {
+                    createResource();
+                } else {
+                    img.onload = createResource;
+                }
+            } else {
+                const baseTexture = new BaseTexture(
+                    this._renderPipeline.context,
+                    { texture: {} },
+                    BaseTextureType.Image,
+                    {} as any
+                );
 
                 const res = new Resource({
-                    name: EMPTY_IMAGE_KEY,
-                    url: EMPTY_IMAGE_KEY,
+                    name: key,
+                    url: key,
                     type: ResourceType.Image,
                     status: ResourceStatus.Loaded,
                     sourceElement: baseTexture.srcElement,
-                    texture: baseTexture
+                    texture: baseTexture,
+                    permanent: true
                 });
 
-                this._resourceMap[EMPTY_IMAGE_KEY] = res;
+                this._resourceMap[key] = res;
+                resolve();
             }
-
-            if (img.complete) {
-                createResource();
-            } else {
-                img.onload = createResource;
-            }
-        } else {
-
-            const baseTexture = new BaseTexture(
-                this._renderPipeline.context,
-                { texture: {} },
-                BaseTextureType.Image,
-                {} as any
-            );
-
-            const res = new Resource({
-                name: EMPTY_IMAGE_KEY,
-                url: EMPTY_IMAGE_KEY,
-                type: ResourceType.Image,
-                status: ResourceStatus.Loaded,
-                sourceElement: baseTexture.srcElement,
-                texture: baseTexture
-            });
-
-            this._resourceMap[EMPTY_IMAGE_KEY] = res;
-
-        }
-
-
+        });
     }
 
     public setRenderPipeline(pipeline: WebGLRenderPipeline) {
@@ -114,7 +162,7 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
             }
         }
 
-        this._createEmptyImage();
+        this._createReservedResources();
     }
 
     public add(url: string, name?: string, onload?: ResourceLoadCallback) {

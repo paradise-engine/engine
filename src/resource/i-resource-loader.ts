@@ -17,6 +17,10 @@ export interface IResourceLoader<T extends SerializableObject> extends ISerializ
     add(url: string, name?: string, onload?: ResourceLoadCallback): void;
     load(onload?: ResourcesLoadCallback): void;
     getResource(name: string): Resource | undefined;
+    ready(cb: () => void): void;
 
     EMPTY_IMAGE: Resource;
+    EDITOR_MOVE_HANDLE_HORIZONTAL: Resource;
+    EDITOR_MOVE_HANDLE_VERTICAL: Resource;
+    EDITOR_MOVE_HANDLE_BOTH: Resource;
 }

@@ -1,4 +1,5 @@
-import { Behaviour, GameObject, recursiveEvent, Renderer } from "../core";
+import { Application } from "../application";
+import { Behaviour, Camera, GameObject, recursiveEvent, Renderer } from "../core";
 import { LifecycleError, SceneLoadError } from "../errors";
 import { IRenderPipeline } from "../graphics";
 import { IResourceLoader } from "../resource";
@@ -6,12 +7,22 @@ import { Scene } from "../scene";
 import { Time } from "../time";
 
 export class GameManager {
+    private _app: Application;
     private _loader: IResourceLoader<any>;
     private _renderPipeline: IRenderPipeline;
 
     private _currentScene?: Scene;
     private _isRunning = false;
     private _animationFrameToken: number | null = null;
+
+    private _editorCameraId?: string;
+    private get _editorCamera() {
+        if (!this._editorCameraId) {
+            return null;
+        }
+
+        return this._app.managedObjectRepository.getObjectById<Camera>(this._editorCameraId);
+    }
 
     private _debugMode = false;
 
@@ -71,10 +82,12 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: IResourceLoader<any>, pipeline: IRenderPipeline, debugMode?: boolean) {
+    constructor(app: Application, loader: IResourceLoader<any>, pipeline: IRenderPipeline, editorCamera?: Camera, debugMode?: boolean) {
+        this._app = app;
         this._loader = loader;
         this._renderPipeline = pipeline;
         this._debugMode = debugMode || false;
+        this._editorCameraId = editorCamera?.id;
     }
 
     /**
@@ -112,7 +125,8 @@ export class GameManager {
         }
 
         // Draw phase
-        for (const camera of scene.getAllCameras()) {
+        const cameraColl = this._editorCamera ? [this._editorCamera] : scene.getAllCameras();
+        for (const camera of cameraColl) {
             const cullingResults = camera.performCulling();
             for (const res of cullingResults) {
                 const renderer = res.getComponent(Renderer);
@@ -266,6 +280,10 @@ export class GameManager {
 
     public setRenderPipeline(p: IRenderPipeline) {
         this._renderPipeline = p;
+    }
+
+    public setEditorCamera(c: Camera) {
+        this._editorCameraId = c.id;
     }
 
     // #endregion
