@@ -1,6 +1,6 @@
 import { Application } from "./application";
 import { DuplicateGameObjectError, HierarchyInconsistencyError, ObjectNotFoundError } from "./errors";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
+import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
 import { arrayMove, Dictionary, generateRandomString, MicroEmitter } from "./util";
 import { Camera, GameObject, SerializableGameObject } from "./core";
 
@@ -18,15 +18,15 @@ interface SceneEvents {
 
 export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<SerializableScene> {
 
-    public static fromSerializable(s: SerializableScene, options: DeserializationOptions) {
-        const scene = new Scene(options.application, s.name);
+    public static fromSerializable(s: SerializableScene) {
+        const scene = new Scene(s.name);
         delete Scene._scenes[scene.id];
         scene._id = s.id;
 
         Scene._scenes[scene._id] = scene;
 
         for (const obj of s.gameObjects) {
-            const gameObject: GameObject = deserialize(obj, options);
+            const gameObject: GameObject = deserialize(obj);
             scene.addGameObject(gameObject);
         }
 
@@ -41,7 +41,10 @@ export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<Se
 
     private _gameObjectIds: string[] = [];
     private _id: string;
-    private _application: Application;
+
+    private get _application() {
+        return Application.instance;
+    }
 
     public get id() {
         return this._id;
@@ -53,10 +56,9 @@ export class Scene extends MicroEmitter<SceneEvents> implements ISerializable<Se
 
     public name: string;
 
-    constructor(application: Application, name: string) {
+    constructor(name: string) {
         super();
         this._id = generateRandomString();
-        this._application = application;
         this.name = name;
         Scene._scenes[this.id] = this;
 

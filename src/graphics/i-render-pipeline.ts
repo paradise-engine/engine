@@ -1,4 +1,3 @@
-import type { ISerializable, SerializableObject } from "../serialization";
 import type { GlobalShaderData } from "./global-shader-data";
 import type { IRenderContext } from "./i-render-context";
 import { MaskLayer } from "./mask-layer";
@@ -18,7 +17,7 @@ export interface IRenderPipelineView {
     removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLCanvasElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
 }
 
-export interface IRenderPipeline<T extends SerializableObject = any> extends ISerializable<T> {
+export interface IRenderPipeline {
     context: IRenderContext;
     view: IRenderPipelineView;
     globalShaderData: GlobalShaderData;

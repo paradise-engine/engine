@@ -7,8 +7,7 @@ import { Scene } from "../scene";
 import { Time } from "../time";
 
 export class GameManager {
-    private _app: Application;
-    private _loader: IResourceLoader<any>;
+    private _loader: IResourceLoader;
     private _renderPipeline: IRenderPipeline;
 
     private _currentScene?: Scene;
@@ -16,6 +15,11 @@ export class GameManager {
     private _animationFrameToken: number | null = null;
 
     private _editorCameraId?: string;
+
+    private get _app() {
+        return Application.instance;
+    }
+
     private get _editorCamera() {
         if (!this._editorCameraId) {
             return null;
@@ -82,8 +86,7 @@ export class GameManager {
 
     // #endregion
 
-    constructor(app: Application, loader: IResourceLoader<any>, pipeline: IRenderPipeline, editorCamera?: Camera, debugMode?: boolean) {
-        this._app = app;
+    constructor(loader: IResourceLoader, pipeline: IRenderPipeline, editorCamera?: Camera, debugMode?: boolean) {
         this._loader = loader;
         this._renderPipeline = pipeline;
         this._debugMode = debugMode || false;
@@ -217,7 +220,7 @@ export class GameManager {
 
     // #region Public
 
-    public setLoader(loader: IResourceLoader<any>) {
+    public setLoader(loader: IResourceLoader) {
         this._loader = loader;
     }
 

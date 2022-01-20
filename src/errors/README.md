@@ -4,6 +4,8 @@
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | [ParadiseError]                         | Base class for all engine errors                                                                                 |
 | [AbstractRendererError]                 | Occurs when `Renderer` component is used directly or it's `getPrimitive` function is not overridden in sub-class |
+| [ApplicationInitializedError]           | `Application.initializeApplication` is called although Application is initialzed already                         |
+| [ApplicationNotInitializedError]        | Tried to access `Application.instance` before calling `Application.initializeApplication`                        |
 | [BrowserApiError]                       | Occurs when an operation that needs a Browser API executes in an non-browser environment                         |
 | [ColorComponentOutOfBoundsError]        | A RGBA-component of a `Color` was set to an invalid number                                                       |
 | [DestroyBoundTransformError]            | A Transform object is destroyed before its GameObject is destroyed                                               |
@@ -29,6 +31,8 @@
 
 [paradiseerror]: ./paradise-error.ts
 [abstractrenderererror]: ./abstract-renderer.ts
+[applicationinitializederror]: ./application-initialized.ts
+[applicationnotinitializederror]: ./application-not-initialized.ts
 [browserapierror]: ./browser-api.ts
 [colorcomponentoutofboundserror]: ./color-component-out-of-bounds.ts
 [destroyboundtransformerror]: ./destroy-bound-transform.ts

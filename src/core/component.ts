@@ -1,11 +1,11 @@
-import { Application } from "../application";
 import { ManagedObjectDestroyedError, ManagedObjectNotFoundError, RuntimeInconsistencyError } from "../errors";
 import { ISerializable, SerializableObject } from "../serialization";
+import { __ComponentCreationLock } from "./component-creation-lock";
 import type { GameObject } from "./game-object";
 import { ManagedObject } from "./managed-object";
 
 export type ComponentConstructor<T extends Component> = {
-	new(application: Application, gameObject: GameObject): T;
+	new(gameObject: GameObject): T;
 	_isInternal?: boolean;
 }
 
@@ -27,26 +27,26 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 			throw new ManagedObjectDestroyedError();
 		}
 
-		const objId = this._application.managedObjectRepository['_componentObjectMap'].get(this.id);
+		const objId = this.application.managedObjectRepository['_componentObjectMap'].get(this.id);
 		if (!objId) {
 			throw new RuntimeInconsistencyError('Cannot get GameObject of orphaned Component');
 		}
 
-		return this._application.managedObjectRepository.getObjectById<GameObject>(objId);
+		return this.application.managedObjectRepository.getObjectById<GameObject>(objId);
 	}
 
 	public get transform() {
 		return this.gameObject.transform;
 	}
 
-	constructor(application: Application, gameObject: GameObject) {
-		if (!application['__ccLock'].componentsMayBeCreated()) {
+	constructor(gameObject: GameObject) {
+		if (!__ComponentCreationLock.componentsMayBeCreated()) {
 			throw new RuntimeInconsistencyError('Cannot create component: Component creation is locked');
 		}
 
-		super(application);
+		super();
 		this._markedForDestruction = false;
-		this._application.managedObjectRepository['_componentObjectMap'].set(this.id, gameObject.id);
+		this.application.managedObjectRepository['_componentObjectMap'].set(this.id, gameObject.id);
 	}
 
 	public override destroy() {
@@ -61,7 +61,7 @@ export abstract class Component extends ManagedObject implements ISerializable<S
 				}
 			}
 
-			this._application.managedObjectRepository['_componentObjectMap'].delete(this.id);
+			this.application.managedObjectRepository['_componentObjectMap'].delete(this.id);
 			super.destroy();
 		}
 	}

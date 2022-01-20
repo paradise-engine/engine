@@ -1,7 +1,6 @@
-import { Application } from "../application";
 import { Control } from "../controls";
 import { SpritePrimitive } from "../graphics";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 import { vec2 } from 'gl-matrix';
 import { Color, ColorControlOptions, Rect, SerializableColor } from "../data-structures";
 import { Renderer, SerializableRenderer } from "./renderer";
@@ -17,10 +16,9 @@ export interface SerializableSpriteRenderer extends SerializableRenderer {
 export class SpriteRenderer extends Renderer implements ISerializable<SerializableSpriteRenderer> {
     public static applySerializable(s: SerializableSpriteRenderer, comp: SpriteRenderer) {
         super.applySerializable(s, comp);
-        const options: DeserializationOptions = { application: comp.application }
 
-        comp.sprite = deserialize(s.sprite, options);
-        comp.color = deserialize(s.color, options);
+        comp.sprite = deserialize(s.sprite);
+        comp.color = deserialize(s.color);
     }
 
     @Control<SpriteControlOptions>({
@@ -35,11 +33,11 @@ export class SpriteRenderer extends Renderer implements ISerializable<Serializab
     })
     public color: Color;
 
-    constructor(application: Application, gameObject: GameObject) {
-        super(application, gameObject);
+    constructor(gameObject: GameObject) {
+        super(gameObject);
 
-        const emptyImageRes = application.loader.EMPTY_IMAGE;
-        const ref = new ResourceReference(application, emptyImageRes.url, emptyImageRes.name);
+        const emptyImageRes = this.application.loader.EMPTY_IMAGE;
+        const ref = new ResourceReference(emptyImageRes.url, emptyImageRes.name);
 
         this.sprite = new Sprite(ref);
         this.color = Color.White;

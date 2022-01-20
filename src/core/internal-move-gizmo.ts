@@ -55,11 +55,11 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
         }
 
         if (s.mousePosSnapshot) {
-            comp._mousePosSnapshot = deserialize(s.mousePosSnapshot, { application: comp.application }) as Vector;
+            comp._mousePosSnapshot = deserialize(s.mousePosSnapshot) as Vector;
         }
 
         if (s.startPos) {
-            comp._startPos = deserialize(s.startPos, { application: comp.application }) as Vector;
+            comp._startPos = deserialize(s.startPos) as Vector;
         }
     }
 
@@ -152,11 +152,10 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._horizontal) {
                 hTarget = this._horizontal.getComponent(PointerTarget) || null;
             } else {
-                this._horizontal = new GameObject(this.application, 'internal_gizmo_move_horizontal');
+                this._horizontal = new GameObject('internal_gizmo_move_horizontal');
                 hTarget = this._horizontal.addComponent(PointerTarget);
                 const hSprite = this._horizontal.addComponent(SpriteRenderer);
                 hSprite.sprite = new Sprite(new ResourceReference(
-                    this.application,
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.name
                 ));
@@ -167,11 +166,10 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._vertical) {
                 vTarget = this._vertical.getComponent(PointerTarget) || null;
             } else {
-                this._vertical = new GameObject(this.application, 'internal_gizmo_move_vertical');
+                this._vertical = new GameObject('internal_gizmo_move_vertical');
                 vTarget = this._vertical.addComponent(PointerTarget);
                 const vSprite = this._vertical.addComponent(SpriteRenderer);
                 vSprite.sprite = new Sprite(new ResourceReference(
-                    this.application,
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.name
                 ));
@@ -182,11 +180,10 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._dual) {
                 dTarget = this._dual.getComponent(PointerTarget) || null;
             } else {
-                this._dual = new GameObject(this.application, 'internal_gizmo_move_dual');
+                this._dual = new GameObject('internal_gizmo_move_dual');
                 dTarget = this._dual.addComponent(PointerTarget);
                 const dSprite = this._dual.addComponent(SpriteRenderer);
                 dSprite.sprite = new Sprite(new ResourceReference(
-                    this.application,
                     this.application.loader.EDITOR_MOVE_HANDLE_BOTH.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_BOTH.name
                 ));

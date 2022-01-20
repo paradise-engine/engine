@@ -1,14 +1,13 @@
-import { resetViewport, tagContext, taggedMessage } from "../webgl";
+import { resetViewport, tagContext } from "../webgl";
 import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../../errors";
 import { DefaultShader, Shader } from '../shader';
 import { ShaderPipeline } from "../shader-pipeline";
 import { GlobalShaderData } from "../global-shader-data";
-import { IRenderPipeline } from "../i-render-pipeline";
-import { registerDeserializable, SerializableObject } from "../../serialization";
 import { WebGLPipelineRenderContext } from "./webgl-render-context";
 import { WebGLDebugUtils } from './webgl_debug';
 import { MaskLayer } from "../mask-layer";
 import { Color } from "../../data-structures";
+import { IRenderPipeline } from "../i-render-pipeline";
 
 export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
@@ -59,18 +58,7 @@ function drawQueueItem(item: RenderQueueItem) {
     }
 }
 
-export interface SerializableRenderPipeline extends SerializableObject {
-    debugMode: boolean;
-}
-
-export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPipeline> {
-
-    public static fromSerializable(s: SerializableRenderPipeline) {
-        return new WebGLRenderPipeline({
-            debugMode: s.debugMode
-        });
-    }
-
+export class WebGLRenderPipeline implements IRenderPipeline {
     private _renderQueue: RenderQueue = [];
     private _activeQueueStack: RenderQueue[] = [];
     private _debugMode: boolean = false;
@@ -190,13 +178,6 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         this.clearRenderQueue();
     }
 
-    public getSerializableObject(): SerializableRenderPipeline {
-        return {
-            _ctor: WebGLRenderPipeline.name,
-            debugMode: this._debugMode
-        }
-    }
-
     public resizeView(width: number, height: number) {
         this._width = width;
         this._height = height;
@@ -207,5 +188,3 @@ export class WebGLRenderPipeline implements IRenderPipeline<SerializableRenderPi
         this.context.resetViewport(width, height);
     }
 }
-
-registerDeserializable(WebGLRenderPipeline);

@@ -32,8 +32,8 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
     private _objectHover = false;
     public events: MicroEmitter<PointerTargetEvents> = new MicroEmitter();
 
-    constructor(application: Application, gameObject: GameObject) {
-        super(application, gameObject);
+    constructor(gameObject: GameObject) {
+        super(gameObject);
 
         console.log(`POINTER TARGET ${this.id} CREATED FOR OBJECT '${gameObject.name}'`);
     }

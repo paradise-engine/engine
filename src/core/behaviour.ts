@@ -16,7 +16,7 @@ export class Behaviour extends Component implements ISerializable<SerializableBe
         b._isActive = s.isActive;
 
         const compIdIndex = b.gameObject['_componentIds'].indexOf(b.id);
-        b._application.managedObjectRepository.changeId(b, s.id);
+        b.application.managedObjectRepository.changeId(b, s.id);
         b.gameObject['_componentIds'][compIdIndex] = s.id;
     }
 

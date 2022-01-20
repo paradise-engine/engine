@@ -1,12 +1,11 @@
 import { ResourceType } from "./resource-type";
 import { MimeTypeExtensions, MimeType, MimeTypes } from "./mime-types";
 import { Resource, ResourceRenameData } from "./resource";
-import { BrowserApiError, ParadiseError, ResourceLoaderError } from "../errors";
+import { ParadiseError, ResourceLoaderError } from "../errors";
 import { ResourceStatus } from "./resource-status";
-import { WebGLRenderPipeline, BaseTexture, SerializableRenderPipeline, BaseTextureType } from "../graphics";
+import { WebGLRenderPipeline, BaseTexture, BaseTextureType } from "../graphics";
 import { browserApisAvailable, Dictionary, MicroListener } from "../util";
 import { IResourceLoader, ResourceLoadCallback, ResourcesLoadCallback } from "./i-resource-loader";
-import { DeserializationOptions, deserialize, registerDeserializable, SerializableObject } from "../serialization";
 import { FileEncoding, fileSystem } from "../runtime";
 
 const EMPTY_IMAGE_KEY = 'paradise::reserved::loader_empty_image';
@@ -24,10 +23,6 @@ interface ResourceLoadOptions {
     cors?: boolean;
     localFile?: boolean;
     mimeType: MimeType;
-}
-
-export interface SerializableResourceLoader extends SerializableObject {
-    renderPipeline: SerializableRenderPipeline;
 }
 
 let emptyImg: HTMLImageElement | null = null;
@@ -54,12 +49,7 @@ if (browserApisAvailable()) {
     editor_moveHandleBothImg.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAACXBIWXMAAAC8AAAAvAHPHSQeAAAAa0lEQVRIie3XMQqAMBBE0VG2t9Ai4B28imfVg3gLIYUW6QPKJGBlJ6zNfNj6tTsNpmvFD1khuxzR592FP21EslBhovOxucDLAMKtC/aSYMGCBQsWLFiwYMGCv1eXBGcFP3yPaD1wslDOKwA3pPUS6UPMTu4AAAAASUVORK5CYII=';
 }
 
-export class ResourceLoader implements IResourceLoader<SerializableResourceLoader> {
-
-    public static fromSerializable(s: SerializableResourceLoader, options: DeserializationOptions) {
-        return new ResourceLoader(deserialize(s.renderPipeline, options));
-    }
-
+export class ResourceLoader implements IResourceLoader {
     private _batchLoadingQueue: ResourceLoadTask[] = [];
     private _resourceMap: Dictionary<Resource> = {};
     private _flaggedForPurge: Resource[] = [];
@@ -500,13 +490,4 @@ export class ResourceLoader implements IResourceLoader<SerializableResourceLoade
     public unloadResource(resource: Resource) {
         resource.unload();
     }
-
-    public getSerializableObject(): SerializableResourceLoader {
-        return {
-            _ctor: ResourceLoader.name,
-            renderPipeline: this.renderPipeline.getSerializableObject()
-        }
-    }
-
 }
-registerDeserializable(ResourceLoader);

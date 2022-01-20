@@ -1,6 +1,6 @@
 import { Resource, ResourceStatus } from "../resource";
-import { BaseTexture, Texture } from "../graphics";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { Texture } from "../graphics";
+import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Application } from "../application";
 import { MicroEmitter } from "../util";
 import { IComparable, Rect, SerializableRect } from "../data-structures";
@@ -17,10 +17,9 @@ export interface ResourceReferenceEvents {
 }
 
 export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> implements IComparable, ISerializable<SerializableResourceReference> {
-    public static fromSerializable(s: SerializableResourceReference, options: DeserializationOptions) {
-        const frame: Rect | undefined = s.textureFrame ? deserialize(s.textureFrame, options) as Rect : undefined;
+    public static fromSerializable(s: SerializableResourceReference) {
+        const frame: Rect | undefined = s.textureFrame ? deserialize(s.textureFrame) as Rect : undefined;
         const ref = new ResourceReference(
-            options.application,
             s.url,
             s.name,
             frame
@@ -29,7 +28,10 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
         return ref;
     }
 
-    private _application: Application;
+    private get _application() {
+        return Application.instance;
+    }
+
     private _isReady = false;
     private _textureFrame?: Rect;
     private _texture: Texture;
@@ -55,25 +57,24 @@ export class ResourceReference extends MicroEmitter<ResourceReferenceEvents> imp
         this.memoizedEmit('resourceLoaded', this);
     }
 
-    constructor(application: Application, url: string, name?: string, textureFrame?: Rect) {
+    constructor(url: string, name?: string, textureFrame?: Rect) {
         super();
 
         this.url = url;
         this.name = name;
-        this._application = application;
         this._textureFrame = textureFrame;
 
-        const emptyImgResource = application.loader.EMPTY_IMAGE;
+        const emptyImgResource = this._application.loader.EMPTY_IMAGE;
         if (!emptyImgResource.texture) {
             throw new ResourceLoaderError('Cannot create resource reference to resource without texture');
         }
         this._texture = new Texture(emptyImgResource.texture);
 
-        const existing = application.loader.getResource(name || url);
+        const existing = this._application.loader.getResource(name || url);
         if (existing && existing.status !== ResourceStatus.FlaggedForUnload) {
             this._handleResourceLoaded(existing);
         } else {
-            application.loader.add(url, name, this._handleResourceLoaded);
+            this._application.loader.add(url, name, this._handleResourceLoaded);
         }
     }
 

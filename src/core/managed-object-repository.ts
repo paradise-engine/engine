@@ -1,5 +1,6 @@
+import { Application } from "../application";
 import { ManagedObjectNotFoundError, UnknownDeserializableError } from "../errors";
-import { DeserializationOptions, deserialize, ISerializable, isSerializableComponentClass, registerDeserializable, SerializableObject } from "../serialization";
+import { deserialize, ISerializable, isSerializableComponentClass, registerDeserializable, SerializableObject } from "../serialization";
 import { MicroEmitter } from "../util";
 import { Component } from "./component";
 import { GameObject } from "./game-object";
@@ -15,15 +16,15 @@ export interface SerializableManagedObjectRepository extends SerializableObject 
 }
 
 export class ManagedObjectRepository extends MicroEmitter<ObjectRepositoryEvents> implements ISerializable<SerializableManagedObjectRepository> {
-    public static fromSerializable(s: SerializableManagedObjectRepository, options: DeserializationOptions) {
+    public static fromSerializable(s: SerializableManagedObjectRepository) {
         const repo = new ManagedObjectRepository();
 
-        options.application['_managedObjectRepository'] = repo;
+        Application.instance.setManagedObjectRepo(repo);
 
         for (const key of Object.keys(s.objectMap)) {
             if (s.objectMap.hasOwnProperty(key)) {
                 try {
-                    repo._objectMap.set(key, deserialize(s.objectMap[key], options) as unknown as ManagedObject)
+                    repo._objectMap.set(key, deserialize(s.objectMap[key]) as unknown as ManagedObject)
                 } catch (err) {
                     // catch UnknownDeserializableError for components
                     if (!(err instanceof UnknownDeserializableError)) {

@@ -1,5 +1,5 @@
+import { Application } from "../application";
 import { Vector } from "../data-structures";
-import { IRenderPipelineView } from "../graphics";
 import { arrayPermutate, Indexable, MicroEmitter } from "../util";
 import { IMouseInput, MouseInputButton, MouseInputButtonsState, MouseInputEvents, MouseInputState } from "./i-mouse-input";
 
@@ -42,8 +42,12 @@ for (const combination of arrayPermutate(Object.keys(BUTTON_FLAGS).map(k => pars
 
 export class MouseInput extends MicroEmitter<MouseInputEvents> implements IMouseInput {
 
-    private _view: IRenderPipelineView;
+
     private _state: MouseInputState;
+
+    private get _view() {
+        return Application.instance.renderPipeline.view;
+    }
 
     public get state() {
         return this._state;
@@ -79,10 +83,9 @@ export class MouseInput extends MicroEmitter<MouseInputEvents> implements IMouse
         }
     }
 
-    constructor(view: IRenderPipelineView) {
+    constructor() {
         super();
 
-        this._view = view;
         this._state = {
             screenPos: new Vector(-1, -1),
             clientPos: new Vector(-1, -1),

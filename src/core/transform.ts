@@ -1,7 +1,7 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { Control } from "../controls";
 import { DestroyBoundTransformError, ManagedObjectNotFoundError } from "../errors";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
+import { deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { arrayMove } from "../util";
 import { Component } from "./component";
 import { SerializableVector, Vector, VectorControlOptions, Rotation, RotationControlOptions, SerializableRotation } from "../data-structures";
@@ -23,10 +23,9 @@ export class Transform extends Component implements ISerializable<SerializableTr
         comp.application.managedObjectRepository.changeId(comp, s.id);
         comp.gameObject['_componentIds'][compIdIndex] = s.id;
 
-        const options: DeserializationOptions = { application: comp.application };
-        comp._localPosition = deserialize(s.localPosition, options);
-        comp._localRotation = deserialize(s.localRotation, options);
-        comp._localScale = deserialize(s.localScale, options);
+        comp._localPosition = deserialize(s.localPosition);
+        comp._localRotation = deserialize(s.localRotation);
+        comp._localScale = deserialize(s.localScale);
     }
 
     protected _parentId?: string;
@@ -64,11 +63,11 @@ export class Transform extends Component implements ISerializable<SerializableTr
         if (!this._parentId) {
             return undefined;
         }
-        return this._application.managedObjectRepository.getObjectById<Transform>(this._parentId);
+        return this.application.managedObjectRepository.getObjectById<Transform>(this._parentId);
     }
 
     public get children() {
-        return this._children.map(childId => this._application.managedObjectRepository.getObjectById<Transform>(childId));
+        return this._children.map(childId => this.application.managedObjectRepository.getObjectById<Transform>(childId));
     }
 
     public setParent(parent: Transform | null) {
