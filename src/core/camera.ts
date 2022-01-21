@@ -69,6 +69,13 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
     })
     public depth: number;
 
+    private get _viewSize() {
+        return new Vector(
+            this.application.renderPipeline.view.width,
+            this.application.renderPipeline.view.height
+        );
+    }
+
     constructor(gameObject: GameObject) {
         super(gameObject);
 
@@ -85,10 +92,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         const inView: GameObject[] = [];
 
         if (scene) {
-            const viewSize = new Vector(
-                this.application.renderPipeline.view.width,
-                this.application.renderPipeline.view.height
-            );
+            const viewSize = this._viewSize;
 
             const viewExtends = Vector.divide(viewSize, new Vector(2, 2));
 
@@ -137,6 +141,19 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         }
 
         return inView;
+    }
+
+    public getViewportOrigin() {
+        const viewSize = this._viewSize;
+        const viewportOrigin = new Vector(
+            this.transform.position.x - (viewSize.x / 2),
+            this.transform.position.y - (viewSize.y / 2)
+        );
+        return viewportOrigin;
+    }
+
+    public worldSpaceToViewport(worldSpacePos: Vector): Vector {
+        return Vector.substract(worldSpacePos, this.getViewportOrigin());
     }
 
     public getSerializableObject(): SerializableCamera {

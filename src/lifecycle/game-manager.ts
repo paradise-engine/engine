@@ -130,12 +130,13 @@ export class GameManager {
         // Draw phase
         const cameraColl = this._editorCamera ? [this._editorCamera] : scene.getAllCameras();
         for (const camera of cameraColl) {
+            const viewportOrigin = camera.getViewportOrigin();
             const cullingResults = camera.performCulling();
             for (const res of cullingResults) {
                 const renderer = res.getComponent(Renderer);
                 if (renderer) {
                     const primitive = renderer.getPrimitive();
-                    primitive.render(this._renderPipeline);
+                    primitive.render(this._renderPipeline, viewportOrigin);
                 }
             }
             this._renderPipeline.drawFrame();

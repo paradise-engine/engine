@@ -4,6 +4,7 @@ import { IRenderable } from "./i-renderable";
 import { IRenderPipeline } from "./i-render-pipeline";
 import { RenderablePrimitive } from "./renderable-primitive";
 import { ShaderTarget } from "./shader-target";
+import { Vector } from "../data-structures";
 
 export class Container extends ShaderTarget implements IRenderable, IPositionable {
 
@@ -37,7 +38,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
         this._globalMatrix = globalMatrix;
     }
 
-    public render(renderPipeline: IRenderPipeline) {
+    public render(renderPipeline: IRenderPipeline, viewportOrigin: Vector) {
 
         const containerShaderCount = this._shaders.length;
 
@@ -50,7 +51,7 @@ export class Container extends ShaderTarget implements IRenderable, IPositionabl
                 child.addShader(shader);
             }
 
-            child.render(renderPipeline);
+            child.render(renderPipeline, viewportOrigin);
 
             let shaderCount = childShaderCount + containerShaderCount;
             while (shaderCount > childShaderCount) {

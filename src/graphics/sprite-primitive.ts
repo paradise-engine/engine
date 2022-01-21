@@ -1,4 +1,5 @@
 import { mat4 } from "gl-matrix";
+import { Vector } from "../data-structures";
 import { IRenderPipeline } from "./i-render-pipeline";
 import { RenderablePrimitive } from "./renderable-primitive";
 import { Texture } from "./texture";
@@ -14,8 +15,11 @@ export class SpritePrimitive extends RenderablePrimitive {
         this.objectId = objectId;
     }
 
-    render(renderPipeline: IRenderPipeline) {
+    public override render(renderPipeline: IRenderPipeline, viewportOrigin: Vector) {
         const textureToRender = renderPipeline.shaderPipeline.applyShaders(this.texture.baseTexture, this.getShaders());
+
+        const destinationWidth = this.scaleX * this.texture.frame.width;
+        const destinationHeight = this.scaleY * this.texture.frame.height;
 
         const drawOptions: DrawImageOptions = {
             shader: renderPipeline.baseShader,
@@ -27,10 +31,10 @@ export class SpritePrimitive extends RenderablePrimitive {
             sourceY: this.texture.frame.y,
             sourceWidth: this.texture.frame.width,
             sourceHeight: this.texture.frame.height,
-            destinationX: this.x,
-            destinationY: this.y,
-            destinationWidth: this.scaleX * this.texture.frame.width,
-            destinationHeight: this.scaleY * this.texture.frame.height,
+            destinationX: (this.x - viewportOrigin.x) - (destinationWidth / 2),
+            destinationY: (this.y - viewportOrigin.y) - (destinationHeight / 2),
+            destinationWidth,
+            destinationHeight,
             rotationRadian: this.rotationZ
         };
 
