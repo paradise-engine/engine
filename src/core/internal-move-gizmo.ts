@@ -145,20 +145,40 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
     public override onAwake(): void {
         if (!this._setUp) {
 
+            let dTarget: PointerTarget | null = null;
             let hTarget: PointerTarget | null = null;
             let vTarget: PointerTarget | null = null;
-            let dTarget: PointerTarget | null = null;
+
+            if (this._dual) {
+                dTarget = this._dual.getComponent(PointerTarget) || null;
+            } else {
+                this._dual = new GameObject({ name: 'internal_gizmo_move_dual', id: 'internal_gizmo_move_dual' });
+                dTarget = this._dual.addComponent(PointerTarget);
+                const dSprite = this._dual.addComponent(SpriteRenderer);
+                dSprite.layer = Number.MAX_SAFE_INTEGER;
+                dSprite.sprite = new Sprite(new ResourceReference(
+                    this.application.loader.EDITOR_MOVE_HANDLE_BOTH.url,
+                    this.application.loader.EDITOR_MOVE_HANDLE_BOTH.name
+                ));
+
+                this._dual.transform.translate(new Vector(15, -15));
+
+                this.gameObject.addChild(this._dual);
+            }
 
             if (this._horizontal) {
                 hTarget = this._horizontal.getComponent(PointerTarget) || null;
             } else {
-                this._horizontal = new GameObject({ name: 'internal_gizmo_move_horizontal' });
+                this._horizontal = new GameObject({ name: 'internal_gizmo_move_horizontal', id: 'internal_gizmo_move_horizontal' });
                 hTarget = this._horizontal.addComponent(PointerTarget);
                 const hSprite = this._horizontal.addComponent(SpriteRenderer);
+                hSprite.layer = Number.MAX_SAFE_INTEGER;
                 hSprite.sprite = new Sprite(new ResourceReference(
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.name
                 ));
+
+                this._horizontal.transform.translate(new Vector(50, 0));
 
                 this.gameObject.addChild(this._horizontal);
             }
@@ -166,29 +186,18 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
             if (this._vertical) {
                 vTarget = this._vertical.getComponent(PointerTarget) || null;
             } else {
-                this._vertical = new GameObject({ name: 'internal_gizmo_move_vertical' });
+                this._vertical = new GameObject({ name: 'internal_gizmo_move_vertical', id: 'internal_gizmo_move_vertical' });
                 vTarget = this._vertical.addComponent(PointerTarget);
                 const vSprite = this._vertical.addComponent(SpriteRenderer);
+                vSprite.layer = Number.MAX_SAFE_INTEGER;
                 vSprite.sprite = new Sprite(new ResourceReference(
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.name
                 ));
 
+                this._vertical.transform.translate(new Vector(0, -50));
+
                 this.gameObject.addChild(this._vertical);
-            }
-
-            if (this._dual) {
-                dTarget = this._dual.getComponent(PointerTarget) || null;
-            } else {
-                this._dual = new GameObject({ name: 'internal_gizmo_move_dual' });
-                dTarget = this._dual.addComponent(PointerTarget);
-                const dSprite = this._dual.addComponent(SpriteRenderer);
-                dSprite.sprite = new Sprite(new ResourceReference(
-                    this.application.loader.EDITOR_MOVE_HANDLE_BOTH.url,
-                    this.application.loader.EDITOR_MOVE_HANDLE_BOTH.name
-                ));
-
-                this.gameObject.addChild(this._dual);
             }
 
             if (hTarget && vTarget && dTarget) {

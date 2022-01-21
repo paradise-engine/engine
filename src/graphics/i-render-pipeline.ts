@@ -1,6 +1,7 @@
 import type { GlobalShaderData } from "./global-shader-data";
 import type { IRenderContext } from "./i-render-context";
 import { MaskLayer } from "./mask-layer";
+import { RenderLayer } from "./render-layer";
 import type { Shader } from "./shader";
 import type { ShaderPipeline } from "./shader-pipeline";
 
@@ -17,6 +18,11 @@ export interface IRenderPipelineView {
     removeEventListener<K extends keyof HTMLElementEventMap>(type: K, listener: (this: HTMLCanvasElement, ev: HTMLElementEventMap[K]) => any, options?: boolean | EventListenerOptions): void;
 }
 
+export interface RenderPipelineEnqueueOptions {
+    worldSpacePosition: [number, number]
+    layer?: number;
+}
+
 export interface IRenderPipeline {
     context: IRenderContext;
     view: IRenderPipelineView;
@@ -24,12 +30,14 @@ export interface IRenderPipeline {
     shaderPipeline: ShaderPipeline;
     baseShader: Shader;
     maskLayer: MaskLayer;
+    layers: RenderLayer[];
+    defaultLayer: number;
 
     clearRenderQueue(): void;
-    enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void): void;
-    openContainer(worldSpacePosition: [number, number]): void;
-    closeContainer(): void;
+    enqueueRenderable(options: RenderPipelineEnqueueOptions, renderFn: () => void): void;
     drawFrame(): void;
+    addLayer(layer: RenderLayer): void;
+    setDefaultLayer(layerNumber: number): void;
 
     resizeView(width: number, height: number): void;
 }

@@ -1,13 +1,12 @@
 import { GameObject } from "../core";
-import { deserialize } from "../serialization";
-import { editor_gizmo_move } from "./_editor-move-gizmo";
+import { create_editor_gizmo_move } from "./_editor-move-gizmo";
 
 export interface CommonGizmos {
     move: GameObject;
 }
 
 function createMoveGizmo(): GameObject {
-    const gizmo: GameObject = deserialize(editor_gizmo_move);
+    const gizmo: GameObject = create_editor_gizmo_move();
     return gizmo;
 }
 

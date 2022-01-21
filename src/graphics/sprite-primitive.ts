@@ -8,11 +8,13 @@ import { DrawImageOptions } from "./types";
 export class SpritePrimitive extends RenderablePrimitive {
     public texture: Texture;
     public objectId: string;
+    public layer: number;
 
-    constructor(texture: Texture, objectId: string, globalMatrix?: mat4) {
+    constructor(texture: Texture, objectId: string, layer: number, globalMatrix?: mat4) {
         super(globalMatrix || mat4.create());
         this.texture = texture;
         this.objectId = objectId;
+        this.layer = layer;
     }
 
     public override render(renderPipeline: IRenderPipeline, viewportOrigin: Vector) {
@@ -38,7 +40,10 @@ export class SpritePrimitive extends RenderablePrimitive {
             rotationRadian: this.rotationZ
         };
 
-        renderPipeline.enqueueRenderable([this.x, this.y], () => {
+        renderPipeline.enqueueRenderable({
+            worldSpacePosition: [this.x, this.y],
+            layer: this.layer
+        }, () => {
             renderPipeline.maskLayer.addObjectToMaskLayer(this.objectId, drawOptions);
             renderPipeline.context.drawImage(drawOptions);
         });

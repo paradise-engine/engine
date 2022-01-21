@@ -1,5 +1,5 @@
 import { resetViewport, tagContext } from "../webgl";
-import { RenderPipelineRanOutOfContainersError, RenderingContextError } from "../../errors";
+import { RenderingContextError, RenderLayerNotFoundError } from "../../errors";
 import { DefaultShader, Shader } from '../shader';
 import { ShaderPipeline } from "../shader-pipeline";
 import { GlobalShaderData } from "../global-shader-data";
@@ -7,7 +7,10 @@ import { WebGLPipelineRenderContext } from "./webgl-render-context";
 import { WebGLDebugUtils } from './webgl_debug';
 import { MaskLayer } from "../mask-layer";
 import { Color } from "../../data-structures";
-import { IRenderPipeline } from "../i-render-pipeline";
+import { IRenderPipeline, RenderPipelineEnqueueOptions } from "../i-render-pipeline";
+import { RenderLayer } from "../render-layer";
+import { Indexable } from "../../util";
+import { BuiltinLayers } from "../builtin-layers";
 
 export interface WebGLRenderPipelineOptions {
     view?: HTMLCanvasElement;
@@ -16,6 +19,7 @@ export interface WebGLRenderPipelineOptions {
     baseShader?: Shader;
     antialias?: boolean;
     debugMode?: boolean;
+    customLayers?: RenderLayer[];
 }
 
 interface RenderQueueItem {
@@ -59,10 +63,11 @@ function drawQueueItem(item: RenderQueueItem) {
 }
 
 export class WebGLRenderPipeline implements IRenderPipeline {
-    private _renderQueue: RenderQueue = [];
-    private _activeQueueStack: RenderQueue[] = [];
+    private _renderQueues: Indexable<RenderQueue> = {};
     private _debugMode: boolean = false;
     private _maskLayer: MaskLayer;
+    private _layers: RenderLayer[] = [];
+    private _defaultLayer: number;
 
     public _width: number;
     public _height: number;
@@ -79,6 +84,14 @@ export class WebGLRenderPipeline implements IRenderPipeline {
 
     public get maskLayer() {
         return this._maskLayer;
+    }
+
+    public get layers() {
+        return this._layers.slice();
+    }
+
+    public get defaultLayer() {
+        return this._defaultLayer;
     }
 
     public readonly globalShaderData: GlobalShaderData;
@@ -127,7 +140,24 @@ export class WebGLRenderPipeline implements IRenderPipeline {
 
         // this.globalShaderData.setUniform('u_resolution', [this.view.width, this.view.height]);
 
-        this._activeQueueStack.push(this._renderQueue);
+        this.addLayer({
+            index: Number.MIN_SAFE_INTEGER,
+            name: 'Background Gizmo',
+            hideInEditor: true
+        });
+
+        this.addLayer({
+            index: BuiltinLayers.Default,
+            name: 'Default'
+        });
+
+        this.addLayer({
+            index: Number.MAX_SAFE_INTEGER,
+            name: 'Foreground Gizmo',
+            hideInEditor: true
+        });
+
+        this._defaultLayer = BuiltinLayers.Default;
 
         this._maskLayer = new MaskLayer(this);
     }
@@ -140,29 +170,49 @@ export class WebGLRenderPipeline implements IRenderPipeline {
     }
 
     public clearRenderQueue() {
-        this._renderQueue = [];
-        this._activeQueueStack = [];
-        this._activeQueueStack.push(this._renderQueue);
-    }
-
-    public enqueueRenderable(worldSpacePosition: [number, number], renderFn: () => void) {
-        const activeQueue = this._activeQueueStack[this._activeQueueStack.length - 1];
-        activeQueue.push({ worldSpacePosition, renderFn });
-    }
-
-    public openContainer(worldSpacePosition: [number, number]) {
-        const container: RenderQueue = [];
-        const activeQueue = this._activeQueueStack[this._activeQueueStack.length - 1];
-        activeQueue.push({ worldSpacePosition, items: container });
-
-        this._activeQueueStack.push(container);
-    }
-
-    public closeContainer() {
-        if (this._activeQueueStack.length === 1) {
-            throw new RenderPipelineRanOutOfContainersError();
+        for (const layer of this._layers) {
+            this._renderQueues[layer.index] = [];
         }
-        this._activeQueueStack.pop();
+    }
+
+    public addLayer(layer: RenderLayer) {
+        const existing = this._layers.find(l => l.index === layer.index);
+        if (!existing) {
+            this._layers.push(layer);
+            this._layers.sort((a, b) => {
+                if (a.index <= b.index) {
+                    return -1;
+                }
+                return 1;
+            });
+
+            if (!this._renderQueues[layer.index]) {
+                this._renderQueues[layer.index] = [];
+            }
+        }
+    }
+
+    public setDefaultLayer(layerIndex: number) {
+        const existing = this._layers.find(l => l.index === layerIndex);
+        if (!existing) {
+            throw new RenderLayerNotFoundError(layerIndex);
+        }
+
+        this._defaultLayer = layerIndex;
+    }
+
+    public enqueueRenderable(options: RenderPipelineEnqueueOptions, renderFn: () => void) {
+        const layer = options.layer || this._defaultLayer;
+        const queue = this._renderQueues[layer];
+
+        if (!queue) {
+            throw new RenderLayerNotFoundError(layer);
+        }
+
+        queue.push({
+            worldSpacePosition: options.worldSpacePosition,
+            renderFn
+        });
     }
 
     /**
@@ -171,10 +221,19 @@ export class WebGLRenderPipeline implements IRenderPipeline {
     public drawFrame() {
         this._maskLayer.clearMaskLayer();
         this.context.clearViewport(Color.Transparent);
-        sortQueueItems(this._renderQueue);
-        for (const item of this._renderQueue) {
-            drawQueueItem(item);
+
+        for (const layer of this._layers) {
+            const queue = this._renderQueues[layer.index];
+            if (!queue) {
+                throw new RenderLayerNotFoundError(layer.index);
+            }
+
+            sortQueueItems(queue);
+            for (const item of queue) {
+                drawQueueItem(item);
+            }
         }
+
         this.clearRenderQueue();
     }
 
