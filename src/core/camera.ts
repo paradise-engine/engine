@@ -30,7 +30,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         name: 'Background Color',
         options: {}
     })
-    public backgroundColor: Color;
+    public backgroundColor: Color = new Color(25, 35, 50);
 
     @Control<NumberControlOptions>({
         name: 'Size',
@@ -39,19 +39,19 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             step: 0.1,
         }
     })
-    public size: number;
+    public size: number = 5;
 
     @Control<NumberControlOptions>({
         name: 'Near Clip Pane',
         options: {}
     })
-    public nearClipPane: number;
+    public nearClipPane: number = -1;
 
     @Control<NumberControlOptions>({
         name: 'Far Clip Pane',
         options: {}
     })
-    public farClipPane: number;
+    public farClipPane: number = 1000;
 
     @Control<RectControlOptions>({
         name: 'Viewport',
@@ -59,7 +59,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             prefixes: ['X', 'Y', 'Width', 'Height']
         }
     })
-    public viewportRect: Rect;
+    public viewportRect: Rect = new Rect(0, 0, 1, 1);
 
     @Control<NumberControlOptions>({
         name: 'Depth',
@@ -67,24 +67,13 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             asInteger: true
         }
     })
-    public depth: number;
+    public depth: number = -1;
 
     private get _viewSize() {
         return new Vector(
             this.application.renderPipeline.view.width,
             this.application.renderPipeline.view.height
         );
-    }
-
-    constructor(gameObject: GameObject) {
-        super(gameObject);
-
-        this.backgroundColor = new Color(25, 35, 50);
-        this.size = 5;
-        this.nearClipPane = -1;
-        this.farClipPane = 1000;
-        this.viewportRect = new Rect(0, 0, 1, 1);
-        this.depth = -1;
     }
 
     public performCulling() {

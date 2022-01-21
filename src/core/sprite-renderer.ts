@@ -7,6 +7,7 @@ import { Renderer, SerializableRenderer } from "./renderer";
 import { SerializableSprite, Sprite, SpriteControlOptions } from "./sprite";
 import { GameObject } from "./game-object";
 import { ResourceReference } from "./resource-reference";
+import { ManagedObjectOptions } from "./managed-object";
 
 export interface SerializableSpriteRenderer extends SerializableRenderer {
     sprite: SerializableSprite;
@@ -33,8 +34,8 @@ export class SpriteRenderer extends Renderer implements ISerializable<Serializab
     })
     public color: Color;
 
-    constructor(gameObject: GameObject) {
-        super(gameObject);
+    constructor(gameObject: GameObject, options?: ManagedObjectOptions) {
+        super(gameObject, options);
 
         const emptyImageRes = this.application.loader.EMPTY_IMAGE;
         const ref = new ResourceReference(emptyImageRes.url, emptyImageRes.name);

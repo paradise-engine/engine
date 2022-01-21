@@ -1,4 +1,3 @@
-import { Application } from "../application";
 import { MouseInputButton, MouseInputMoveEvent, MouseInputState } from "../input";
 import { ISerializable, registerDeserializableComponent } from "../serialization";
 import { MicroEmitter } from "../util/micro-emitter";
@@ -31,12 +30,6 @@ export class PointerTarget extends Behaviour implements ISerializable<Serializab
     private _handlersSetUp = false;
     private _objectHover = false;
     public events: MicroEmitter<PointerTargetEvents> = new MicroEmitter();
-
-    constructor(gameObject: GameObject) {
-        super(gameObject);
-
-        console.log(`POINTER TARGET ${this.id} CREATED FOR OBJECT '${gameObject.name}'`);
-    }
 
     private _handleMouseMove = (ev: MouseInputMoveEvent) => {
         const pointerObject = this.application.renderPipeline.maskLayer.probePosition(ev.viewPos.x, ev.viewPos.y);
