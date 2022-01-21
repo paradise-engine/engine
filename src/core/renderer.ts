@@ -6,6 +6,7 @@ import { ISerializable, registerDeserializableComponent } from "../serialization
 import { Behaviour, SerializableBehaviour } from "./behaviour";
 
 export interface SerializableRenderer extends SerializableBehaviour {
+    layer: number;
 }
 
 export class Renderer extends Behaviour implements ISerializable<SerializableRenderer> {
@@ -34,7 +35,8 @@ export class Renderer extends Behaviour implements ISerializable<SerializableRen
     public getSerializableObject(): SerializableRenderer {
         return {
             ...super.getSerializableObject(),
-            _ctor: Renderer.name
+            _ctor: Renderer.name,
+            layer: this.layer
         }
     }
 }
