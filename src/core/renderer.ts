@@ -12,6 +12,7 @@ export interface SerializableRenderer extends SerializableBehaviour {
 export class Renderer extends Behaviour implements ISerializable<SerializableRenderer> {
     public static applySerializable(s: SerializableRenderer, comp: Renderer) {
         super.applySerializable(s, comp);
+        comp.layer = s.layer;
     }
 
     @Control<NumberControlOptions>({
