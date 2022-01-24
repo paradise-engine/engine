@@ -121,8 +121,10 @@ export class WebGLRenderPipeline implements IRenderPipeline {
             }
         }
 
+        context.pixelStorei(context.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+
         context.enable(context.BLEND);
-        context.blendFunc(context.SRC_ALPHA, context.ONE_MINUS_SRC_ALPHA);
+        context.blendFunc(context.ONE, context.ONE_MINUS_SRC_ALPHA);
 
         this.context = new WebGLPipelineRenderContext(context, this._debugMode);
 
