@@ -21,7 +21,6 @@
         "emitDecoratorMetadata": true
     },
     "include": [
-        "./src",
-        "./typings"
+        "./src"
     ]
 }

@@ -1,53 +1,58 @@
-import { generateRandomString } from "./util";
-import { ManagedObjectRepository, SerializableManagedObjectRepository } from "./core";
-import { IRenderer, Renderer } from "./renderer";
-import { RuntimeInconsistencyError } from "./errors";
+import { Camera, GameObject, ManagedObjectRepository } from "./core";
+import { IRenderPipeline, WebGLRenderPipeline } from "./graphics";
+import { ApplicationInitializedError, ApplicationNotInitializedError } from "./errors";
 import { __ComponentCreationLock } from "./core/component-creation-lock";
 import { GameManager } from "./lifecycle";
-import { ResourceLoader } from "./resource";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "./serialization";
+import { IResourceLoader, ResourceLoader } from "./resource";
+import { deserialize } from "./serialization";
+import { IInputManager, InputManager } from "./input";
+import { CommonGizmos, createCommonGizmos } from "./editor";
+import { editor_camera_obj } from "./editor/_editor-camera";
+
+export interface ApplicationEditorModeOptions { }
 
 export interface ApplicationOptions {
     id?: string;
-    renderer?: IRenderer<any>;
+    renderPipeline?: IRenderPipeline;
+    loader?: IResourceLoader;
+    gameManager?: GameManager;
+    inputManager?: IInputManager;
+    debugMode?: boolean;
+    editorMode?: ApplicationEditorModeOptions;
 }
 
-export interface SerializableApplication extends SerializableObject {
-    id: string;
-    renderer: SerializableObject;
-    objectRepository: SerializableManagedObjectRepository;
-}
+export class Application {
+    private static _app: Application;
 
-export class Application implements ISerializable<SerializableApplication> {
-
-    public static fromSerializable(s: SerializableApplication, options: DeserializationOptions) {
-        const app = new Application({
-            renderer: deserialize(s.renderer, options) as IRenderer<any>
-        });
-
-        app._managedObjectRepository = deserialize(s.objectRepository, options);
-        app._id = s.id;
-
-        return app;
-    }
-
-    private static _apps: Map<string, Application> = new Map();
-
-    public static getById(id: string) {
-        const app = this._apps.get(id);
-        if (!app) {
-            throw new RuntimeInconsistencyError(`No application with ID '${id}' registered.`);
+    public static initializeApplication(options: ApplicationOptions) {
+        if (this._app) {
+            throw new ApplicationInitializedError();
         }
+
+        const app = new Application(options);
+        this._app = app;
+
+        app._createCommonGizmos();
+
         return app;
     }
 
-    private _id: string;
-    private __ccLock: __ComponentCreationLock;
-    private _loader: ResourceLoader;
+    public static get instance() {
+        if (!this._app) {
+            throw new ApplicationNotInitializedError();
+        }
+
+        return this._app;
+    }
+
+    private _loader: IResourceLoader;
     private _gameManager: GameManager;
     private _managedObjectRepository: ManagedObjectRepository;
-
-    public readonly renderer: IRenderer<any>;
+    private _renderPipeline: IRenderPipeline;
+    private _inputManager: IInputManager;
+    private _editorMode?: boolean = false;
+    private _commonGizmos?: CommonGizmos;
+    private _editorCamera?: GameObject;
 
     public get loader() {
         return this._loader;
@@ -61,42 +66,67 @@ export class Application implements ISerializable<SerializableApplication> {
         return this._managedObjectRepository;
     }
 
-    public get id() {
-        return this._id;
+    public get renderPipeline() {
+        return this._renderPipeline;
     }
 
-    constructor(options: ApplicationOptions = {}) {
-        this._id = options.id || generateRandomString();
-        this.__ccLock = new __ComponentCreationLock();
+    public get inputManager() {
+        return this._inputManager;
+    }
+
+    public get editorMode() {
+        return this._editorMode;
+    }
+
+    public get commonGizmos() {
+        return this._commonGizmos;
+    }
+
+    private constructor(options: ApplicationOptions = {}) {
+
+        if (options.editorMode) {
+            this._editorMode = true;
+        }
+
         this._managedObjectRepository = new ManagedObjectRepository();
-        this.renderer = options.renderer || new Renderer(options.renderer);
-
-        if ((this.renderer as Renderer).context) {
-            this._loader = new ResourceLoader(this.renderer as Renderer);
-            this._gameManager = new GameManager(this.renderer, this._loader);
-        } else {
-            this._loader = undefined as any;
-            this._gameManager = undefined as any;
-        }
-
+        this._renderPipeline = options.renderPipeline || new WebGLRenderPipeline({
+            ...(options.renderPipeline || {}),
+            debugMode: options.debugMode
+        });
+        this._loader = options.loader || new ResourceLoader(this.renderPipeline as WebGLRenderPipeline);
+        this._gameManager = new GameManager(this._loader, this._renderPipeline, undefined, options.debugMode);
+        this._inputManager = options.inputManager || new InputManager();
     }
 
-    public snapshot(): Application {
-        const cloneApp = new Application({ renderer: this.renderer });
-
-        cloneApp._managedObjectRepository = deserialize(this.managedObjectRepository.getSerializableObject(), { application: cloneApp });
-
-        return cloneApp;
+    private _createCommonGizmos() {
+        if (this.editorMode) {
+            this._loader.ready(() => {
+                this._commonGizmos = createCommonGizmos();
+                this._editorCamera = deserialize(editor_camera_obj);
+                const camComp = this._editorCamera.getComponent(Camera);
+                if (camComp) {
+                    this._gameManager.setEditorCamera(camComp);
+                }
+            });
+        }
     }
 
-    public getSerializableObject(): SerializableApplication {
-        return {
-            _ctor: Application.name,
-            id: this._id,
-            renderer: this.renderer.getSerializableObject(),
-            objectRepository: this.managedObjectRepository.getSerializableObject()
-        }
+    public setRenderPipeline(pipeline: IRenderPipeline) {
+        this._renderPipeline = pipeline;
+        this._loader.setRenderPipeline(pipeline);
+        this._gameManager.setRenderPipeline(pipeline);
+    }
+
+    public setLoader(loader: ResourceLoader) {
+        this._loader = loader;
+        this._gameManager.setLoader(loader);
+    }
+
+    public setGameManager(gm: GameManager) {
+        this._gameManager = gm;
+    }
+
+    public setInputManager(im: InputManager) {
+        this._inputManager = im;
     }
 }
-
-registerDeserializable(Application);

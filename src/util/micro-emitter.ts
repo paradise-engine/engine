@@ -8,9 +8,17 @@ enum ListenerType {
     single = 2
 }
 
-export class MicroEmitter<T extends Dictionary<any>> {
+export interface IEmitter<T extends Dictionary<any>> {
+    on<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    once<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    off<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void;
+    emit<K extends keyof T>(event: K, ...data: T[K] extends undefined ? [undefined?] : [T[K]]): void;
+}
+
+export class MicroEmitter<T extends Dictionary<any>> implements IEmitter<T> {
 
     private _listeners: Dictionary<Map<MicroListener<this>, ListenerType>> = {}
+    private _memoized: { [K in keyof T]?: T[K] extends undefined ? [undefined?] : [T[K]] } = {}
 
     private _addEventListener<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>, type: ListenerType) {
         const key = event as string;
@@ -38,10 +46,19 @@ export class MicroEmitter<T extends Dictionary<any>> {
 
     public on<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void {
         this._addEventListener(event, listener, ListenerType.normal);
+        if (this._memoized.hasOwnProperty(event)) {
+            const data = this._memoized[event];
+            listener.call(this, data as any);
+        }
     }
 
     public once<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void {
-        this._addEventListener(event, listener, ListenerType.single);
+        if (this._memoized.hasOwnProperty(event)) {
+            const data = this._memoized[event];
+            listener.call(this, data as any);
+        } else {
+            this._addEventListener(event, listener, ListenerType.single);
+        }
     }
 
     public off<K extends keyof T>(event: K, listener: MicroListener<this, T[K]>): void {
@@ -71,6 +88,22 @@ export class MicroEmitter<T extends Dictionary<any>> {
 
 
         }
+    }
+
+    public memoizedEmit<K extends keyof T>(
+        event: K,
+        ...data: T[K] extends undefined ? [undefined?] : [T[K]]
+    ) {
+        this._memoized[event] = data[0];
+        this.emit(event, ...data);
+    }
+
+    public clearMemoized<K extends keyof T>(event: K) {
+        delete this._memoized[event];
+    }
+
+    public clearAllMemoized() {
+        this._memoized = {};
     }
 
 }
