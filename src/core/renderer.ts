@@ -1,7 +1,7 @@
 import { Control, NumberControlOptions } from "../controls";
 import { Rect } from "../data-structures";
 import { AbstractRendererError } from "../errors";
-import { BuiltinLayers, RenderablePrimitive } from "../graphics";
+import { BuiltinLayers, RenderablePrimitive, ShaderTarget } from "../graphics";
 import { ISerializable, registerDeserializableComponent } from "../serialization";
 import { Behaviour, SerializableBehaviour } from "./behaviour";
 
@@ -23,6 +23,7 @@ export class Renderer extends Behaviour implements ISerializable<SerializableRen
         }
     })
     public layer: number = BuiltinLayers.Default;
+    public shaders: ShaderTarget = new ShaderTarget();
 
     public getPrimitive(): RenderablePrimitive {
         throw new AbstractRendererError();

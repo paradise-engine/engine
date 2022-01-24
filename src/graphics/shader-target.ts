@@ -4,7 +4,7 @@ import { Shader } from "./shader";
  * Base class for all objects that can be target to
  * shading.
  */
-export abstract class ShaderTarget {
+export class ShaderTarget {
     protected _shaders: Shader[] = [];
 
     public getShaders() {
