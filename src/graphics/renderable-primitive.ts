@@ -3,6 +3,7 @@ import { mat4, quat, vec3 } from "gl-matrix";
 import { ShaderTarget } from "./shader-target";
 import { IPositionable } from "./i-positionable";
 import { IRenderPipeline } from "./i-render-pipeline";
+import { Vector } from "../data-structures";
 
 export abstract class RenderablePrimitive extends ShaderTarget implements IRenderable, IPositionable {
     protected _globalMatrix: mat4;
@@ -50,6 +51,7 @@ export abstract class RenderablePrimitive extends ShaderTarget implements IRende
     constructor(globalMatrix: mat4) {
         super();
         this._globalMatrix = globalMatrix;
+        this._updateTransforms();
     }
 
     private _updateTransforms() {
@@ -58,5 +60,5 @@ export abstract class RenderablePrimitive extends ShaderTarget implements IRende
         mat4.getScaling(this._scaling, this._globalMatrix);
     }
 
-    public abstract render(renderPipeline: IRenderPipeline): void;
+    public abstract render(renderPipeline: IRenderPipeline, viewportOrigin: Vector): void;
 }

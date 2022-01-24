@@ -9,3 +9,6 @@ export * from './array-move';
 export * from './array-permutate';
 export * from './type-constructor';
 export * from './browser-apis-available';
+export * from './random-integer';
+export * from './array-shuffle';
+export * from './color-generator';

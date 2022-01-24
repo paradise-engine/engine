@@ -10,6 +10,7 @@ export interface ResourceOptions {
     status: ResourceStatus;
     sourceElement: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
     texture?: BaseTexture;
+    permanent?: boolean;
 }
 
 interface ResourceEventTypes {
@@ -28,6 +29,7 @@ export class Resource extends MicroEmitter<ResourceEventTypes> {
     private _isLocked = false;
     private _name: string;
     private _url: string;
+    private _permanent = false;
 
     public get name() {
         return this._name;
@@ -72,6 +74,10 @@ export class Resource extends MicroEmitter<ResourceEventTypes> {
         this.sourceElement = options.sourceElement;
         this.texture = options.texture;
 
+        if (options.permanent) {
+            this._permanent = options.permanent;
+        }
+
         if (this.texture) {
             this.texture.once('destroyed', this.onTextureDestroyed);
         }
@@ -103,20 +109,22 @@ export class Resource extends MicroEmitter<ResourceEventTypes> {
      * Destroys objects & data tied to this resource
      */
     public unload() {
-        this.emit('aboutToUnload');
+        if (!this._permanent) {
+            this.emit('aboutToUnload');
 
-        this._url = '';
-        this.status = ResourceStatus.Unloaded;
-        this.sourceElement = undefined as any;
-        this._isLocked = false;
+            this._url = '';
+            this.status = ResourceStatus.Unloaded;
+            this.sourceElement = undefined as any;
+            this._isLocked = false;
 
-        if (this.texture) {
-            this.texture.off('destroyed', this.onTextureDestroyed);
-            this.texture.destroy();
+            if (this.texture) {
+                this.texture.off('destroyed', this.onTextureDestroyed);
+                this.texture.destroy();
+            }
+
+            this.texture = undefined as any;
+
+            this.emit('unloaded');
         }
-
-        this.texture = undefined as any;
-
-        this.emit('unloaded');
     }
 }

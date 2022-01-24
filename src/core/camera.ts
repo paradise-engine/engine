@@ -1,7 +1,6 @@
-import { Application } from "../application";
 import { Control, NumberControlOptions } from "../controls";
 import { Color, ColorControlOptions, Rect, RectControlOptions, SerializableColor, SerializableRect, Vector } from "../data-structures";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 import { Renderer } from "./renderer";
 import { Behaviour, SerializableBehaviour } from "./behaviour";
 import { GameObject } from "./game-object";
@@ -19,13 +18,11 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
     public static applySerializable(s: SerializableCamera, comp: Camera) {
         super.applySerializable(s, comp);
 
-        const options: DeserializationOptions = { application: comp.application }
-
-        comp.backgroundColor = deserialize(s.backgroundColor, options);
+        comp.backgroundColor = deserialize(s.backgroundColor);
         comp.size = s.size;
         comp.nearClipPane = s.nearClipPane;
         comp.farClipPane = s.farClipPane;
-        comp.viewportRect = deserialize(s.viewportRect, options);
+        comp.viewportRect = deserialize(s.viewportRect);
         comp.depth = s.depth;
     }
 
@@ -33,7 +30,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         name: 'Background Color',
         options: {}
     })
-    public backgroundColor: Color;
+    public backgroundColor: Color = new Color(25, 35, 50);
 
     @Control<NumberControlOptions>({
         name: 'Size',
@@ -42,19 +39,19 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             step: 0.1,
         }
     })
-    public size: number;
+    public size: number = 5;
 
     @Control<NumberControlOptions>({
         name: 'Near Clip Pane',
         options: {}
     })
-    public nearClipPane: number;
+    public nearClipPane: number = -1;
 
     @Control<NumberControlOptions>({
         name: 'Far Clip Pane',
         options: {}
     })
-    public farClipPane: number;
+    public farClipPane: number = 1000;
 
     @Control<RectControlOptions>({
         name: 'Viewport',
@@ -62,7 +59,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             prefixes: ['X', 'Y', 'Width', 'Height']
         }
     })
-    public viewportRect: Rect;
+    public viewportRect: Rect = new Rect(0, 0, 1, 1);
 
     @Control<NumberControlOptions>({
         name: 'Depth',
@@ -70,17 +67,13 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
             asInteger: true
         }
     })
-    public depth: number;
+    public depth: number = -1;
 
-    constructor(application: Application, gameObject: GameObject) {
-        super(application, gameObject);
-
-        this.backgroundColor = new Color(25, 35, 50);
-        this.size = 5;
-        this.nearClipPane = -1;
-        this.farClipPane = 1000;
-        this.viewportRect = new Rect(0, 0, 1, 1);
-        this.depth = -1;
+    private get _viewSize() {
+        return new Vector(
+            this.application.renderPipeline.view.width,
+            this.application.renderPipeline.view.height
+        );
     }
 
     public performCulling() {
@@ -88,10 +81,7 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         const inView: GameObject[] = [];
 
         if (scene) {
-            const viewSize = new Vector(
-                this.application.renderPipeline.view.width,
-                this.application.renderPipeline.view.height
-            );
+            const viewSize = this._viewSize;
 
             const viewExtends = Vector.divide(viewSize, new Vector(2, 2));
 
@@ -116,6 +106,17 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
                     results.push(obj);
                 }
 
+                if (this.application.editorMode) {
+                    const comps = obj.getComponents(Behaviour);
+
+                    const gizmos = comps
+                        .map(comp => comp.onDrawGizmos())
+                        .reduce((previous, current) => previous.concat(current), []);
+                    for (const gizmo of gizmos) {
+                        results.push(...cullFn(gizmo));
+                    }
+                }
+
                 for (const child of obj.getChildren()) {
                     results.push(...cullFn(child));
                 }
@@ -129,6 +130,19 @@ export class Camera extends Behaviour implements ISerializable<SerializableCamer
         }
 
         return inView;
+    }
+
+    public getViewportOrigin() {
+        const viewSize = this._viewSize;
+        const viewportOrigin = new Vector(
+            this.transform.position.x - (viewSize.x / 2),
+            this.transform.position.y - (viewSize.y / 2)
+        );
+        return viewportOrigin;
+    }
+
+    public worldSpaceToViewport(worldSpacePos: Vector): Vector {
+        return Vector.substract(worldSpacePos, this.getViewportOrigin());
     }
 
     public getSerializableObject(): SerializableCamera {

@@ -1,3 +1,4 @@
+import { Color } from "../data-structures";
 import { Dictionary } from "../util";
 import { Shader } from "./shader";
 import {
@@ -25,7 +26,7 @@ export interface IRenderContext {
     createFramebuffer(): NativeFramebuffer;
     attachTextureToFramebuffer(texture: NativeTexture, fbo: NativeFramebuffer): void;
     drawToFramebuffer(globalUniforms: Dictionary<UniformData>, shader: Shader, texture: NativeTexture): void
-    bindFramebuffer(fbo: NativeFramebuffer | null, width: number, height: number): void;
+    bindFramebuffer(fbo: NativeFramebuffer | null, width?: number, height?: number): void;
 
     createBufferInfo(input: BufferInput): BufferInfo;
     createShaderProgram(fragmentSource: string, vertexSource: string): ShaderInfo;
@@ -36,4 +37,11 @@ export interface IRenderContext {
 
     drawImage(options: DrawImageOptions): void;
     resetViewport(width: number, height: number): void;
+
+    clearViewport(clearColor: Color): void;
+    clearFramebuffer(fbo: NativeFramebuffer, clearColor: Color, width?: number, height?: number): void;
+    readPixel(pixelX: number, pixelY: number, fbo?: NativeFramebuffer): Color;
+
+    enableUnpackPremultipliedAlpha(): void;
+    disableUnpackPremultipliedAlpha(): void;
 }

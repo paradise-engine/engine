@@ -11,3 +11,6 @@ export * from './recursive-event';
 export * from './camera';
 export * from './renderer';
 export * from './sprite-renderer';
+export * from './pointer-target';
+export * from './internal-gizmo-handler';
+export * from './internal-move-gizmo';

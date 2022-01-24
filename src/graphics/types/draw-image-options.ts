@@ -57,6 +57,14 @@ export interface DrawImageOptions {
      */
     destinationHeight?: number;
     /**
+     * The width of the viewport. Defaults to the canvas width.
+     */
+    viewportWidth?: number;
+    /**
+     * The height of the viewport. Defaults to the canvas height.
+     */
+    viewportHeight?: number;
+    /**
      * The angle to rotate by in radians (clockwise)
      */
     rotationRadian?: number;
@@ -68,4 +76,8 @@ export interface DrawImageOptions {
      * The y-location of the rotation center, with `0` being the top edge of the rect
      */
     rotationOffsetY?: number;
+    /**
+     * Flip Y
+     */
+    flipY?: boolean;
 }

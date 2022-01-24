@@ -1,7 +1,7 @@
 import { mat4, quat, vec3 } from "gl-matrix";
 import { Control } from "../controls";
-import { DestroyBoundTransformError } from "../errors";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
+import { DestroyBoundTransformError, ManagedObjectNotFoundError } from "../errors";
+import { deserialize, ISerializable, registerDeserializableComponent, SerializableObject } from "../serialization";
 import { arrayMove } from "../util";
 import { Component } from "./component";
 import { SerializableVector, Vector, VectorControlOptions, Rotation, RotationControlOptions, SerializableRotation } from "../data-structures";
@@ -19,14 +19,9 @@ export interface SerializableTransform extends SerializableObject {
 export class Transform extends Component implements ISerializable<SerializableTransform> {
 
     public static applySerializable(s: SerializableTransform, comp: Transform) {
-        const compIdIndex = comp.gameObject['_componentIds'].indexOf(comp.id);
-        comp.application.managedObjectRepository.changeId(comp, s.id);
-        comp.gameObject['_componentIds'][compIdIndex] = s.id;
-
-        const options: DeserializationOptions = { application: comp.application };
-        comp._localPosition = deserialize(s.localPosition, options);
-        comp._localRotation = deserialize(s.localRotation, options);
-        comp._localScale = deserialize(s.localScale, options);
+        comp._localPosition = deserialize(s.localPosition);
+        comp._localRotation = deserialize(s.localRotation);
+        comp._localScale = deserialize(s.localScale);
     }
 
     protected _parentId?: string;
@@ -64,11 +59,11 @@ export class Transform extends Component implements ISerializable<SerializableTr
         if (!this._parentId) {
             return undefined;
         }
-        return this._application.managedObjectRepository.getObjectById<Transform>(this._parentId);
+        return this.application.managedObjectRepository.getObjectById<Transform>(this._parentId);
     }
 
     public get children() {
-        return this._children.map(childId => this._application.managedObjectRepository.getObjectById<Transform>(childId));
+        return this._children.map(childId => this.application.managedObjectRepository.getObjectById<Transform>(childId));
     }
 
     public setParent(parent: Transform | null) {
@@ -248,12 +243,24 @@ export class Transform extends Component implements ISerializable<SerializableTr
     }
 
     public override destroy() {
-        if (!this.gameObject.isDestroyed) {
+        let gameObjectDestroyed = true;
+
+        try {
+            if (!this.gameObject.isDestroyed) {
+                gameObjectDestroyed = false;
+            }
+        } catch (err) {
+            if (!(err instanceof ManagedObjectNotFoundError)) {
+                throw err;
+            }
+            gameObjectDestroyed = true;
+        }
+
+        if (!gameObjectDestroyed) {
             throw new DestroyBoundTransformError();
         }
 
         this.setParent(null);
-
         super.destroy();
     }
 

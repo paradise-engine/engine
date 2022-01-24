@@ -1,18 +1,20 @@
 import { isInstanceOf, MicroEmitter } from "../util";
 import { MultipleTransformsError } from "../errors";
-import { applySerializable, DeserializationOptions, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { applySerializable, deserialize, getSerializableComponentClass, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { Component, ComponentConstructor, SerializableComponent } from "./component";
-import { ManagedObject } from "./managed-object";
+import { ManagedObject, ManagedObjectOptions } from "./managed-object";
 import { SerializableTransform, Transform } from "./transform";
-import { Application } from "../application";
 import { Behaviour } from "./behaviour";
 import { MouseInputMoveEvent, MouseInputState } from "../input";
 import { recursiveEvent } from "./recursive-event";
+import { InternalGizmoHandler } from "./internal-gizmo-handler";
+import { __ComponentCreationLock } from "./component-creation-lock";
 
 export interface SerializableGameObject extends SerializableObject {
     name: string;
     id: string;
     isActive: boolean;
+    isSelected: boolean;
     transform: SerializableTransform;
     components: SerializableComponent[];
     children: SerializableGameObject[];
@@ -27,21 +29,35 @@ export interface GameObjectEvents {
     onMouseUp: GameObjectEventPayload<MouseInputState>;
 }
 
+export interface GameObjectOptions extends ManagedObjectOptions {
+    name?: string;
+    transformId?: string;
+}
+
 /**
  * Base class for any game object.
  */
 export class GameObject extends ManagedObject implements ISerializable<SerializableGameObject> {
 
-    public static fromSerializable(s: SerializableGameObject, options: DeserializationOptions) {
-        const obj = new GameObject(options.application, s.name);
-        obj.application.managedObjectRepository.changeId(obj, s.id);
+    public static fromSerializable(s: SerializableGameObject) {
+        const obj = new GameObject({
+            name: s.name,
+            id: s.id
+        });
         obj._isActive = s.isActive;
+        obj._isSelected = s.isSelected;
 
         applySerializable(s.transform, obj._transform);
+
+        for (const child of s.children) {
+            const childObject: GameObject = deserialize(child);
+            obj.addChild(childObject);
+        }
+
         for (const comp of s.components) {
             const ctor = getSerializableComponentClass(comp._ctor);
             try {
-                const compInstance = obj.addComponent(ctor);
+                const compInstance = obj.addComponent(ctor, { id: comp.id });
                 applySerializable(comp, compInstance);
             } catch (err) {
                 // avoid crashing because another transform is being added to object
@@ -51,14 +67,10 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             }
         }
 
-        for (const child of s.children) {
-            const childObject: GameObject = deserialize(child, options);
-            obj.addChild(childObject);
-        }
-
         return obj;
     }
 
+    private _isSelected = false;
     private _componentIds: string[] = [];
 
     // internal representation of the active field
@@ -95,10 +107,15 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
 
     private _handleMouseUp = (ev: MouseInputState) => { }
 
-    constructor(application: Application, name?: string) {
-        super(application);
-        this.name = name || 'EmptyObject';
-        this._transform = this.addComponent(Transform);
+    constructor(options: GameObjectOptions = {}) {
+        super(options);
+        this.name = options.name || 'EmptyObject';
+
+        this._transform = this.addComponent(Transform, { id: options.transformId });
+
+        if (this.application.editorMode === true) {
+            this.addComponent(InternalGizmoHandler);
+        }
 
         const inputManager = this.application.inputManager;
         if (inputManager.mouse) {
@@ -108,7 +125,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         }
     }
 
-    public addComponent<T extends Component>(componentType: ComponentConstructor<T>): T {
+    public addComponent<T extends Component>(componentType: ComponentConstructor<T>, options?: ManagedObjectOptions): T {
         if (
             (componentType.prototype instanceof Transform || componentType === Transform as any)
             && this._transform !== undefined
@@ -116,13 +133,13 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             throw new MultipleTransformsError();
         }
 
-        this._application['__ccLock'].unlockComponentCreation();
-        const component = new componentType(this._application, this);
-        this._application['__ccLock'].lockComponentCreation();
+        __ComponentCreationLock.unlockComponentCreation();
+        const component = new componentType(this, options);
+        __ComponentCreationLock.lockComponentCreation();
 
         this._componentIds.push(component.id);
 
-        if (component instanceof Behaviour) {
+        if (component instanceof Behaviour && this.application.gameManager.isRunning) {
             component.onAwake();
             this.application.gameManager.currentScene?.notifyAwake(component.id);
         }
@@ -135,12 +152,23 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
         if (componentIndex !== -1) {
             const del = this._componentIds.splice(componentIndex, 1);
             const delId = del[0];
-            this._application.managedObjectRepository.getObjectById<Component>(delId).destroy();
+            this.application.managedObjectRepository.getObjectById<Component>(delId).destroy();
         }
     }
 
+    private _getAllComponents(omitInternals: boolean) {
+        let comps = this._componentIds
+            .map(cId => this.application.managedObjectRepository.getObjectById<Component>(cId));
+
+        if (omitInternals) {
+            comps = comps.filter(comp => (comp.constructor as ComponentConstructor<any>)._isInternal !== true);
+        }
+
+        return comps;
+    }
+
     public getAllComponents() {
-        return this._componentIds.map(cId => this._application.managedObjectRepository.getObjectById<Component>(cId));
+        return this._getAllComponents(true);
     }
 
     /**
@@ -149,7 +177,7 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
      * @param strict If `true`, only Components that are the exact specified type are returned. Otherwise, also inheriting types qualify _(default)_.
      */
     public getComponents<T extends Component>(componentType: ComponentConstructor<T>, strict?: boolean) {
-        return this.getAllComponents().filter((comp): comp is T => isInstanceOf(comp, componentType, strict));
+        return this._getAllComponents(false).filter((comp): comp is T => isInstanceOf(comp, componentType, strict));
     }
 
     /**
@@ -211,6 +239,11 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             this._transform.children.forEach(c => c.gameObject.destroy());
             this.getAllComponents().forEach(c => c.destroy());
 
+            const parent = this.getParent();
+            if (parent) {
+                parent.removeChild(this);
+            }
+
             const inputManager = this.application.inputManager;
             if (inputManager.mouse) {
                 inputManager.mouse.off('move', this._handleMouseMove);
@@ -226,7 +259,10 @@ export class GameObject extends ManagedObject implements ISerializable<Serializa
             id: this.id,
             transform: this._transform.getSerializableObject(),
             isActive: this._isActive,
-            components: this._componentIds.map(cId => this._application.managedObjectRepository.getObjectById<Component>(cId).getSerializableObject()),
+            isSelected: this._isSelected,
+            components: this._componentIds
+                .filter(cId => (this.application.managedObjectRepository.getObjectById<Component>(cId).constructor as ComponentConstructor<any>)._isInternal !== true)
+                .map(cId => this.application.managedObjectRepository.getObjectById<Component>(cId).getSerializableObject()),
             name: this.name,
             children: this.getChildren().map(c => c.getSerializableObject())
         }

@@ -10,9 +10,9 @@ import { RuntimeInconsistencyError } from "../errors";
  * It should not be used by non-internal classes.
  */
 export class __ComponentCreationLock {
-	private __isLocked = true;
+	private static __isLocked = true;
 
-	public unlockComponentCreation() {
+	public static unlockComponentCreation() {
 		if (this.__isLocked) {
 			this.__isLocked = false;
 		} else {
@@ -20,7 +20,7 @@ export class __ComponentCreationLock {
 		}
 	}
 
-	public lockComponentCreation() {
+	public static lockComponentCreation() {
 		if (!this.__isLocked) {
 			this.__isLocked = true;
 		} else {
@@ -28,7 +28,7 @@ export class __ComponentCreationLock {
 		}
 	}
 
-	public componentsMayBeCreated() {
+	public static componentsMayBeCreated() {
 		return !this.__isLocked;
 	}
 }

@@ -1,6 +1,6 @@
 import { BaseControlOptions, ControlType } from "../controls";
 import { IComparable } from "../data-structures";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
+import { deserialize, ISerializable, registerDeserializable, SerializableObject } from "../serialization";
 import { ResourceReference, SerializableResourceReference } from "./resource-reference";
 
 export interface SerializableSprite extends SerializableObject {
@@ -11,8 +11,8 @@ export interface SpriteControlOptions extends BaseControlOptions { }
 
 @ControlType()
 export class Sprite implements IComparable, ISerializable<SerializableSprite> {
-    public static fromSerializable(s: SerializableSprite, options: DeserializationOptions) {
-        return new Sprite(deserialize(s.resourceRef, options));
+    public static fromSerializable(s: SerializableSprite) {
+        return new Sprite(deserialize(s.resourceRef));
     }
 
     private _resourceReference: ResourceReference;

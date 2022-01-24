@@ -1,4 +1,5 @@
-import { Behaviour, GameObject, recursiveEvent, Renderer } from "../core";
+import { Application } from "../application";
+import { Behaviour, Camera, GameObject, recursiveEvent, Renderer } from "../core";
 import { LifecycleError, SceneLoadError } from "../errors";
 import { IRenderPipeline } from "../graphics";
 import { IResourceLoader } from "../resource";
@@ -6,11 +7,26 @@ import { Scene } from "../scene";
 import { Time } from "../time";
 
 export class GameManager {
-    private _loader: IResourceLoader<any>;
+    private _loader: IResourceLoader;
     private _renderPipeline: IRenderPipeline;
 
     private _currentScene?: Scene;
     private _isRunning = false;
+    private _animationFrameToken: number | null = null;
+
+    private _editorCameraId?: string;
+
+    private get _app() {
+        return Application.instance;
+    }
+
+    private get _editorCamera() {
+        if (!this._editorCameraId) {
+            return null;
+        }
+
+        return this._app.managedObjectRepository.getObjectById<Camera>(this._editorCameraId);
+    }
 
     private _debugMode = false;
 
@@ -70,10 +86,11 @@ export class GameManager {
 
     // #endregion
 
-    constructor(loader: IResourceLoader<any>, pipeline: IRenderPipeline, debugMode?: boolean) {
+    constructor(loader: IResourceLoader, pipeline: IRenderPipeline, editorCamera?: Camera, debugMode?: boolean) {
         this._loader = loader;
         this._renderPipeline = pipeline;
         this._debugMode = debugMode || false;
+        this._editorCameraId = editorCamera?.id;
     }
 
     /**
@@ -83,9 +100,7 @@ export class GameManager {
     private _gameLoop = (msElapsed: number) => {
         Time.tick(msElapsed);
 
-        if (this._transitionFlag) {
-            this._executeTransition();
-        }
+        this.loader.load();
 
         const scene = this.currentScene;
         if (!scene) {
@@ -113,29 +128,27 @@ export class GameManager {
         }
 
         // Draw phase
-        console.log(`
-        ....
-        ....
-        ....
-        DRAW PHASE START`);
-        for (const camera of scene.getAllCameras()) {
+        const cameraColl = this._editorCamera ? [this._editorCamera] : scene.getAllCameras();
+        for (const camera of cameraColl) {
+            const viewportOrigin = camera.getViewportOrigin();
             const cullingResults = camera.performCulling();
             for (const res of cullingResults) {
                 const renderer = res.getComponent(Renderer);
                 if (renderer) {
                     const primitive = renderer.getPrimitive();
-                    primitive.render(this._renderPipeline);
+                    primitive.render(this._renderPipeline, viewportOrigin);
                 }
             }
             this._renderPipeline.drawFrame();
         }
-        console.log(`
-        DRAW PHASE END
-        ....
-        ....
-        ....`);
 
-        requestAnimationFrame(this._gameLoop);
+        if (this._transitionFlag) {
+            this._executeTransition();
+        } else
+
+            if (this._isRunning) {
+                this._animationFrameToken = requestAnimationFrame(this._gameLoop);
+            }
     }
 
     // #region Private
@@ -150,15 +163,17 @@ export class GameManager {
         if (!this._transitionFlag) {
             throw new SceneLoadError('Cannot transition scene: No scene selected for transition');
         }
+        const nextScene = this._transitionFlag;
+
+        this.stop();
 
         this._unloadScene();
-        this._loadScene(this._transitionFlag);
+        this._loadScene(nextScene);
 
-
-        this._queueSceneResources(this._transitionFlag);
+        this._queueSceneResources(nextScene);
         this.loader.purge();
         this.loader.load(() => {
-            // TODO emit an event
+            this.start();
         });
     }
 
@@ -186,8 +201,13 @@ export class GameManager {
         this._currentScene?.off('objectDisabled', this._onSceneObjectDisabled);
         this._currentScene?.off('objectAwakened', this._onSceneObjectAwakened);
 
-        for (const gameObject of this._currentScene?.getAllGameObjects() || []) {
-            if (!gameObject.isDestroyed) {
+        const currentObjects = this._currentScene?.getAllGameObjects() || [];
+        const nextObjects = this._transitionFlag?.getAllGameObjects() || [];
+
+        for (const gameObject of currentObjects) {
+            const next = nextObjects.find(o => o.id === gameObject.id);
+
+            if (!gameObject.isDestroyed && !next) {
                 gameObject.destroy();
             }
         }
@@ -195,15 +215,13 @@ export class GameManager {
         this._currentScene = undefined;
         this._enabledObjects = new Set();
         this._awakenedObjects = new Set();
-
-
     }
 
     // #endregion
 
     // #region Public
 
-    public setLoader(loader: IResourceLoader<any>) {
+    public setLoader(loader: IResourceLoader) {
         this._loader = loader;
     }
 
@@ -237,9 +255,39 @@ export class GameManager {
 
     public start() {
         if (!this._isRunning) {
+            console.log('################################');
+            console.log('################################');
+            console.log('################################');
+            console.log('STARTING GAME LOOP!!');
+            console.log('################################');
+            console.log('################################');
+            console.log('################################');
             this._isRunning = true;
-            requestAnimationFrame(this._gameLoop);
+            this._animationFrameToken = requestAnimationFrame(this._gameLoop);
         }
+    }
+
+    public stop() {
+        if (this._isRunning && this._animationFrameToken !== null) {
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('STOPPING GAME LOOP!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            console.log('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+            this._isRunning = false;
+            cancelAnimationFrame(this._animationFrameToken);
+            this._animationFrameToken = null;
+        }
+    }
+
+    public setRenderPipeline(p: IRenderPipeline) {
+        this._renderPipeline = p;
+    }
+
+    public setEditorCamera(c: Camera) {
+        this._editorCameraId = c.id;
     }
 
     // #endregion

@@ -1,13 +1,13 @@
-import { Application } from "../application";
 import { Control } from "../controls";
 import { SpritePrimitive } from "../graphics";
-import { DeserializationOptions, deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 import { vec2 } from 'gl-matrix';
 import { Color, ColorControlOptions, Rect, SerializableColor } from "../data-structures";
 import { Renderer, SerializableRenderer } from "./renderer";
 import { SerializableSprite, Sprite, SpriteControlOptions } from "./sprite";
 import { GameObject } from "./game-object";
 import { ResourceReference } from "./resource-reference";
+import { ManagedObjectOptions } from "./managed-object";
 
 export interface SerializableSpriteRenderer extends SerializableRenderer {
     sprite: SerializableSprite;
@@ -17,10 +17,9 @@ export interface SerializableSpriteRenderer extends SerializableRenderer {
 export class SpriteRenderer extends Renderer implements ISerializable<SerializableSpriteRenderer> {
     public static applySerializable(s: SerializableSpriteRenderer, comp: SpriteRenderer) {
         super.applySerializable(s, comp);
-        const options: DeserializationOptions = { application: comp.application }
 
-        comp.sprite = deserialize(s.sprite, options);
-        comp.color = deserialize(s.color, options);
+        comp.sprite = deserialize(s.sprite);
+        comp.color = deserialize(s.color);
     }
 
     @Control<SpriteControlOptions>({
@@ -35,18 +34,27 @@ export class SpriteRenderer extends Renderer implements ISerializable<Serializab
     })
     public color: Color;
 
-    constructor(application: Application, gameObject: GameObject) {
-        super(application, gameObject);
+    constructor(gameObject: GameObject, options?: ManagedObjectOptions) {
+        super(gameObject, options);
 
-        const emptyImageRes = application.loader.EMPTY_IMAGE;
-        const ref = new ResourceReference(application, emptyImageRes.url, emptyImageRes.name);
+        const emptyImageRes = this.application.loader.EMPTY_IMAGE;
+        const ref = new ResourceReference(emptyImageRes.url, emptyImageRes.name);
 
         this.sprite = new Sprite(ref);
         this.color = Color.White;
     }
 
+    public override onAwake(): void {
+        this.sprite.resourceReference.refreshResource();
+    }
+
     public override getPrimitive(): SpritePrimitive {
-        return new SpritePrimitive(this.sprite.texture, this.transform.getGlobalMatrix());
+        const primitive = new SpritePrimitive(this.sprite.texture, this.gameObject.id, this.layer, this.transform.getGlobalMatrix());
+        for (const shader of this.shaders.getShaders()) {
+            primitive.addShader(shader);
+        }
+
+        return primitive;
     }
 
     public override getBounds(): Rect {

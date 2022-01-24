@@ -1,24 +1,29 @@
-import { Application } from "../application";
+import { Control, NumberControlOptions } from "../controls";
 import { Rect } from "../data-structures";
 import { AbstractRendererError } from "../errors";
-import { RenderablePrimitive } from "../graphics";
-import { DeserializationOptions, ISerializable, registerDeserializableComponent } from "../serialization";
+import { BuiltinLayers, RenderablePrimitive, ShaderTarget } from "../graphics";
+import { ISerializable, registerDeserializableComponent } from "../serialization";
 import { Behaviour, SerializableBehaviour } from "./behaviour";
-import { GameObject } from "./game-object";
 
 export interface SerializableRenderer extends SerializableBehaviour {
+    layer: number;
 }
 
 export class Renderer extends Behaviour implements ISerializable<SerializableRenderer> {
     public static applySerializable(s: SerializableRenderer, comp: Renderer) {
         super.applySerializable(s, comp);
-        const options: DeserializationOptions = { application: comp.application }
+        comp.layer = s.layer;
     }
 
-
-    constructor(application: Application, gameObject: GameObject) {
-        super(application, gameObject);
-    }
+    @Control<NumberControlOptions>({
+        name: 'Layer',
+        options: {
+            step: 1,
+            asInteger: true
+        }
+    })
+    public layer: number = BuiltinLayers.Default;
+    public shaders: ShaderTarget = new ShaderTarget();
 
     public getPrimitive(): RenderablePrimitive {
         throw new AbstractRendererError();
@@ -32,7 +37,8 @@ export class Renderer extends Behaviour implements ISerializable<SerializableRen
     public getSerializableObject(): SerializableRenderer {
         return {
             ...super.getSerializableObject(),
-            _ctor: Renderer.name
+            _ctor: Renderer.name,
+            layer: this.layer
         }
     }
 }

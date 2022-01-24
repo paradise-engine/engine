@@ -1,3 +1,4 @@
+import { Color } from "../../data-structures";
 import { Dictionary } from "../../util";
 import { IRenderContext } from "../i-render-context";
 import { Shader } from "../shader";
@@ -84,6 +85,10 @@ export class WebGLPipelineRenderContext implements IRenderContext {
             this._glContext.UNSIGNED_BYTE,
             source as any || null
         );
+
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_MIN_FILTER, this._glContext.LINEAR);
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_WRAP_S, this._glContext.CLAMP_TO_EDGE);
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_WRAP_T, this._glContext.CLAMP_TO_EDGE);
     }
 
     createFramebuffer(): NativeFramebuffer {
@@ -100,8 +105,11 @@ export class WebGLPipelineRenderContext implements IRenderContext {
         drawToFramebuffer(this._glContext, globalUniforms, shader, texture.texture, this._debugMode);
     }
 
-    bindFramebuffer(fbo: NativeFramebuffer | null, width: number, height: number): void {
-        setFramebuffer(this._glContext, fbo, width, height, this._debugMode);
+    bindFramebuffer(fbo: NativeFramebuffer | null, width?: number, height?: number): void {
+        width = (width === undefined) ? this._glContext.canvas.width : width;
+        height = (height === undefined) ? this._glContext.canvas.height : height;
+
+        setFramebuffer(this._glContext, fbo?.framebuffer, width, height, this._debugMode);
     }
 
     createBufferInfo(input: BufferInput): BufferInfo {
@@ -144,5 +152,53 @@ export class WebGLPipelineRenderContext implements IRenderContext {
 
     resetViewport(width: number, height: number): void {
         resetViewport(this._glContext, this._debugMode);
+    }
+
+    clearViewport(clearColor: Color): void {
+
+        const comps = clearColor.getNormalized();
+        this._glContext.clearColor(comps[0], comps[1], comps[2], comps[3]);
+        this._glContext.clear(this._glContext.COLOR_BUFFER_BIT | this._glContext.DEPTH_BUFFER_BIT | this._glContext.STENCIL_BUFFER_BIT);
+    }
+    clearFramebuffer(fbo: { framebuffer: any; }, clearColor: Color, width?: number, height?: number): void {
+        this.bindFramebuffer(fbo, width, height);
+        const status = this._glContext.checkFramebufferStatus(this._glContext.FRAMEBUFFER);
+        if (status === this._glContext.FRAMEBUFFER_COMPLETE) {
+            this.clearViewport(clearColor);
+        }
+        this.bindFramebuffer(null);
+    }
+    readPixel(pixelX: number, pixelY: number, fbo?: NativeFramebuffer): Color {
+
+        if (fbo && fbo.framebuffer) {
+            this.bindFramebuffer(fbo);
+        }
+
+        const data = new Uint8Array(4);
+        this._glContext.readPixels(
+            pixelX,
+            pixelY,
+            1,
+            1,
+            this._glContext.RGBA,
+            this._glContext.UNSIGNED_BYTE,
+            data
+        );
+
+        if (fbo && fbo.framebuffer) {
+            this.bindFramebuffer(null)
+        }
+
+        return Color.fromUint8Array(data);
+    }
+
+    public enableUnpackPremultipliedAlpha(): void {
+        this._glContext.pixelStorei(this._glContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+        this._glContext.blendFunc(this._glContext.ONE, this._glContext.ONE_MINUS_SRC_ALPHA);
+    }
+
+    public disableUnpackPremultipliedAlpha(): void {
+        this._glContext.pixelStorei(this._glContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        this._glContext.blendFunc(this._glContext.SRC_ALPHA, this._glContext.ONE_MINUS_SRC_ALPHA);
     }
 }
