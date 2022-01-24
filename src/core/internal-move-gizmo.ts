@@ -8,6 +8,9 @@ import { MouseInputButton, MouseInputState } from "../input";
 import { SerializableVector, Vector } from "../data-structures";
 import { MicroEmitter } from "../util";
 import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
+import { LightnessShader } from "../graphics";
+
+const HOVER_LIGHTNESS_FACTOR = 1.2;
 
 enum MoveDir {
     horizontal = 0,
@@ -70,9 +73,14 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
     private _horizontal: GameObject | null = null;
     private _vertical: GameObject | null = null;
     private _dual: GameObject | null = null;
+
     private _moveDir: MoveDir | null = null;
     private _mousePosSnapshot: Vector | null = null;
     private _startPos: Vector | null = null;
+
+    private _hLightness: LightnessShader = new LightnessShader(this.application.renderPipeline);
+    private _vLightness: LightnessShader = new LightnessShader(this.application.renderPipeline);
+    private _dLightness: LightnessShader = new LightnessShader(this.application.renderPipeline);
 
     private _setUp = false;
 
@@ -118,6 +126,26 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
         this._startPos = this.gameObject.transform.position;
     }
 
+    private _handleMouseEnter = (gameObject: GameObject) => {
+        if (gameObject === this._dual) {
+            this._dLightness.setLightnessFactor(HOVER_LIGHTNESS_FACTOR);
+        } else if (gameObject === this._horizontal) {
+            this._hLightness.setLightnessFactor(HOVER_LIGHTNESS_FACTOR);
+        } else if (gameObject === this._vertical) {
+            this._vLightness.setLightnessFactor(HOVER_LIGHTNESS_FACTOR);
+        }
+    }
+
+    private _handleMouseLeave = (gameObject: GameObject) => {
+        if (gameObject === this._dual) {
+            this._dLightness.setLightnessFactor(1.0);
+        } else if (gameObject === this._horizontal) {
+            this._hLightness.setLightnessFactor(1.0);
+        } else if (gameObject === this._vertical) {
+            this._vLightness.setLightnessFactor(1.0);
+        }
+    }
+
     private _handleGlobalMouseUp = (ev: MouseInputState) => {
         if (ev.triggerButton === MouseInputButton.primary) {
             this._moveDir = null;
@@ -160,9 +188,9 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
                     this.application.loader.EDITOR_MOVE_HANDLE_BOTH.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_BOTH.name
                 ));
+                dSprite.shaders.addShader(this._dLightness);
 
                 this._dual.transform.translate(new Vector(15, -15));
-
                 this.gameObject.addChild(this._dual);
             }
 
@@ -177,6 +205,7 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_HORIZONTAL.name
                 ));
+                hSprite.shaders.addShader(this._hLightness);
 
                 this._horizontal.transform.translate(new Vector(50, 0));
 
@@ -194,6 +223,7 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.url,
                     this.application.loader.EDITOR_MOVE_HANDLE_VERTICAL.name
                 ));
+                vSprite.shaders.addShader(this._vLightness);
 
                 this._vertical.transform.translate(new Vector(0, -50));
 
@@ -205,6 +235,14 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
                 hTarget.events.on('mousePrimaryDown', this._handleMouseDown);
                 vTarget.events.on('mousePrimaryDown', this._handleMouseDown);
                 dTarget.events.on('mousePrimaryDown', this._handleMouseDown);
+
+                hTarget.events.on('mouseEnter', this._handleMouseEnter);
+                vTarget.events.on('mouseEnter', this._handleMouseEnter);
+                dTarget.events.on('mouseEnter', this._handleMouseEnter);
+
+                hTarget.events.on('mouseLeave', this._handleMouseLeave);
+                vTarget.events.on('mouseLeave', this._handleMouseLeave);
+                dTarget.events.on('mouseLeave', this._handleMouseLeave);
 
                 const mouseInput = this.application.inputManager.mouse;
                 if (mouseInput) {
@@ -218,9 +256,22 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
 
     public override onDestroy(): void {
         if (this._setUp) {
-            this._horizontal?.getComponent(PointerTarget)?.events.off('mousePrimaryDown', this._handleMouseDown);
-            this._vertical?.getComponent(PointerTarget)?.events.off('mousePrimaryDown', this._handleMouseDown);
-            this._dual?.getComponent(PointerTarget)?.events.off('mousePrimaryDown', this._handleMouseDown);
+
+            const hEvents = this._horizontal?.getComponent(PointerTarget)?.events;
+            const vEvents = this._vertical?.getComponent(PointerTarget)?.events;
+            const dEvents = this._dual?.getComponent(PointerTarget)?.events;
+
+            hEvents?.off('mousePrimaryDown', this._handleMouseDown);
+            vEvents?.off('mousePrimaryDown', this._handleMouseDown);
+            dEvents?.off('mousePrimaryDown', this._handleMouseDown);
+
+            hEvents?.off('mouseEnter', this._handleMouseEnter);
+            vEvents?.off('mouseEnter', this._handleMouseEnter);
+            dEvents?.off('mouseEnter', this._handleMouseEnter);
+
+            hEvents?.off('mouseLeave', this._handleMouseLeave);
+            vEvents?.off('mouseLeave', this._handleMouseLeave);
+            dEvents?.off('mouseLeave', this._handleMouseLeave);
 
             const mouseInput = this.application.inputManager.mouse;
             if (mouseInput) {
