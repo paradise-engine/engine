@@ -85,6 +85,10 @@ export class WebGLPipelineRenderContext implements IRenderContext {
             this._glContext.UNSIGNED_BYTE,
             source as any || null
         );
+
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_MIN_FILTER, this._glContext.LINEAR);
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_WRAP_S, this._glContext.CLAMP_TO_EDGE);
+        this._glContext.texParameteri(this._glContext.TEXTURE_2D, this._glContext.TEXTURE_WRAP_T, this._glContext.CLAMP_TO_EDGE);
     }
 
     createFramebuffer(): NativeFramebuffer {
@@ -156,8 +160,8 @@ export class WebGLPipelineRenderContext implements IRenderContext {
         this._glContext.clearColor(comps[0], comps[1], comps[2], comps[3]);
         this._glContext.clear(this._glContext.COLOR_BUFFER_BIT | this._glContext.DEPTH_BUFFER_BIT | this._glContext.STENCIL_BUFFER_BIT);
     }
-    clearFramebuffer(fbo: { framebuffer: any; }, clearColor: Color): void {
-        this.bindFramebuffer(fbo);
+    clearFramebuffer(fbo: { framebuffer: any; }, clearColor: Color, width?: number, height?: number): void {
+        this.bindFramebuffer(fbo, width, height);
         const status = this._glContext.checkFramebufferStatus(this._glContext.FRAMEBUFFER);
         if (status === this._glContext.FRAMEBUFFER_COMPLETE) {
             this.clearViewport(clearColor);

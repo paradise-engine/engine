@@ -5,6 +5,11 @@ const DEBUG_MSG_CSS_WARN = 'color: #C22762; font-weight: 700';
 
 let enableLog = true;
 
+function getStack() {
+    const err = new Error();
+    return err.stack;
+}
+
 /**
  * Taggs a context with a name and number for debugging purposes.
  * @param ctx The context to tag
@@ -21,7 +26,9 @@ export function tagContext(ctx: WebGLRenderingContext) {
         contexts.set(ctx, tag);
 
         if (enableLog) {
-            console.log(`%cCreated WebGL Context Tag %c${tag}`, DEBUG_MSG_CSS_TEXT, DEBUG_MSG_CSS_TAG);
+            console.groupCollapsed(`%cCreated WebGL Context Tag %c${tag}`, DEBUG_MSG_CSS_TEXT, DEBUG_MSG_CSS_TAG);
+            console.log(getStack());
+            console.groupEnd();
         }
     }
 }
@@ -44,16 +51,21 @@ export function taggedMessage(ctx: WebGLRenderingContext, text: string, check: b
     if (enableLog) {
         const tag = getTag(ctx);
         if (!tag) {
-            console.log(`%cNO_TAG %c${text}`, DEBUG_MSG_CSS_NOTAG, DEBUG_MSG_CSS_TEXT, ...attachedObjects);
+            console.groupCollapsed(`%cNO_TAG %c${text}`, DEBUG_MSG_CSS_NOTAG, DEBUG_MSG_CSS_TEXT, ...attachedObjects);
         } else {
-            console.log(`%c${tag} %c${text}`, DEBUG_MSG_CSS_TAG, DEBUG_MSG_CSS_TEXT, ...attachedObjects);
+            console.groupCollapsed(`%c${tag} %c${text}`, DEBUG_MSG_CSS_TAG, DEBUG_MSG_CSS_TEXT, ...attachedObjects);
         }
+
+        console.log(getStack());
+        console.groupEnd();
 
         if (check) {
             const obj = getObjects(ctx);
             for (const ao of attachedObjects) {
                 if (!obj.includes(ao)) {
-                    console.log(`%c\t--> Object not registered for context`, DEBUG_MSG_CSS_WARN, ao);
+                    console.groupCollapsed(`%c\t--> Object not registered for context`, DEBUG_MSG_CSS_WARN, ao);
+                    console.log(getStack());
+                    console.groupEnd();
                 }
             }
         }

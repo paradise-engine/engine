@@ -84,6 +84,14 @@ export function drawImage(options: WebGLDrawImageOptions) {
         options.sourceHeight = options.textureHeight;
     }
 
+    if (options.viewportWidth === undefined) {
+        options.viewportWidth = gl.canvas.width;
+    }
+
+    if (options.viewportHeight === undefined) {
+        options.viewportHeight = gl.canvas.height;
+    }
+
     if (options.rotationRadian === undefined) {
         options.rotationRadian = 0;
     }
@@ -104,7 +112,15 @@ export function drawImage(options: WebGLDrawImageOptions) {
     mat4.translate(rotationOffsetMatrix, rotationOffsetMatrix, [-options.rotationOffsetX / scaleX, -options.rotationOffsetY / scaleY, 0]);
 
     const matrix = mat4.create();
-    mat4.ortho(matrix, 0, gl.canvas.width, options.flipY ? 0 : gl.canvas.height, options.flipY ? gl.canvas.height : 0, -1, 1);
+    mat4.ortho(
+        matrix,
+        0,
+        options.viewportWidth,
+        options.flipY ? 0 : options.viewportHeight,
+        options.flipY ? options.viewportHeight : 0,
+        -1,
+        1
+    );
     mat4.translate(matrix, matrix, [options.destinationX, options.destinationY, 0]);
     mat4.rotate(matrix, matrix, options.rotationRadian, [0, 0, 1]);
     mat4.multiply(matrix, matrix, rotationOffsetMatrix);

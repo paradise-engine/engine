@@ -57,6 +57,14 @@ export interface DrawImageOptions {
      */
     destinationHeight?: number;
     /**
+     * The width of the viewport. Defaults to the canvas width.
+     */
+    viewportWidth?: number;
+    /**
+     * The height of the viewport. Defaults to the canvas height.
+     */
+    viewportHeight?: number;
+    /**
      * The angle to rotate by in radians (clockwise)
      */
     rotationRadian?: number;

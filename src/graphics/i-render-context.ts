@@ -39,6 +39,6 @@ export interface IRenderContext {
     resetViewport(width: number, height: number): void;
 
     clearViewport(clearColor: Color): void;
-    clearFramebuffer(fbo: NativeFramebuffer, clearColor: Color): void;
+    clearFramebuffer(fbo: NativeFramebuffer, clearColor: Color, width?: number, height?: number): void;
     readPixel(pixelX: number, pixelY: number, fbo?: NativeFramebuffer): Color;
 }
