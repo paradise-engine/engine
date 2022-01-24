@@ -73,6 +73,7 @@ export class MaskLayer {
 
     public addObjectToMaskLayer(objectId: string, options: DrawImageOptions) {
         const color = this._getNextColor();
+        this._context.disableUnpackPremultipliedAlpha();
         this._shader.setColor(color);
 
         const uniqueString = `${color.hex}_${color.alpha}`;
@@ -88,6 +89,8 @@ export class MaskLayer {
         });
 
         this._context.bindFramebuffer(null);
+
+        this._context.enableUnpackPremultipliedAlpha();
     }
 
     public probePosition(posX: number, posY: number): string | undefined {

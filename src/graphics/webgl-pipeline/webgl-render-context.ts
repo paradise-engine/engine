@@ -191,4 +191,14 @@ export class WebGLPipelineRenderContext implements IRenderContext {
 
         return Color.fromUint8Array(data);
     }
+
+    public enableUnpackPremultipliedAlpha(): void {
+        this._glContext.pixelStorei(this._glContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+        this._glContext.blendFunc(this._glContext.ONE, this._glContext.ONE_MINUS_SRC_ALPHA);
+    }
+
+    public disableUnpackPremultipliedAlpha(): void {
+        this._glContext.pixelStorei(this._glContext.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        this._glContext.blendFunc(this._glContext.SRC_ALPHA, this._glContext.ONE_MINUS_SRC_ALPHA);
+    }
 }

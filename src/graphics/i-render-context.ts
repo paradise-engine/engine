@@ -41,4 +41,7 @@ export interface IRenderContext {
     clearViewport(clearColor: Color): void;
     clearFramebuffer(fbo: NativeFramebuffer, clearColor: Color, width?: number, height?: number): void;
     readPixel(pixelX: number, pixelY: number, fbo?: NativeFramebuffer): Color;
+
+    enableUnpackPremultipliedAlpha(): void;
+    disableUnpackPremultipliedAlpha(): void;
 }
