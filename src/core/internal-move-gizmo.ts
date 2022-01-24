@@ -9,6 +9,7 @@ import { SerializableVector, Vector } from "../data-structures";
 import { MicroEmitter } from "../util";
 import { deserialize, ISerializable, registerDeserializableComponent } from "../serialization";
 import { LightnessShader } from "../graphics";
+import { recursiveEvent } from "./recursive-event";
 
 const HOVER_LIGHTNESS_FACTOR = 1.2;
 
@@ -250,6 +251,9 @@ export class InternalMoveGizmo extends Behaviour implements ISerializable<Serial
                 }
             }
 
+            recursiveEvent(this._vertical, 'onAwake');
+            recursiveEvent(this._horizontal, 'onAwake');
+            recursiveEvent(this._dual, 'onAwake');
             this._setUp = true;
         }
     }
